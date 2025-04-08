@@ -1,12 +1,11 @@
 local M = {}
 require 'config.util_find_func'
 local make_notify = require('mini.notify').make_notify {}
-local map = vim.keymap.set
 local ns = vim.api.nvim_create_namespace 'GoTestError'
 local terminal_multiplexer = require 'config.terminal_multiplexer'
 M.terminals_tests = terminal_multiplexer.new()
 
-local function toggle_view_enclosing_test()
+M.toggle_view_enclosing_test = function()
   local test_name = Get_enclosing_test()
   assert(test_name, 'No test found')
   local float_terminal_state = M.terminals_tests:toggle_float_terminal(test_name)
@@ -115,11 +114,6 @@ local function test_buf(test_format)
     local test_command = string.format(test_format, test_name)
     local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
     make_notify(string.format('Running test: %s', test_name))
-    for index, existing_test_info in ipairs(M.test_tracker) do
-      if existing_test_info.test_name == test_info.test_name then
-        M.test_tracker[index] = test_info
-      end
-    end
     M.go_test_command(test_info)
   end
 end
@@ -143,7 +137,7 @@ M.get_test_info_enclosing_test = function()
 end
 
 ---@return  testInfo | nil
-local function go_integration_test()
+M.go_integration_test = function()
   local test_info = M.get_test_info_enclosing_test()
   if not test_info then
     return nil
@@ -154,34 +148,34 @@ local function go_integration_test()
   return test_info
 end
 
-local function drive_test_dev()
+M.drive_test_dev = function()
   vim.env.MODE, vim.env.UKS = 'dev', 'others'
-  go_integration_test()
+  M.go_integration_test()
 end
 
-local function drive_test_staging()
+M.drive_test_staging = function()
   vim.env.MODE, vim.env.UKS = 'staging', 'others'
-  go_integration_test()
+  M.go_integration_test()
 end
 
-local function windows_test_buf()
+M.windows_test_buf = function()
   local test_format = 'gitBash -c "go test integration_tests/*.go -v -run %s"\r'
   test_buf(test_format)
 end
 
-local function drive_test_dev_buf()
+M.drive_test_dev_buf = function()
   vim.env.MODE, vim.env.UKS = 'dev', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
   test_buf(test_format)
 end
 
-local function drive_test_staging_buf()
+M.drive_test_staging_buf = function()
   vim.env.MODE, vim.env.UKS = 'staging', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
   test_buf(test_format)
 end
 
-local go_normal_test = function()
+M.go_normal_test = function()
   local source_bufnr = vim.api.nvim_get_current_buf()
   local test_name, test_line = Get_enclosing_test()
   M.terminals_tests:delete_terminal(test_name)
@@ -191,12 +185,12 @@ local go_normal_test = function()
   M.go_test_command(test_info)
 end
 
-local function test_normal_buf()
+M.test_normal_buf = function()
   local test_format = 'go test ./... -v -run %s'
   test_buf(test_format)
 end
 
-local function toggle_last_test()
+M.toggle_last_test = function()
   local test_name = M.terminals_tests.last_terminal_name
   if not test_name then
     make_notify 'No last test found'
