@@ -12,6 +12,7 @@ M.setup = function()
   vim.api.nvim_create_user_command('GoTestDriveDevBuf', term_test.drive_test_dev_buf, {})
   vim.api.nvim_create_user_command('GoTestWindowsBuf', term_test.windows_test_buf, {})
   vim.api.nvim_create_user_command('GoTestIntegration', term_test.go_integration_test, {})
+  require 'test_all'
 
   vim.keymap.set('n', '<leader>G', term_test.go_integration_test, { desc = 'Go integration test' })
   vim.keymap.set('n', '<leader>st', function() M.terminals_tests:search_terminal() end, { desc = 'Select test terminal' })
