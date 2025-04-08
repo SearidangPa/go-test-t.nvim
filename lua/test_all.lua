@@ -1,5 +1,4 @@
 local M = {}
-require 'config.util_find_func'
 local make_notify = require('mini.notify').make_notify {}
 
 ---@class gotest.State
