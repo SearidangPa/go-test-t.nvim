@@ -1,5 +1,5 @@
 vim.api.nvim_create_user_command('ReloadTestT', function()
   -- Easy Reloading
-  package.loaded['test-t'] = nil
-  require('test-t').setup()
+  package.loaded['test-tt'] = nil
+  require('test-tt').setup()
 end, {})
