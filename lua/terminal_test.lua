@@ -117,7 +117,7 @@ local function test_buf(test_format)
   end
 end
 
----@return integer | nil, string | nil
+---@return  string | nil, number | nil
 local function get_enclosing_test()
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
@@ -161,7 +161,6 @@ M.get_test_info_enclosing_test = function()
   return test_info
 end
 
----@return  testInfo | nil
 M.go_integration_test = function()
   local test_info = M.get_test_info_enclosing_test()
   if not test_info then
@@ -170,7 +169,6 @@ M.go_integration_test = function()
   M.terminals_tests:delete_terminal(test_info.test_name)
   M.go_test_command(test_info)
   make_notify(string.format('Running test: %s', test_info.test_name))
-  return test_info
 end
 
 M.drive_test_dev = function()
@@ -203,6 +201,8 @@ end
 M.go_normal_test = function()
   local source_bufnr = vim.api.nvim_get_current_buf()
   local test_name, test_line = get_enclosing_test()
+  assert(test_name, 'No test found')
+  assert(test_line, 'No test line found')
   M.terminals_tests:delete_terminal(test_name)
   assert(test_name, 'No test found')
   local test_command = string.format('go test ./... -v -run %s\r\n', test_name)
