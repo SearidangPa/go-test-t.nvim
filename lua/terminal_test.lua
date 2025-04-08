@@ -117,7 +117,8 @@ local function test_buf(test_format)
   end
 end
 
-local function get_enclosing_fn_info()
+---@return integer | nil, string | nil
+local function get_enclosing_test()
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
   while node do
@@ -130,25 +131,16 @@ local function get_enclosing_fn_info()
     if func_name_node then
       local func_name = vim.treesitter.get_node_text(func_name_node, 0)
       local startLine, _, _ = node:start()
-      return startLine + 1, func_name -- +1 to convert 0-based to 1-based lua indexing system
+      if not string.match(func_name, 'Test_') then
+        print(string.format('Not in a test function: %s', func_name))
+        return nil
+      end
+      return func_name, startLine + 1 -- +1 to convert 0-based to 1-based lua indexing system
     end
     ::continue::
   end
 
-  return nil
-end
-
-local function get_enclosing_test()
-  local test_line, testName = get_enclosing_fn_info()
-  if not testName then
-    print 'Not in a function'
-    return nil
-  end
-  if not string.match(testName, 'Test_') then
-    print(string.format('Not in a test function: %s', testName))
-    return nil
-  end
-  return testName, test_line
+  return nil, nil
 end
 
 M.get_test_info_enclosing_test = function()
