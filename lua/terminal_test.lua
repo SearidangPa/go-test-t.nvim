@@ -117,7 +117,7 @@ local function test_buf(test_format)
   end
 end
 
-local function Get_enclosing_fn_info()
+local function get_enclosing_fn_info()
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
   while node do
@@ -139,7 +139,7 @@ local function Get_enclosing_fn_info()
 end
 
 local function get_enclosing_test()
-  local test_line, testName = Get_enclosing_fn_info()
+  local test_line, testName = get_enclosing_fn_info()
   if not testName then
     print 'Not in a function'
     return nil
