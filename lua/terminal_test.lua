@@ -1,8 +1,7 @@
 local M = {}
-require 'config.util_find_func'
 local make_notify = require('mini.notify').make_notify {}
 local ns = vim.api.nvim_create_namespace 'GoTestError'
-local terminal_multiplexer = require 'config.terminal_multiplexer'
+local terminal_multiplexer = require 'terminal_multiplexer'
 M.terminals_tests = terminal_multiplexer.new()
 
 M.toggle_view_enclosing_test = function()
@@ -118,8 +117,42 @@ local function test_buf(test_format)
   end
 end
 
+local function Get_enclosing_fn_info()
+  local ts_utils = require 'nvim-treesitter.ts_utils'
+  local node = ts_utils.get_node_at_cursor()
+  while node do
+    if node:type() ~= 'function_declaration' then
+      node = node:parent() -- Traverse up the node tree to find a function node
+      goto continue
+    end
+
+    local func_name_node = node:child(1)
+    if func_name_node then
+      local func_name = vim.treesitter.get_node_text(func_name_node, 0)
+      local startLine, _, _ = node:start()
+      return startLine + 1, func_name -- +1 to convert 0-based to 1-based lua indexing system
+    end
+    ::continue::
+  end
+
+  return nil
+end
+
+local function get_enclosing_test()
+  local test_line, testName = Get_enclosing_fn_info()
+  if not testName then
+    print 'Not in a function'
+    return nil
+  end
+  if not string.match(testName, 'Test_') then
+    print(string.format('Not in a test function: %s', testName))
+    return nil
+  end
+  return testName, test_line
+end
+
 M.get_test_info_enclosing_test = function()
-  local test_name, test_line = Get_enclosing_test()
+  local test_name, test_line = get_enclosing_test()
   if not test_name then
     make_notify 'No test found'
     return nil
@@ -177,7 +210,7 @@ end
 
 M.go_normal_test = function()
   local source_bufnr = vim.api.nvim_get_current_buf()
-  local test_name, test_line = Get_enclosing_test()
+  local test_name, test_line = get_enclosing_test()
   M.terminals_tests:delete_terminal(test_name)
   assert(test_name, 'No test found')
   local test_command = string.format('go test ./... -v -run %s\r\n', test_name)

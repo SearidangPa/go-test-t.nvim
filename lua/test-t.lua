@@ -2,7 +2,6 @@ local M = {}
 
 M.setup = function()
   local term_test = require 'terminal_test'
-
   vim.api.nvim_create_user_command('GoTestSearch', function() M.terminals_tests:search_terminal() end, {})
   vim.api.nvim_create_user_command('GoTestDelete', function() M.terminals_tests:select_delete_terminal() end, {})
   vim.api.nvim_create_user_command('GoTestNormalBuf', term_test.test_normal_buf, {})
