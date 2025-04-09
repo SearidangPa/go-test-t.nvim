@@ -18,15 +18,6 @@ M.setup = function()
   vim.api.nvim_create_user_command('TerminalTestToggleView', terminal_test.toggle_view_enclosing_test, {})
   vim.api.nvim_create_user_command('TerminalTestToggleLast', terminal_test.toggle_last_test_teriminal, {})
 
-  vim.api.nvim_create_user_command('GoTestNormal', terminal_test.go_normal_test, {})
-
-  vim.api.nvim_create_user_command('GoTestDriveDev', terminal_test.drive_test_dev, {})
-  vim.api.nvim_create_user_command('GoTestDriveStaging', terminal_test.drive_test_staging, {})
-  vim.api.nvim_create_user_command('GoTestDriveStagingBuf', terminal_test.drive_test_staging_buf, {})
-  vim.api.nvim_create_user_command('GoTestDriveDevBuf', terminal_test.drive_test_dev_buf, {})
-  vim.api.nvim_create_user_command('GoTestWindowsBuf', terminal_test.windows_test_buf, {})
-  vim.api.nvim_create_user_command('GoTestIntegration', terminal_test.go_integration_test, {})
-
   require 'test_all'
   require 'terminals.terminal_tracker'
 end

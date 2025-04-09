@@ -1,23 +1,5 @@
 local M = {}
 
-M.get_test_info_enclosing_test = function()
-  local util_find_test = require 'util_find_test'
-  local test_name, test_line = util_find_test.get_enclosing_test()
-  if not test_name then
-    vim.notify('Not in a test function', vim.log.levels.WARN)
-    return nil
-  end
-
-  local test_command
-  if vim.fn.has 'win32' == 1 then
-    test_command = string.format('gitBash -c "go test integration_tests/*.go -v -race -run %s"\r', test_name)
-  else
-    test_command = string.format('go test integration_tests/*.go -v -run %s', test_name)
-  end
-  local source_bufnr = vim.api.nvim_get_current_buf()
-  local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-  return test_info
-end
 
 ---@return  string | nil, number | nil
 M.get_enclosing_test = function()

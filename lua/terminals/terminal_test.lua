@@ -1,33 +1,20 @@
----@class terminal_test
----@field terminal_test.terminals TerminalMultiplexer
----@field terminal_test.toggle_view_enclosing_test fun()
----@field terminal_test.go_terminal_test_command fun(test_info: { test_name: string, test_bufnr: number, test_line: number, test_command: string })
-
-local terminal_test = {}
-
 local make_notify = require('mini.notify').make_notify {}
 local ns = vim.api.nvim_create_namespace 'GoTestError'
 local terminal_multiplexer = require 'terminals.terminal_multiplexer'
+
+---@class terminalTest
+---@field terminalTest.terminals TerminalMultiplexer
+---@field terminalTest.test_in_terminal fun(test_info: table)
+---@field terminalTest.test_buf_in_terminals fun(test_command_format: string)
+
+---@class testInfo
+---@field test_name string
+---@field test_line number
+---@field test_bufnr number
+---@field test_command string
+
+local terminal_test = {}
 terminal_test.terminals = terminal_multiplexer.new()
-
-terminal_test.toggle_view_enclosing_test = function()
-  local util_find_test = require 'util_find_test'
-  local test_name, _ = util_find_test.get_enclosing_test()
-  assert(test_name, 'No test found')
-  local float_terminal_state = terminal_test.terminals:toggle_float_terminal(test_name)
-  assert(float_terminal_state, 'Failed to create floating terminal')
-
-  -- Need this duplication. Otherwise, the keymap is bind to the buffer for for some reason
-  local close_term = function()
-    if vim.api.nvim_win_is_valid(float_terminal_state.footer_win) then
-      vim.api.nvim_win_hide(float_terminal_state.footer_win)
-    end
-    if vim.api.nvim_win_is_valid(float_terminal_state.win) then
-      vim.api.nvim_win_hide(float_terminal_state.win)
-    end
-  end
-  vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
-end
 
 terminal_test.test_in_terminal = function(test_info)
   assert(test_info.test_name, 'No test found')
@@ -125,55 +112,40 @@ terminal_test.test_buf_in_terminals = function(test_command_format)
   end
 end
 
-terminal_test.go_integration_test = function()
-  local util_find_test = require 'util_find_test'
-  local test_info = util_find_test.get_test_info_enclosing_test()
-  if not test_info then
-    return nil
-  end
-  terminal_test.terminals:delete_terminal(test_info.test_name)
-  terminal_test.test_in_terminal(test_info)
-  make_notify(string.format('Running test: %s', test_info.test_name))
-end
-
-terminal_test.drive_test_dev = function()
-  vim.env.MODE, vim.env.UKS = 'dev', 'others'
-  terminal_test.go_integration_test()
-end
-
-terminal_test.drive_test_staging = function()
-  vim.env.MODE, vim.env.UKS = 'staging', 'others'
-  terminal_test.go_integration_test()
-end
-
-terminal_test.windows_test_buf = function()
-  local test_format = 'gitBash -c "go test integration_tests/*.go -v -run %s"\r'
-  terminal_test.test_buf_in_terminals(test_format)
-end
-
-terminal_test.drive_test_dev_buf = function()
-  vim.env.MODE, vim.env.UKS = 'dev', 'others'
-  local test_format = 'go test integration_tests/*.go -v -run %s'
-  terminal_test.test_buf_in_terminals(test_format)
-end
-
-terminal_test.drive_test_staging_buf = function()
-  vim.env.MODE, vim.env.UKS = 'staging', 'others'
-  local test_format = 'go test integration_tests/*.go -v -run %s'
-  terminal_test.test_buf_in_terminals(test_format)
-end
-
-terminal_test.go_normal_test = function()
+---@param test_command_format string
+terminal_test.test_nearest_in_terminal = function(test_command_format)
+  assert(test_command_format, 'No test command format found')
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
-  assert(test_name, 'No test found')
+  assert(test_name, 'Not inside a test function')
   assert(test_line, 'No test line found')
   terminal_test.terminals:delete_terminal(test_name)
   assert(test_name, 'No test found')
-  local test_command = string.format('go test ./... -v -run %s\r\n', test_name)
+  local test_command = string.format(test_command_format, test_name)
   local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
   terminal_test.test_in_terminal(test_info)
+end
+
+--- === View Teriminal ===
+
+terminal_test.toggle_view_enclosing_test = function()
+  local util_find_test = require 'util_find_test'
+  local test_name, _ = util_find_test.get_enclosing_test()
+  assert(test_name, 'No test found')
+  local float_terminal_state = terminal_test.terminals:toggle_float_terminal(test_name)
+  assert(float_terminal_state, 'Failed to create floating terminal')
+
+  -- Need this duplication. Otherwise, the keymap is bind to the buffer for for some reason
+  local close_term = function()
+    if vim.api.nvim_win_is_valid(float_terminal_state.footer_win) then
+      vim.api.nvim_win_hide(float_terminal_state.footer_win)
+    end
+    if vim.api.nvim_win_is_valid(float_terminal_state.win) then
+      vim.api.nvim_win_hide(float_terminal_state.win)
+    end
+  end
+  vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
 end
 
 terminal_test.toggle_last_test_teriminal = function()
@@ -184,5 +156,4 @@ terminal_test.toggle_last_test_teriminal = function()
   end
   terminal_test.terminals:toggle_float_terminal(test_name)
 end
-
 return terminal_test
