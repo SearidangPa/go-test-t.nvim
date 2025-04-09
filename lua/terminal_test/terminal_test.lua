@@ -18,6 +18,7 @@ terminal_test.terminals = terminal_multiplexer.new()
 ---@field test_line number
 ---@field test_bufnr number
 ---@field test_command string
+---@field status string
 
 local function validate_test_info(info)
   assert(info.test_name, 'No test found')
@@ -27,16 +28,13 @@ local function validate_test_info(info)
   assert(vim.api.nvim_buf_is_valid(info.test_bufnr), 'Invalid buffer')
 end
 
-terminal_test.test_in_terminal = function(terminal_test_info)
-  validate_test_info(terminal_test_info)
-  local test_name = terminal_test_info.test_name
-  local test_line = terminal_test_info.test_line
-  local test_command = terminal_test_info.test_command
-  local source_bufnr = terminal_test_info.test_bufnr
-  terminal_test.terminals:toggle_float_terminal(test_name)
-  local float_term_state = terminal_test.terminals:toggle_float_terminal(test_name)
+---@param opts terminal.testInfo
+terminal_test.test_in_terminal = function(opts)
+  validate_test_info(opts)
+  terminal_test.terminals:toggle_float_terminal(opts.test_name)
+  local float_term_state = terminal_test.terminals:toggle_float_terminal(opts.test_name)
   assert(float_term_state, 'Failed to create floating terminal')
-  vim.api.nvim_chan_send(float_term_state.chan, test_command .. '\n')
+  vim.api.nvim_chan_send(float_term_state.chan, opts.test_command .. '\n')
 
   vim.api.nvim_buf_attach(float_term_state.buf, false, {
     on_lines = function(_, buf, _, first_line, last_line)
@@ -46,25 +44,25 @@ terminal_test.test_in_terminal = function(terminal_test_info)
 
       for _, line in ipairs(lines) do
         if string.match(line, '--- FAIL') then
-          vim.api.nvim_buf_set_extmark(source_bufnr, terminal_test_ns, test_line - 1, 0, {
+          vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
             virt_text = { { string.format('❌ %s', current_time) } },
             virt_text_pos = 'eol',
           })
-          terminal_test_info.status = 'failed'
+          opts.status = 'failed'
           float_term_state.status = 'failed'
 
-          make_notify(string.format('Test failed: %s', test_name))
-          vim.notify(string.format('Test failed: %s', test_name), vim.log.levels.WARN, { title = 'Test Failure' })
+          make_notify(string.format('Test failed: %s', opts.test_name))
+          vim.notify(string.format('Test failed: %s', opts.test_name), vim.log.levels.WARN, { title = 'Test Failure' })
           return true
         elseif string.match(line, '--- PASS') then
-          vim.api.nvim_buf_set_extmark(source_bufnr, terminal_test_ns, test_line - 1, 0, {
+          vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
             virt_text = { { string.format('✅ %s', current_time) } },
             virt_text_pos = 'eol',
           })
-          terminal_test_info.status = 'passed'
+          opts.status = 'passed'
           float_term_state.status = 'passed'
 
-          make_notify(string.format('Test passed: %s', test_name))
+          make_notify(string.format('Test passed: %s', opts.test_name))
           return true -- detach from the buffer
         end
 
