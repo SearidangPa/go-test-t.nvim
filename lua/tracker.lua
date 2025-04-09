@@ -105,13 +105,6 @@ for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
   map('n', string.format('<localleader>v%d', idx), function() toggle_tracked_test_by_index(idx) end, { desc = string.format('Toggle tracked test %d', idx) })
 end
 
-M.test_track_list = function()
-  for _, test_info in ipairs(M.test_tracker) do
-    make_notify(string.format('Running test: %s', test_info.test_name))
-    tt.go_test_command(test_info)
-  end
-end
-
 function M.delete_tracked_test()
   local opts = {
     prompt = 'Select tracked test to delete',
