@@ -157,7 +157,7 @@ M.jump_to_test_location = function()
   end
 end
 
----@param tests gotest.Test[]
+---@param tests gotest.Test[] | nil
 M.setup_display_buffer = function(tests)
   -- Create the namespace for highlights if it doesn't exist
   if M.ns == -1 then
@@ -191,7 +191,9 @@ M.setup_display_buffer = function(tests)
   end
 
   -- Update the buffer with initial content
-  M.update_tracker_buffer(tests)
+  if tests then
+    M.update_tracker_buffer(tests)
+  end
 
   -- Return to original window
   vim.api.nvim_set_current_win(M.original_test_win)
@@ -215,6 +217,13 @@ M.close_display = function()
   end
 end
 
-vim.api.nvim_create_user_command('GoTestDisplayClose', M.close_display, {})
+vim.api.nvim_create_user_command('GoTestDisplayToggle', function()
+  if vim.api.nvim_win_is_valid(M.display_win) then
+    vim.api.nvim_win_close(M.display_win, true)
+    M.display_win = -1
+  else
+    M.setup_display_buffer()
+  end
+end, {})
 
 return M
