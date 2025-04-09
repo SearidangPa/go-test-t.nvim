@@ -156,13 +156,6 @@ local function setup_tracker_buffer()
   setup_keymaps()
 end
 
-M.close_tracker = function()
-  if vim.api.nvim_win_is_valid(M.tracker_state.tracker_win) then
-    vim.api.nvim_win_close(M.tracker_state.tracker_win, true)
-    M.tracker_state.tracker_win = -1
-  end
-end
-
 M.run_test_all = function(command)
   -- Reset test state
   M.tracker_state.tests = {}
@@ -236,95 +229,4 @@ vim.api.nvim_create_user_command('GoTestTrackerToggle', function()
   end
 end, {})
 
---- === on demand: load all tests that have not passed into a single quickfix
-
-local function add_direct_file_entries(test, qf_entries)
-  assert(test.file, 'File not found for test: ' .. test.name)
-  -- Find the file in the project
-  local cmd = string.format("find . -name '%s' | head -n 1", test.file)
-  local filepath = vim.fn.system(cmd):gsub('\n', '')
-
-  if filepath ~= '' then
-    table.insert(qf_entries, {
-      filename = filepath,
-      lnum = test.fail_at_line,
-      text = string.format('%s', test.name),
-    })
-  end
-
-  return qf_entries
-end
-
--- Helper function to resolve test locations via LSP
-local function resolve_test_locations(tests_to_resolve, qf_entries, on_complete)
-  local resolved_count = 0
-  local total_to_resolve = #tests_to_resolve
-
-  -- If no tests to resolve, call completion callback immediately
-  if total_to_resolve == 0 then
-    on_complete(qf_entries)
-    return
-  end
-
-  for _, test in ipairs(tests_to_resolve) do
-    vim.lsp.buf_request(0, 'workspace/symbol', { query = test.name }, function(err, res)
-      if err or not res or #res == 0 then
-        vim.notify('No definition found for test: ' .. test.name, vim.log.levels.WARN)
-      else
-        local result = res[1] -- Take the first result
-        local filename = vim.uri_to_fname(result.location.uri)
-        local start = result.location.range.start
-
-        table.insert(qf_entries, {
-          filename = filename,
-          lnum = start.line + 1,
-          col = start.character + 1,
-          text = string.format('%s', test.name),
-        })
-      end
-
-      resolved_count = resolved_count + 1
-
-      -- When all tests are resolved, call the completion callback
-      if resolved_count == total_to_resolve then
-        on_complete(qf_entries)
-      end
-    end)
-  end
-end
-
-local function populate_quickfix_list(qf_entries)
-  if #qf_entries > 0 then
-    vim.fn.setqflist(qf_entries, 'r')
-    vim.cmd 'copen'
-    vim.notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list', vim.log.levels.INFO)
-  else
-    vim.notify('No failing tests found', vim.log.levels.INFO)
-  end
-end
-
-M.load_non_passing_tests_to_quickfix = function()
-  local qf_entries = {}
-  local tests_to_resolve = {}
-
-  for _, test in pairs(M.tracker_state.tests) do
-    if test.status == 'pass' then
-      goto continue
-    end
-
-    if test.fail_at_line ~= 0 then
-      qf_entries = add_direct_file_entries(test, qf_entries)
-    else
-      table.insert(tests_to_resolve, test)
-    end
-    ::continue::
-  end
-
-  resolve_test_locations(tests_to_resolve, qf_entries, populate_quickfix_list)
-  M.close_tracker()
-  return qf_entries
-end
-
--- Create a command to load non-passing tests to quickfix
-vim.api.nvim_create_user_command('GoTestQuickfix', function() M.load_non_passing_tests_to_quickfix() end, {})
 return M
