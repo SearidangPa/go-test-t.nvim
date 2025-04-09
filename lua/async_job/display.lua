@@ -18,11 +18,9 @@ end
 
 ---@param tests gotest.TestInfo[] | nil
 function GoTestDisplay:setup(tests, title)
-  -- Save current window and buffer
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
-  -- Create a new buffer if needed
   if not vim.api.nvim_buf_is_valid(self.display_buf) then
     self.display_buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_name(self.display_buf, title or 'Go Test Results')
@@ -31,7 +29,6 @@ function GoTestDisplay:setup(tests, title)
     vim.bo[self.display_buf].swapfile = false
   end
 
-  -- Create a new window if needed
   if not vim.api.nvim_win_is_valid(self.display_win) then
     vim.cmd 'vsplit'
     self.display_win = vim.api.nvim_get_current_win()
@@ -44,15 +41,10 @@ function GoTestDisplay:setup(tests, title)
     vim.wo[self.display_win].foldenable = false
   end
 
-  -- Update the buffer with initial content
   if tests then
     self:update_tracker_buffer(tests)
   end
-
-  -- Return to original window
   vim.api.nvim_set_current_win(self.original_test_win)
-
-  -- Set up keymaps in the tracker buffer
   self:setup_keymaps()
 end
 
