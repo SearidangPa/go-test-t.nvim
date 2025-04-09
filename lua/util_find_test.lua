@@ -56,8 +56,8 @@ M.Find_all_tests = function (go_bufnr)
     end
     local nodeContent = vim.treesitter.get_node_text(node, go_bufnr)
 
-    -- all tests start with Test_
-    if not string.match(nodeContent, 'Test_') then
+    -- all tests start with Test
+    if not string.match(nodeContent, 'Test') then
       goto continue
     end
 
