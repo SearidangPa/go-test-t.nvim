@@ -5,7 +5,8 @@ local terminal_multiplexer = require 'terminal_multiplexer'
 M.terminals_tests = terminal_multiplexer.new()
 
 M.toggle_view_enclosing_test = function()
-  local test_name = Get_enclosing_test()
+  local util_find_test = require 'util_find_test'
+  local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
   local float_terminal_state = M.terminals_tests:toggle_float_terminal(test_name)
   assert(float_terminal_state, 'Failed to create floating terminal')
@@ -117,34 +118,9 @@ local function test_buf(test_format)
   end
 end
 
----@return  string | nil, number | nil
-local function get_enclosing_test()
-  local ts_utils = require 'nvim-treesitter.ts_utils'
-  local node = ts_utils.get_node_at_cursor()
-  while node do
-    if node:type() ~= 'function_declaration' then
-      node = node:parent() -- Traverse up the node tree to find a function node
-      goto continue
-    end
-
-    local func_name_node = node:child(1)
-    if func_name_node then
-      local func_name = vim.treesitter.get_node_text(func_name_node, 0)
-      local startLine, _, _ = node:start()
-      if not string.match(func_name, 'Test_') then
-        print(string.format('Not in a test function: %s', func_name))
-        return nil
-      end
-      return func_name, startLine + 1 -- +1 to convert 0-based to 1-based lua indexing system
-    end
-    ::continue::
-  end
-
-  return nil, nil
-end
-
 M.get_test_info_enclosing_test = function()
-  local test_name, test_line = get_enclosing_test()
+  local util_find_test = require 'util_find_test'
+  local test_name, test_line = util_find_test.get_enclosing_test()
   if not test_name then
     make_notify 'No test found'
     return nil
