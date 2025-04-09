@@ -28,72 +28,91 @@ local function validate_test_info(info)
   assert(vim.api.nvim_buf_is_valid(info.test_bufnr), 'Invalid buffer')
 end
 
+local function handle_test_passed(opts, float_term_state, current_time)
+  vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
+    virt_text = { { string.format('✅ %s', current_time) } },
+    virt_text_pos = 'eol',
+  })
+  opts.status = 'passed'
+  float_term_state.status = 'passed'
+  make_notify(string.format('Test passed: %s', opts.test_name))
+  return true -- detach from the buffer
+end
+
+local function handle_test_failed(opts, float_term_state, current_time)
+  vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
+    virt_text = { { string.format('❌ %s', current_time) } },
+    virt_text_pos = 'eol',
+  })
+  opts.status = 'failed'
+  float_term_state.status = 'failed'
+  make_notify(string.format('Test failed: %s', opts.test_name))
+  vim.notify(string.format('Test failed: %s', opts.test_name), vim.log.levels.WARN, { title = 'Test Failure' })
+  return true
+end
+
+local function find_buffer_for_file(file)
+  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
+    local buf_name = vim.api.nvim_buf_get_name(buf_id)
+    if buf_name:match(file .. '$') then
+      return buf_id
+    end
+  end
+  return nil
+end
+
+local function handle_error_trace(line)
+  -- Pattern matches strings like "Error Trace:    /Users/path/file.go:21"
+  local file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
+  if file and line_num then
+    local error_line = tonumber(line_num)
+    local error_bufnr = find_buffer_for_file(file)
+    if error_bufnr then
+      vim.fn.sign_define('GoTestError', { text = '✗', texthl = 'DiagnosticError' })
+      vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = line_num })
+    end
+
+    return error_line
+  end
+  return nil
+end
+
+local function process_one_line(line, opts, float_term_state, current_time)
+  if string.match(line, '--- FAIL') then
+    return handle_test_failed(opts, float_term_state, current_time)
+  elseif string.match(line, '--- PASS') then
+    return handle_test_passed(opts, float_term_state, current_time)
+  end
+  return handle_error_trace(line)
+end
+
+-- Main function to process buffer lines
+local function process_buffer_lines(_, buf, first_line, last_line, opts, float_term_state)
+  local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
+  local current_time = os.date '%H:%M:%S'
+  local found_error = false
+
+  for _, line in ipairs(lines) do
+    local result = process_one_line(line, opts, float_term_state, current_time)
+    if result == true then
+      return true -- Detach requested by handler
+    elseif result then
+      found_error = true -- Error line found
+    end
+  end
+
+  return found_error
+end
+
 ---@param opts terminal.testInfo
 terminal_test.test_in_terminal = function(opts)
   validate_test_info(opts)
   terminal_test.terminals:toggle_float_terminal(opts.test_name)
   local float_term_state = terminal_test.terminals:toggle_float_terminal(opts.test_name)
-  assert(float_term_state, 'Failed to create floating terminal')
   vim.api.nvim_chan_send(float_term_state.chan, opts.test_command .. '\n')
 
   vim.api.nvim_buf_attach(float_term_state.buf, false, {
-    on_lines = function(_, buf, _, first_line, last_line)
-      local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
-      local current_time = os.date '%H:%M:%S'
-      local error_line
-
-      for _, line in ipairs(lines) do
-        if string.match(line, '--- FAIL') then
-          vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
-            virt_text = { { string.format('❌ %s', current_time) } },
-            virt_text_pos = 'eol',
-          })
-          opts.status = 'failed'
-          float_term_state.status = 'failed'
-
-          make_notify(string.format('Test failed: %s', opts.test_name))
-          vim.notify(string.format('Test failed: %s', opts.test_name), vim.log.levels.WARN, { title = 'Test Failure' })
-          return true
-        elseif string.match(line, '--- PASS') then
-          vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
-            virt_text = { { string.format('✅ %s', current_time) } },
-            virt_text_pos = 'eol',
-          })
-          opts.status = 'passed'
-          float_term_state.status = 'passed'
-
-          make_notify(string.format('Test passed: %s', opts.test_name))
-          return true -- detach from the buffer
-        end
-
-        -- Pattern matches strings like "Error Trace:    /Users/path/file.go:21"
-        local file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
-
-        if file and line_num then
-          error_line = tonumber(line_num)
-
-          -- Try to find the buffer for this file
-          local error_bufnr
-          for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-            local buf_name = vim.api.nvim_buf_get_name(buf_id)
-            if buf_name:match(file .. '$') then
-              error_bufnr = buf_id
-              break
-            end
-          end
-
-          if error_bufnr then
-            vim.fn.sign_define('GoTestError', { text = '✗', texthl = 'DiagnosticError' })
-            vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = error_line })
-          end
-        end
-      end
-
-      if error_line then
-        return true
-      end
-      return false
-    end,
+    on_lines = function(_, buf, _, first_line, last_line) return process_buffer_lines(_, buf, first_line, last_line, opts, float_term_state) end,
   })
 end
 
