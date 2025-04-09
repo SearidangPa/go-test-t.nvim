@@ -3,7 +3,7 @@ local M = {}
 local tt = require 'terminal_test'
 local make_notify = require('mini.notify').make_notify {}
 local map = vim.keymap.set
-local terminals_tests = tt.terminals_tests
+local terminals_tests = tt.terminals
 
 M.test_tracker = {}
 
