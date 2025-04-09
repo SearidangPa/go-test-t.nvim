@@ -1,7 +1,7 @@
 local terminal_test = {}
 local make_notify = require('mini.notify').make_notify {}
 local ns = vim.api.nvim_create_namespace 'GoTestError'
-local terminal_multiplexer = require 'terminal_multiplexer'
+local terminal_multiplexer = require 'terminals.terminal_multiplexer'
 terminal_test.terminals = terminal_multiplexer.new()
 
 terminal_test.toggle_view_enclosing_test = function()
