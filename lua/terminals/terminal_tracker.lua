@@ -119,7 +119,7 @@ function M.delete_tracked_test()
   local handle_choice = function(tracked_test_name)
     for index, testInfo in ipairs(M.test_tracker) do
       if testInfo.test_name == tracked_test_name then
-        terminals_tests.delete_terminal(tracked_test_name)
+        terminals_tests:delete_terminal(tracked_test_name)
         table.remove(M.test_tracker, index)
         make_notify(string.format('Deleted test terminal from tracker: %s', tracked_test_name))
         break
