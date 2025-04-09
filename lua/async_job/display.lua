@@ -16,14 +16,14 @@ function GoTestDisplay.new()
   return self
 end
 
----@param tests gotest.TestInfo[] | nil
-function GoTestDisplay:setup(tests, title)
+---@param tests_info gotest.TestInfo[]
+function GoTestDisplay:setup(tests_info)
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
   if not vim.api.nvim_buf_is_valid(self.display_buf) then
     self.display_buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(self.display_buf, title or 'Go Test Results')
+    vim.api.nvim_buf_set_name(self.display_buf, 'Go Test Results')
     vim.bo[self.display_buf].bufhidden = 'hide'
     vim.bo[self.display_buf].buftype = 'nofile'
     vim.bo[self.display_buf].swapfile = false
@@ -41,8 +41,8 @@ function GoTestDisplay:setup(tests, title)
     vim.wo[self.display_win].foldenable = false
   end
 
-  if tests then
-    self:update_tracker_buffer(tests)
+  if tests_info then
+    self:update_tracker_buffer(tests_info)
   end
   vim.api.nvim_set_current_win(self.original_test_win)
   self:setup_keymaps()
