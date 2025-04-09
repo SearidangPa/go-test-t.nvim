@@ -104,7 +104,7 @@ M.run_test_all = function(command)
   M.tests = {}
 
   -- Set up tracker buffer
-  displayer:setup_display_buffer(M.tests)
+  displayer:setup(M.tests)
 
   -- Clean up previous job
   M.clean_up_prev_job(M.job_id)

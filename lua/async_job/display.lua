@@ -16,6 +16,46 @@ function GoTestDisplay.new()
   return self
 end
 
+---@param tests gotest.Test[] | nil
+function GoTestDisplay:setup(tests, title)
+  -- Save current window and buffer
+  self.original_test_win = vim.api.nvim_get_current_win()
+  self.original_test_buf = vim.api.nvim_get_current_buf()
+
+  -- Create a new buffer if needed
+  if not vim.api.nvim_buf_is_valid(self.display_buf) then
+    self.display_buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(self.display_buf, title or 'Go Test Results')
+    vim.bo[self.display_buf].bufhidden = 'hide'
+    vim.bo[self.display_buf].buftype = 'nofile'
+    vim.bo[self.display_buf].swapfile = false
+  end
+
+  -- Create a new window if needed
+  if not vim.api.nvim_win_is_valid(self.display_win) then
+    vim.cmd 'vsplit'
+    self.display_win = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(self.display_win, self.display_buf)
+    vim.api.nvim_win_set_width(self.display_win, math.floor(vim.o.columns / 3))
+    vim.wo[self.display_win].number = false
+    vim.wo[self.display_win].relativenumber = false
+    vim.wo[self.display_win].wrap = false
+    vim.wo[self.display_win].signcolumn = 'no'
+    vim.wo[self.display_win].foldenable = false
+  end
+
+  -- Update the buffer with initial content
+  if tests then
+    self:update_tracker_buffer(tests)
+  end
+
+  -- Return to original window
+  vim.api.nvim_set_current_win(self.original_test_win)
+
+  -- Set up keymaps in the tracker buffer
+  self:setup_keymaps()
+end
+
 ---@param tests_info gotest.Test[]
 function GoTestDisplay:parse_test_state_to_lines(tests_info)
   local lines = {}
@@ -166,46 +206,6 @@ function GoTestDisplay:jump_to_test_location()
   end
 end
 
----@param tests gotest.Test[] | nil
-function GoTestDisplay:setup_display_buffer(tests, title)
-  -- Save current window and buffer
-  self.original_test_win = vim.api.nvim_get_current_win()
-  self.original_test_buf = vim.api.nvim_get_current_buf()
-
-  -- Create a new buffer if needed
-  if not vim.api.nvim_buf_is_valid(self.display_buf) then
-    self.display_buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(self.display_buf, title or 'Go Test Results')
-    vim.bo[self.display_buf].bufhidden = 'hide'
-    vim.bo[self.display_buf].buftype = 'nofile'
-    vim.bo[self.display_buf].swapfile = false
-  end
-
-  -- Create a new window if needed
-  if not vim.api.nvim_win_is_valid(self.display_win) then
-    vim.cmd 'vsplit'
-    self.display_win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(self.display_win, self.display_buf)
-    vim.api.nvim_win_set_width(self.display_win, math.floor(vim.o.columns / 3))
-    vim.wo[self.display_win].number = false
-    vim.wo[self.display_win].relativenumber = false
-    vim.wo[self.display_win].wrap = false
-    vim.wo[self.display_win].signcolumn = 'no'
-    vim.wo[self.display_win].foldenable = false
-  end
-
-  -- Update the buffer with initial content
-  if tests then
-    self:update_tracker_buffer(tests)
-  end
-
-  -- Return to original window
-  vim.api.nvim_set_current_win(self.original_test_win)
-
-  -- Set up keymaps in the tracker buffer
-  self:setup_keymaps()
-end
-
 function GoTestDisplay:setup_keymaps()
   -- Ensure we operate on the correct instance
   local tracker = self
@@ -229,7 +229,7 @@ function GoTestDisplay:toggle_display()
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
   else
-    self:setup_display_buffer()
+    self:setup()
   end
 end
 
