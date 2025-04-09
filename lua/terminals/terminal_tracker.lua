@@ -5,7 +5,7 @@ local make_notify = require('mini.notify').make_notify {}
 local map = vim.keymap.set
 local terminals_tests = tt.terminals
 
-M.test_tracker = {}
+M.track_test_list = {}
 
 M.view_tests_tracked = function()
   if vim.api.nvim_win_is_valid(M.view_tracker) then
@@ -15,7 +15,7 @@ M.view_tests_tracked = function()
 
   local all_tracked_tests = { '', '' }
 
-  for _, test_info in ipairs(M.test_tracker) do
+  for _, test_info in ipairs(M.track_test_list) do
     if test_info.status == 'failed' then
       table.insert(all_tracked_tests, '\t' .. '❌' .. '  ' .. test_info.test_name)
     elseif test_info.status == 'passed' then
@@ -51,27 +51,27 @@ M.add_test_to_tracker = function()
   if not test_info then
     return nil
   end
-  for _, existing_test_info in ipairs(M.test_tracker) do
+  for _, existing_test_info in ipairs(M.track_test_list) do
     if existing_test_info.test_name == test_info.test_name then
       make_notify(string.format('Test already in tracker: %s', test_info.test_name))
       return
     end
   end
-  table.insert(M.test_tracker, test_info)
+  table.insert(M.track_test_list, test_info)
 end
 
 vim.keymap.set('n', '<leader>at', M.add_test_to_tracker, { desc = '[A]dd [T]est to tracker' })
 
 local function jump_to_tracked_test_by_index(index)
-  if index > #M.test_tracker then
-    index = #M.test_tracker
+  if index > #M.track_test_list then
+    index = #M.track_test_list
   end
   if index < 1 then
     vim.notify(string.format('Invalid index: %d', index), vim.log.levels.ERROR)
     return
   end
 
-  local target_test = M.test_tracker[index].test_name
+  local target_test = M.track_test_list[index].test_name
 
   vim.lsp.buf_request(0, 'workspace/symbol', { query = target_test }, function(err, res)
     if err or not res or #res == 0 then
@@ -94,10 +94,10 @@ for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
 end
 
 local function toggle_tracked_test_by_index(index)
-  if index > #M.test_tracker then
-    index = #M.test_tracker
+  if index > #M.track_test_list then
+    index = #M.track_test_list
   end
-  local target_test = M.test_tracker[index].test_name
+  local target_test = M.track_test_list[index].test_name
   terminals_tests:toggle_float_terminal(target_test)
 end
 
@@ -112,15 +112,15 @@ function M.delete_tracked_test()
   }
 
   local all_tracked_test_names = {}
-  for _, testInfo in ipairs(M.test_tracker) do
+  for _, testInfo in ipairs(M.track_test_list) do
     table.insert(all_tracked_test_names, testInfo.test_name)
   end
 
   local handle_choice = function(tracked_test_name)
-    for index, testInfo in ipairs(M.test_tracker) do
+    for index, testInfo in ipairs(M.track_test_list) do
       if testInfo.test_name == tracked_test_name then
         terminals_tests:delete_terminal(tracked_test_name)
-        table.remove(M.test_tracker, index)
+        table.remove(M.track_test_list, index)
         make_notify(string.format('Deleted test terminal from tracker: %s', tracked_test_name))
         break
       end
@@ -138,7 +138,7 @@ M.reset_test = function()
   end
 
   vim.api.nvim_buf_clear_namespace(0, -1, 0, -1)
-  M.test_tracker = {}
+  M.track_test_list = {}
 end
 
 return M

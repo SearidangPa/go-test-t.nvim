@@ -2,10 +2,10 @@ local M = {}
 
 M.test_track_list = function()
   local terminal_test = require 'terminals.terminal_test'
-  local tracker = require 'terminals.terminal_tracker'
+  local terminal_tracker = require 'terminals.terminal_tracker'
 
   local make_notify = require('mini.notify').make_notify {}
-  for _, test_info in ipairs(tracker.test_tracker) do
+  for _, test_info in ipairs(terminal_tracker.track_test_list) do
     make_notify(string.format('Running test: %s', test_info.test_name)).go_test_command(test_info)
     terminal_test.test_in_terminal(test_info)
   end
