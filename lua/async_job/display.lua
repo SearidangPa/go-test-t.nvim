@@ -59,85 +59,57 @@ end
 ---@param tests_info gotest.TestInfo[]
 function GoTestDisplay:parse_test_state_to_lines(tests_info)
   local lines = {}
-  local packages = {}
-  local package_tests = {}
+  local tests = {}
 
-  -- Group tests by package
   for _, test in pairs(tests_info) do
-    if not packages[test.package] then
-      packages[test.package] = true
-      package_tests[test.package] = {}
-    end
-
     if test.name then
-      table.insert(package_tests[test.package], test)
+      table.insert(tests, test)
     end
   end
 
-  -- Sort packages
-  local sorted_packages = {}
-  for pkg, _ in pairs(packages) do
-    table.insert(sorted_packages, pkg)
-  end
-  table.sort(sorted_packages)
+  table.sort(tests, function(a, b)
+    if a.status == b.status then
+      return a.name < b.name
+    end
+    local priority = {
+      running = 1,
+      paused = 2,
+      cont = 3,
+      start = 4,
+      fail = 5,
+      pass = 6,
+    }
+    if not priority[a.status] and priority[b.status] then
+      return true
+    end
+    if priority[a.status] and not priority[b.status] then
+      return false
+    end
+    if not priority[a.status] and not priority[b.status] then
+      return a.name < b.name
+    end
+    return priority[a.status] < priority[b.status]
+  end)
 
-  -- Build display lines
-  for _, pkg in ipairs(sorted_packages) do
-    table.insert(lines, '📦 ' .. pkg)
-
-    local tests = package_tests[pkg]
-    -- Sort tests by status priority and then by name
-    table.sort(tests, function(a, b)
-      -- If status is the same, sort by name
-      if a.status == b.status then
-        return a.name < b.name
-      end
-
-      -- Define priority: running (1), paused (2), cont (3), start (4), fail (5), pass (6)
-      local priority = {
-        running = 1,
-        paused = 2,
-        cont = 3,
-        start = 4,
-        fail = 5,
-        pass = 6,
-      }
-
-      if not priority[a.status] and priority[b.status] then
-        return true
-      end
-      if priority[a.status] and not priority[b.status] then
-        return false
-      end
-
-      if not priority[a.status] and not priority[b.status] then
-        return a.name < b.name
-      end
-      return priority[a.status] < priority[b.status]
-    end)
-
-    for _, test in ipairs(tests) do
-      local status_icon = '🔄'
-      if test.status == 'pass' then
-        status_icon = '✅'
-      elseif test.status == 'fail' then
-        status_icon = '❌'
-      elseif test.status == 'paused' then
-        status_icon = '⏸️'
-      elseif test.status == 'cont' then
-        status_icon = '▶️'
-      elseif test.status == 'start' then
-        status_icon = '🏁'
-      end
-
-      if test.status == 'fail' and test.file ~= '' then
-        table.insert(lines, string.format('  %s %s -> %s:%d', status_icon, test.name, test.file, test.fail_at_line))
-      else
-        table.insert(lines, string.format('  %s %s', status_icon, test.name))
-      end
+  for _, test in ipairs(tests) do
+    local status_icon = '🔄'
+    if test.status == 'pass' then
+      status_icon = '✅'
+    elseif test.status == 'fail' then
+      status_icon = '❌'
+    elseif test.status == 'paused' then
+      status_icon = '⏸️'
+    elseif test.status == 'cont' then
+      status_icon = '▶️'
+    elseif test.status == 'start' then
+      status_icon = '🏁'
     end
 
-    table.insert(lines, '')
+    if test.status == 'fail' and test.file ~= '' then
+      table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, test.file, test.fail_at_line))
+    else
+      table.insert(lines, string.format('%s %s', status_icon, test.name))
+    end
   end
 
   return lines
