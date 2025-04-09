@@ -47,8 +47,6 @@ function TerminalMultiplexer:list()
   return terminal_names
 end
 
----Open terminal selector UI
----@param filter_pass boolean Whether to filter out passed tests
 ---@return nil
 function TerminalMultiplexer:search_terminal()
   local opts = {
@@ -66,11 +64,11 @@ function TerminalMultiplexer:search_terminal()
       table.insert(all_terminal_names, '\t' .. '🔵' .. '  ' .. test_name)
     end
   end
-  local handle_choice = function(terminal_name)
-    if not terminal_name then
+  local handle_choice = function(choice)
+    if not choice then
       return
     end
-    local terminal_name = terminal_name:match '[\t%s][^\t%s]+[\t%s]+(.+)$'
+    local terminal_name = choice:match '[\t%s][^\t%s]+[\t%s]+(.+)$'
     self:toggle_float_terminal(terminal_name)
   end
 
@@ -203,14 +201,11 @@ end
 
 --- === Toggle terminal ===
 
----Toggle a terminal window's visibility
----@param terminal_name string Name of the terminal to toggle
+---@param terminal_name string
 ---@param do_not_open_win boolean|nil If true, prepare but don't display the window
----@return Float_Term_State|nil The terminal state or nil if terminal name is nil
+---@return Float_Term_State
 function TerminalMultiplexer:toggle_float_terminal(terminal_name, do_not_open_win)
-  if not terminal_name then
-    return nil
-  end
+  assert(terminal_name, 'No terminal name provided')
 
   local current_float_term_state = self.all_terminals[terminal_name]
   if not current_float_term_state then
