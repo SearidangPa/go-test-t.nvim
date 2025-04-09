@@ -11,6 +11,4 @@ M.setup = function()
   require 'terminal_test.track_test_terminal'
 end
 
---- === Terminal Test ===
-
 return M
