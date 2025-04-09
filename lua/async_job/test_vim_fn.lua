@@ -1,6 +1,6 @@
 local M = {}
 local make_notify = require('mini.notify').make_notify {}
-local display = require 'raw_dog.display'
+local display = require 'async_job.display'
 
 ---@class gotest.State
 ---@field tracker_win number
