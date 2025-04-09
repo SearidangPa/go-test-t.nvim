@@ -147,31 +147,29 @@ end
 function GoTestDisplay:update_tracker_buffer(tests_info)
   local lines = self:parse_test_state_to_lines(tests_info)
 
-  -- Only update if the buffer is valid
   if vim.api.nvim_buf_is_valid(self.display_buf) then
     vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)
     vim.api.nvim_buf_clear_namespace(self.display_buf, self.ns, 0, -1)
 
-    -- Highlight package names
     for i, line in ipairs(lines) do
       if line:match '^📦' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'Directory', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'Directory', i - 1, 0, -1)
       elseif line:match '^  ✅' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticOk', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticOk', i - 1, 0, -1)
       elseif line:match '^  ❌' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticError', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticError', i - 1, 0, -1)
       elseif line:match '^  ⏸️' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticWarn', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticWarn', i - 1, 0, -1)
       elseif line:match '^  ▶️' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticInfo', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticInfo', i - 1, 0, -1)
       elseif line:match '^    ↳' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'Comment', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'Comment', i - 1, 0, -1)
       end
     end
   end
