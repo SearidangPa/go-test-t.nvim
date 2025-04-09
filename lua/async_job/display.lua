@@ -150,10 +150,7 @@ function GoTestDisplay:update_tracker_buffer(tests_info)
   -- Only update if the buffer is valid
   if vim.api.nvim_buf_is_valid(self.display_buf) then
     vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)
-
-    -- Apply highlights
-    local ns = self.ns
-    vim.api.nvim_buf_clear_namespace(self.display_buf, ns, 0, -1)
+    vim.api.nvim_buf_clear_namespace(self.display_buf, self.ns, 0, -1)
 
     -- Highlight package names
     for i, line in ipairs(lines) do
