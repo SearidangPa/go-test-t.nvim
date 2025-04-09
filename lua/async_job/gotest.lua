@@ -5,6 +5,18 @@ local display = require 'async_job.display'
 M.tests = {}
 M.job_id = -1
 
+local ignored_actions = {
+  skip = true,
+}
+
+local action_state = {
+  pause = true,
+  cont = true,
+  start = true,
+  fail = true,
+  pass = true,
+}
+
 ---@class gotest.Test
 ---@field name string
 ---@field package string
@@ -21,18 +33,6 @@ M.clean_up_prev_job = function(job_id)
     vim.diagnostic.reset()
   end
 end
-
-local ignored_actions = {
-  skip = true,
-}
-
-local action_state = {
-  pause = true,
-  cont = true,
-  start = true,
-  fail = true,
-  pass = true,
-}
 
 local make_key = function(entry)
   assert(entry.Package, 'Must have package name' .. vim.inspect(entry))
