@@ -3,18 +3,9 @@ local make_notify = require('mini.notify').make_notify {}
 local display = require 'async_job.display'
 
 ---@class gotest.State
----@field tracker_win number
----@field tracker_buf number
----@field original_win number
----@field original_buf number
 ---@field tests table<string, gotest.TestInfo>
 ---@field job_id number
----@field last_update number
 M.tracker_state = {
-  tracker_win = -1,
-  tracker_buf = -1,
-  original_win = -1,
-  original_buf = -1,
   tests = {},
   job_id = -1,
 }
