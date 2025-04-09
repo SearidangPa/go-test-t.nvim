@@ -6,15 +6,14 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 ---@field terminalTest.terminals TerminalMultiplexer
 ---@field terminalTest.test_in_terminal fun(test_info: terminal.testInfo)
 ---@field terminalTest.test_buf_in_terminals fun(test_command_format: string)
+local terminal_test = {}
+terminal_test.terminals = terminal_multiplexer.new()
 
 ---@class terminal.testInfo
 ---@field test_name string
 ---@field test_line number
 ---@field test_bufnr number
 ---@field test_command string
-
-local terminal_test = {}
-terminal_test.terminals = terminal_multiplexer.new()
 
 terminal_test.test_in_terminal = function(test_info)
   assert(test_info.test_name, 'No test found')
