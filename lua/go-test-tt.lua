@@ -4,7 +4,7 @@ M.setup = function()
   local terminal_test = require 'terminals.terminal_test'
   vim.api.nvim_create_user_command('TerminalTestSearch', function() terminal_test.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command('TerminalTestDelete', function() terminal_test.terminals:select_delete_terminal() end, {})
-  vim.api.nvim_create_user_command('TerminalTestToggleView', terminal_test.toggle_view_enclosing_test, {})
+  vim.api.nvim_create_user_command('TerminalTestToggleView', terminal_test.view_enclosing_test, {})
   vim.api.nvim_create_user_command('TerminalTestToggleLast', terminal_test.toggle_last_test_teriminal, {})
 
   require 'gotest'

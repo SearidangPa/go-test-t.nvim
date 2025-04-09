@@ -101,7 +101,7 @@ end
 
 --- === View Teriminal ===
 
-terminal_test.toggle_view_enclosing_test = function()
+terminal_test.view_enclosing_test = function()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
