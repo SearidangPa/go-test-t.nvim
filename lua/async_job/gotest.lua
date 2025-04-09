@@ -27,7 +27,6 @@ local action_state = {
 ---@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
 ---@field fail_at_line number
 ---@field file string
----@field output string[]
 
 M.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
@@ -66,7 +65,6 @@ local add_golang_output = function(tests, entry)
     return
   end
   local trimmed_output = vim.trim(entry.Output)
-  table.insert(test.output, trimmed_output)
   local file, line = string.match(trimmed_output, '([%w_%-]+%.go):(%d+):')
   if file and line then
     local line_num = tonumber(line)
