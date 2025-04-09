@@ -120,7 +120,7 @@ terminal_test.view_enclosing_test = function()
   vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
 end
 
-terminal_test.toggle_last_test_teriminal = function()
+terminal_test.view_last_test_teriminal = function()
   local test_name = terminal_test.terminals.last_terminal_name
   if not test_name then
     make_notify 'No last test found'
