@@ -16,7 +16,7 @@ function GoTestDisplay.new()
   return self
 end
 
----@param tests_info gotest.TestInfo[]
+---@param tests_info gotest.TestInfo[] | nil
 function GoTestDisplay:setup(tests_info)
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
