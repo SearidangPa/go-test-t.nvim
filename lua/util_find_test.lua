@@ -41,7 +41,7 @@ local function_query = [[
 )
 ]]
 
-M.find_all_tests = function (go_bufnr)
+M.find_all_tests_in_buf = function (go_bufnr)
   local query = vim.treesitter.query.parse('go', function_query)
   local parser = vim.treesitter.get_parser(go_bufnr, 'go', {})
   assert(parser, 'parser is nil')

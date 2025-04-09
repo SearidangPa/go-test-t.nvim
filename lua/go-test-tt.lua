@@ -44,8 +44,8 @@ M.test_buf_in_terminals = function(test_command_format)
   local terminal_test = require 'terminals.terminal_test'
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
-  local testsInCurrBuf = util_find_test.find_all_tests(source_bufnr)
-  for test_name, test_line in pairs(testsInCurrBuf) do
+  local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
+  for test_name, test_line in pairs(all_tests_in_buf) do
     terminal_test.terminals:delete_terminal(test_name)
     local test_command = string.format(test_command_format, test_name)
     local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
