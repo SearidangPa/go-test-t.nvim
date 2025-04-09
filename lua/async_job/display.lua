@@ -7,8 +7,6 @@ local make_notify = require('mini.notify').make_notify {}
 -- Constructor
 function GoTestDisplay.new()
   local self = setmetatable({}, GoTestDisplay)
-
-  -- Initialize instance variables
   self.display_win = -1
   self.display_buf = -1
   self.original_test_win = -1

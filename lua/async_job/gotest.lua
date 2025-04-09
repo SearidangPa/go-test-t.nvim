@@ -1,10 +1,14 @@
-local M = {}
 local make_notify = require('mini.notify').make_notify {}
 local display = require 'async_job.display'
 local displayer = display.new()
 
-M.tests = {}
-M.job_id = -1
+---@class gotest
+---@field tests gotest.Test[]
+---@field job_id number
+local M = {
+  tests = {}, ---@type gotest.Test[]
+  job_id = -1, ---@type number
+}
 
 local ignored_actions = {
   skip = true,
