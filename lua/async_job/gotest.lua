@@ -43,9 +43,9 @@ local make_key = function(entry)
   return string.format('%s/%s', entry.Package, entry.Test)
 end
 
-local add_golang_test = function(test_state, entry)
+local add_golang_test = function(tests, entry)
   local key = make_key(entry)
-  test_state.tests[key] = {
+  tests[key] = {
     name = entry.Test or 'Package Test',
     package = entry.Package,
     full_name = key,
