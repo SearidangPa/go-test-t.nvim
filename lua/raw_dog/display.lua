@@ -88,7 +88,7 @@ local function parse_test_state_to_lines()
   return lines
 end
 
-local function update_tracker_buffer()
+M.update_tracker_buffer = function()
   local lines = parse_test_state_to_lines()
 
   -- Only update if the buffer is valid
@@ -149,4 +149,55 @@ M.jump_to_test_location = function()
     end
   end
 end
+
+M.setup_tracker_buffer = function()
+  -- Create the namespace for highlights if it doesn't exist
+  if M.tracker_state.ns == -1 then
+    M.tracker_state.ns = vim.api.nvim_create_namespace 'go_test_tracker'
+  end
+
+  -- Save current window and buffer
+  M.tracker_state.original_win = vim.api.nvim_get_current_win()
+  M.tracker_state.original_buf = vim.api.nvim_get_current_buf()
+
+  -- Create a new buffer if needed
+  if not vim.api.nvim_buf_is_valid(M.tracker_state.tracker_buf) then
+    M.tracker_state.tracker_buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(M.tracker_state.tracker_buf, 'GoTestTracker')
+    vim.bo[M.tracker_state.tracker_buf].bufhidden = 'hide'
+    vim.bo[M.tracker_state.tracker_buf].buftype = 'nofile'
+    vim.bo[M.tracker_state.tracker_buf].swapfile = false
+  end
+
+  -- Create a new window if needed
+  if not vim.api.nvim_win_is_valid(M.tracker_state.tracker_win) then
+    vim.cmd 'vsplit'
+    M.tracker_state.tracker_win = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(M.tracker_state.tracker_win, M.tracker_state.tracker_buf)
+    vim.api.nvim_win_set_width(M.tracker_state.tracker_win, math.floor(vim.o.columns / 3))
+    vim.wo[M.tracker_state.tracker_win].number = false
+    vim.wo[M.tracker_state.tracker_win].relativenumber = false
+    vim.wo[M.tracker_state.tracker_win].wrap = false
+    vim.wo[M.tracker_state.tracker_win].signcolumn = 'no'
+    vim.wo[M.tracker_state.tracker_win].foldenable = false
+  end
+
+  -- Update the buffer with initial content
+  M.update_tracker_buffer()
+
+  -- Return to original window
+  vim.api.nvim_set_current_win(M.tracker_state.original_win)
+
+  -- Set up keymaps in the tracker buffer
+  local setup_keymaps = function()
+    -- Close tracker with q
+    vim.keymap.set('n', 'q', function() M.close_tracker() end, { buffer = M.tracker_state.tracker_buf, noremap = true, silent = true })
+
+    -- Jump to test file location with <CR>
+    vim.keymap.set('n', '<CR>', function() M.jump_to_test_location() end, { buffer = M.tracker_state.tracker_buf, noremap = true, silent = true })
+  end
+
+  setup_keymaps()
+end
+
 return M
