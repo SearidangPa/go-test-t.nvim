@@ -6,6 +6,10 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 ---@field terminalTest.terminals TerminalMultiplexer
 ---@field terminalTest.test_in_terminal fun(test_info: terminal.testInfo)
 ---@field terminalTest.test_buf_in_terminals fun(test_command_format: string)
+---@field terminalTest.test_nearest_in_terminal fun(test_command_format: string)
+---@field terminalTest.test_tracked_in_terminal fun()
+---@field terminalTest.view_enclosing_test fun()
+---@field terminalTest.view_last_test_teriminal fun()
 local terminal_test = {}
 terminal_test.terminals = terminal_multiplexer.new()
 
