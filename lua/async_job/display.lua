@@ -174,14 +174,8 @@ function GoTestDisplay:jump_to_test_location()
 end
 
 function GoTestDisplay:setup_keymaps()
-  -- Ensure we operate on the correct instance
-  local tracker = self
-
-  -- Close tracker with q
-  vim.keymap.set('n', 'q', function() tracker:close_display() end, { buffer = self.display_buf, noremap = true, silent = true })
-
-  -- Jump to test file location with <CR>
-  vim.keymap.set('n', '<CR>', function() tracker:jump_to_test_location() end, { buffer = self.display_buf, noremap = true, silent = true })
+  vim.keymap.set('n', 'q', function() GoTestDisplay:close_display() end, { buffer = self.display_buf, noremap = true, silent = true })
+  vim.keymap.set('n', '<CR>', function() GoTestDisplay():jump_to_test_location() end, { buffer = self.display_buf, noremap = true, silent = true })
 end
 
 function GoTestDisplay:close_display()
