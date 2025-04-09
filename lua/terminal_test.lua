@@ -1,14 +1,14 @@
-local M = {}
+local terminal_test = {}
 local make_notify = require('mini.notify').make_notify {}
 local ns = vim.api.nvim_create_namespace 'GoTestError'
 local terminal_multiplexer = require 'terminal_multiplexer'
-M.terminals = terminal_multiplexer.new()
+terminal_test.terminals = terminal_multiplexer.new()
 
-M.toggle_view_enclosing_test = function()
+terminal_test.toggle_view_enclosing_test = function()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
-  local float_terminal_state = M.terminals:toggle_float_terminal(test_name)
+  local float_terminal_state = terminal_test.terminals:toggle_float_terminal(test_name)
   assert(float_terminal_state, 'Failed to create floating terminal')
 
   -- Need this duplication. Otherwise, the keymap is bind to the buffer for for some reason
@@ -23,7 +23,7 @@ M.toggle_view_enclosing_test = function()
   vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
 end
 
-M.go_terminal_test_command = function(test_info)
+terminal_test.go_terminal_test_command = function(test_info)
   assert(test_info.test_name, 'No test found')
   assert(test_info.test_bufnr, 'No test buffer found')
   assert(test_info.test_line, 'No test line found')
@@ -33,8 +33,8 @@ M.go_terminal_test_command = function(test_info)
   local test_line = test_info.test_line
   local test_command = test_info.test_command
   local source_bufnr = test_info.test_bufnr
-  M.terminals:toggle_float_terminal(test_name)
-  local float_term_state = M.terminals:toggle_float_terminal(test_name)
+  terminal_test.terminals:toggle_float_terminal(test_name)
+  local float_term_state = terminal_test.terminals:toggle_float_terminal(test_name)
   assert(float_term_state, 'Failed to create floating terminal')
   vim.api.nvim_chan_send(float_term_state.chan, test_command .. '\n')
 
@@ -111,15 +111,15 @@ local function test_buf(test_format)
   local util_find_test = require 'util_find_test'
   local testsInCurrBuf = util_find_test.find_all_tests(source_bufnr)
   for test_name, test_line in pairs(testsInCurrBuf) do
-    M.terminals:delete_terminal(test_name)
+    terminal_test.terminals:delete_terminal(test_name)
     local test_command = string.format(test_format, test_name)
     local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
     make_notify(string.format('Running test: %s', test_name))
-    M.go_terminal_test_command(test_info)
+    terminal_test.go_terminal_test_command(test_info)
   end
 end
 
-M.get_test_info_enclosing_test = function()
+terminal_test.get_test_info_enclosing_test = function()
   local util_find_test = require 'util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
   if not test_name then
@@ -138,68 +138,68 @@ M.get_test_info_enclosing_test = function()
   return test_info
 end
 
-M.go_integration_test = function()
-  local test_info = M.get_test_info_enclosing_test()
+terminal_test.go_integration_test = function()
+  local test_info = terminal_test.get_test_info_enclosing_test()
   if not test_info then
     return nil
   end
-  M.terminals:delete_terminal(test_info.test_name)
-  M.go_terminal_test_command(test_info)
+  terminal_test.terminals:delete_terminal(test_info.test_name)
+  terminal_test.go_terminal_test_command(test_info)
   make_notify(string.format('Running test: %s', test_info.test_name))
 end
 
-M.drive_test_dev = function()
+terminal_test.drive_test_dev = function()
   vim.env.MODE, vim.env.UKS = 'dev', 'others'
-  M.go_integration_test()
+  terminal_test.go_integration_test()
 end
 
-M.drive_test_staging = function()
+terminal_test.drive_test_staging = function()
   vim.env.MODE, vim.env.UKS = 'staging', 'others'
-  M.go_integration_test()
+  terminal_test.go_integration_test()
 end
 
-M.windows_test_buf = function()
+terminal_test.windows_test_buf = function()
   local test_format = 'gitBash -c "go test integration_tests/*.go -v -run %s"\r'
   test_buf(test_format)
 end
 
-M.drive_test_dev_buf = function()
+terminal_test.drive_test_dev_buf = function()
   vim.env.MODE, vim.env.UKS = 'dev', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
   test_buf(test_format)
 end
 
-M.drive_test_staging_buf = function()
+terminal_test.drive_test_staging_buf = function()
   vim.env.MODE, vim.env.UKS = 'staging', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
   test_buf(test_format)
 end
 
-M.go_normal_test = function()
+terminal_test.go_normal_test = function()
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
   assert(test_line, 'No test line found')
-  M.terminals:delete_terminal(test_name)
+  terminal_test.terminals:delete_terminal(test_name)
   assert(test_name, 'No test found')
   local test_command = string.format('go test ./... -v -run %s\r\n', test_name)
   local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-  M.go_terminal_test_command(test_info)
+  terminal_test.go_terminal_test_command(test_info)
 end
 
-M.test_normal_buf = function()
+terminal_test.test_normal_buf = function()
   local test_format = 'go test ./... -v -run %s'
   test_buf(test_format)
 end
 
-M.toggle_last_test = function()
-  local test_name = M.terminals.last_terminal_name
+terminal_test.toggle_last_test = function()
+  local test_name = terminal_test.terminals.last_terminal_name
   if not test_name then
     make_notify 'No last test found'
     return
   end
-  M.terminals:toggle_float_terminal(test_name)
+  terminal_test.terminals:toggle_float_terminal(test_name)
 end
 
-return M
+return terminal_test
