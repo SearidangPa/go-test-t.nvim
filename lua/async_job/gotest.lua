@@ -1,6 +1,7 @@
 local M = {}
 local make_notify = require('mini.notify').make_notify {}
 local display = require 'async_job.display'
+local displayer = display.new()
 
 M.tests = {}
 M.job_id = -1
@@ -99,7 +100,7 @@ M.run_test_all = function(command)
   M.tests = {}
 
   -- Set up tracker buffer
-  display.setup_display_buffer(M.tests)
+  displayer:setup_display_buffer(M.tests)
 
   -- Clean up previous job
   M.clean_up_prev_job(M.job_id)
@@ -127,7 +128,7 @@ M.run_test_all = function(command)
 
         if decoded.Action == 'run' then
           add_golang_test(M.tests, decoded)
-          vim.schedule(function() display.update_tracker_buffer(M.tests) end)
+          vim.schedule(function() displayer:update_tracker_buffer(M.tests) end)
           goto continue
         end
 
@@ -141,7 +142,7 @@ M.run_test_all = function(command)
         -- Handle pause, cont, and start actions
         if action_state[decoded.Action] then
           mark_outcome(M.tests, decoded)
-          vim.schedule(function() display.update_tracker_buffer(M.tests) end)
+          vim.schedule(function() displayer:update_tracker_buffer(M.tests) end)
           goto continue
         end
 
@@ -149,7 +150,7 @@ M.run_test_all = function(command)
       end
     end,
     on_exit = function()
-      vim.schedule(function() display.update_tracker_buffer(M.tests) end)
+      vim.schedule(function() displayer:update_tracker_buffer(M.tests) end)
     end,
   })
 end

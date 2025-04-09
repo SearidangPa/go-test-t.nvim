@@ -1,14 +1,25 @@
-local M = {}
-M.display_win = -1
-M.display_buf = -1
-M.original_test_win = -1
-M.original_test_buf = -1
-M.ns = -1
+-- GoTestDisplay class for displaying Go test results
+local GoTestDisplay = {}
+GoTestDisplay.__index = GoTestDisplay
 
 local make_notify = require('mini.notify').make_notify {}
 
+-- Constructor
+function GoTestDisplay.new()
+  local self = setmetatable({}, GoTestDisplay)
+
+  -- Initialize instance variables
+  self.display_win = -1
+  self.display_buf = -1
+  self.original_test_win = -1
+  self.original_test_buf = -1
+  self.ns = vim.api.nvim_create_namespace 'go_test_display'
+
+  return self
+end
+
 ---@param tests_info gotest.Test[]
-local function parse_test_state_to_lines(tests_info)
+function GoTestDisplay:parse_test_state_to_lines(tests_info)
   local lines = {}
   local packages = {}
   local package_tests = {}
@@ -95,53 +106,53 @@ local function parse_test_state_to_lines(tests_info)
 end
 
 ---@param tests gotest.Test[]
-M.update_tracker_buffer = function(tests)
-  local lines = parse_test_state_to_lines(tests)
+function GoTestDisplay:update_tracker_buffer(tests)
+  local lines = self:parse_test_state_to_lines(tests)
 
   -- Only update if the buffer is valid
-  if vim.api.nvim_buf_is_valid(M.display_buf) then
-    vim.api.nvim_buf_set_lines(M.display_buf, 0, -1, false, lines)
+  if vim.api.nvim_buf_is_valid(self.display_buf) then
+    vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)
 
     -- Apply highlights
-    local ns = M.ns
-    vim.api.nvim_buf_clear_namespace(M.display_buf, ns, 0, -1)
+    local ns = self.ns
+    vim.api.nvim_buf_clear_namespace(self.display_buf, ns, 0, -1)
 
     -- Highlight package names
     for i, line in ipairs(lines) do
       if line:match '^📦' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(M.display_buf, ns, 'Directory', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'Directory', i - 1, 0, -1)
       elseif line:match '^  ✅' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(M.display_buf, ns, 'DiagnosticOk', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticOk', i - 1, 0, -1)
       elseif line:match '^  ❌' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(M.display_buf, ns, 'DiagnosticError', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticError', i - 1, 0, -1)
       elseif line:match '^  ⏸️' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(M.display_buf, ns, 'DiagnosticWarn', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticWarn', i - 1, 0, -1)
       elseif line:match '^  ▶️' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(M.display_buf, ns, 'DiagnosticInfo', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'DiagnosticInfo', i - 1, 0, -1)
       elseif line:match '^    ↳' then
         ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(M.display_buf, ns, 'Comment', i - 1, 0, -1)
+        vim.api.nvim_buf_add_highlight(self.display_buf, ns, 'Comment', i - 1, 0, -1)
       end
     end
   end
 end
 
-M.jump_to_test_location = function()
+function GoTestDisplay:jump_to_test_location()
   -- Get current line
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
-  local line = vim.api.nvim_buf_get_lines(M.display_buf, line_nr - 1, line_nr, false)[1]
+  local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
 
   local file, line_num = line:match '->%s+([%w_%-]+%.go):(%d+)'
 
   if file and line_num then
     -- Switch to original window
-    vim.api.nvim_set_current_win(M.original_test_win)
+    vim.api.nvim_set_current_win(self.original_test_win)
 
     -- Find the file in the project
     local cmd = string.format("find . -name '%s' | head -n 1", file)
@@ -158,72 +169,77 @@ M.jump_to_test_location = function()
 end
 
 ---@param tests gotest.Test[] | nil
-M.setup_display_buffer = function(tests)
-  -- Create the namespace for highlights if it doesn't exist
-  if M.ns == -1 then
-    M.ns = vim.api.nvim_create_namespace 'go_test_tracker'
-  end
-
+function GoTestDisplay:setup_display_buffer(tests, title)
   -- Save current window and buffer
-  M.original_test_win = vim.api.nvim_get_current_win()
-  M.original_test_buf = vim.api.nvim_get_current_buf()
+  self.original_test_win = vim.api.nvim_get_current_win()
+  self.original_test_buf = vim.api.nvim_get_current_buf()
 
   -- Create a new buffer if needed
-  if not vim.api.nvim_buf_is_valid(M.display_buf) then
-    M.display_buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(M.display_buf, 'Go Test All')
-    vim.bo[M.display_buf].bufhidden = 'hide'
-    vim.bo[M.display_buf].buftype = 'nofile'
-    vim.bo[M.display_buf].swapfile = false
+  if not vim.api.nvim_buf_is_valid(self.display_buf) then
+    self.display_buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(self.display_buf, title or 'Go Test Results')
+    vim.bo[self.display_buf].bufhidden = 'hide'
+    vim.bo[self.display_buf].buftype = 'nofile'
+    vim.bo[self.display_buf].swapfile = false
   end
 
   -- Create a new window if needed
-  if not vim.api.nvim_win_is_valid(M.display_win) then
+  if not vim.api.nvim_win_is_valid(self.display_win) then
     vim.cmd 'vsplit'
-    M.display_win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(M.display_win, M.display_buf)
-    vim.api.nvim_win_set_width(M.display_win, math.floor(vim.o.columns / 3))
-    vim.wo[M.display_win].number = false
-    vim.wo[M.display_win].relativenumber = false
-    vim.wo[M.display_win].wrap = false
-    vim.wo[M.display_win].signcolumn = 'no'
-    vim.wo[M.display_win].foldenable = false
+    self.display_win = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(self.display_win, self.display_buf)
+    vim.api.nvim_win_set_width(self.display_win, math.floor(vim.o.columns / 3))
+    vim.wo[self.display_win].number = false
+    vim.wo[self.display_win].relativenumber = false
+    vim.wo[self.display_win].wrap = false
+    vim.wo[self.display_win].signcolumn = 'no'
+    vim.wo[self.display_win].foldenable = false
   end
 
   -- Update the buffer with initial content
   if tests then
-    M.update_tracker_buffer(tests)
+    self:update_tracker_buffer(tests)
   end
 
   -- Return to original window
-  vim.api.nvim_set_current_win(M.original_test_win)
+  vim.api.nvim_set_current_win(self.original_test_win)
 
   -- Set up keymaps in the tracker buffer
-  local setup_keymaps = function()
-    -- Close tracker with q
-    vim.keymap.set('n', 'q', function() M.close_display() end, { buffer = M.display_buf, noremap = true, silent = true })
-
-    -- Jump to test file location with <CR>
-    vim.keymap.set('n', '<CR>', function() M.jump_to_test_location() end, { buffer = M.display_buf, noremap = true, silent = true })
-  end
-
-  setup_keymaps()
+  self:setup_keymaps()
 end
 
-M.close_display = function()
-  if vim.api.nvim_win_is_valid(M.display_win) then
-    vim.api.nvim_win_close(M.display_win, true)
-    M.display_win = -1
+function GoTestDisplay:setup_keymaps()
+  -- Ensure we operate on the correct instance
+  local tracker = self
+
+  -- Close tracker with q
+  vim.keymap.set('n', 'q', function() tracker:close_display() end, { buffer = self.display_buf, noremap = true, silent = true })
+
+  -- Jump to test file location with <CR>
+  vim.keymap.set('n', '<CR>', function() tracker:jump_to_test_location() end, { buffer = self.display_buf, noremap = true, silent = true })
+end
+
+function GoTestDisplay:close_display()
+  if vim.api.nvim_win_is_valid(self.display_win) then
+    vim.api.nvim_win_close(self.display_win, true)
+    self.display_win = -1
   end
 end
 
-vim.api.nvim_create_user_command('GoTestDisplayToggle', function()
-  if vim.api.nvim_win_is_valid(M.display_win) then
-    vim.api.nvim_win_close(M.display_win, true)
-    M.display_win = -1
+function GoTestDisplay:toggle_display()
+  if vim.api.nvim_win_is_valid(self.display_win) then
+    vim.api.nvim_win_close(self.display_win, true)
+    self.display_win = -1
   else
-    M.setup_display_buffer()
+    self:setup_display_buffer()
   end
-end, {})
+end
 
-return M
+-- Create a user command for each instance
+function GoTestDisplay:register_command(command_name)
+  local tracker = self
+  vim.api.nvim_create_user_command(command_name, function() tracker:toggle_display() end, {})
+end
+
+-- Return the constructor for the class
+return GoTestDisplay
