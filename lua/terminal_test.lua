@@ -23,7 +23,7 @@ M.toggle_view_enclosing_test = function()
   vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
 end
 
-M.go_test_command = function(test_info)
+M.go_terminal_test_command = function(test_info)
   assert(test_info.test_name, 'No test found')
   assert(test_info.test_bufnr, 'No test buffer found')
   assert(test_info.test_line, 'No test line found')
@@ -115,7 +115,7 @@ local function test_buf(test_format)
     local test_command = string.format(test_format, test_name)
     local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
     make_notify(string.format('Running test: %s', test_name))
-    M.go_test_command(test_info)
+    M.go_terminal_test_command(test_info)
   end
 end
 
@@ -144,7 +144,7 @@ M.go_integration_test = function()
     return nil
   end
   M.terminals_tests:delete_terminal(test_info.test_name)
-  M.go_test_command(test_info)
+  M.go_terminal_test_command(test_info)
   make_notify(string.format('Running test: %s', test_info.test_name))
 end
 
@@ -185,7 +185,7 @@ M.go_normal_test = function()
   assert(test_name, 'No test found')
   local test_command = string.format('go test ./... -v -run %s\r\n', test_name)
   local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-  M.go_test_command(test_info)
+  M.go_terminal_test_command(test_info)
 end
 
 M.test_normal_buf = function()

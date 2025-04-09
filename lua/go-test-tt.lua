@@ -7,7 +7,7 @@ M.test_track_list = function()
   local make_notify = require('mini.notify').make_notify {}
   for _, test_info in ipairs(tracker.test_tracker) do
     make_notify(string.format('Running test: %s', test_info.test_name)).go_test_command(test_info)
-    terminal_test.go_test_command(test_info)
+    terminal_test.go_terminal_test_command(test_info)
   end
 end
 
