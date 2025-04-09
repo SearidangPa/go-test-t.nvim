@@ -1,6 +1,5 @@
 local M = {}
 
-
 ---@return  string | nil, number | nil
 M.get_enclosing_test = function()
   local ts_utils = require 'nvim-treesitter.ts_utils'
