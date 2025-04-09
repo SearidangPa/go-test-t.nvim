@@ -176,7 +176,7 @@ terminal_test.go_normal_test = function()
   terminal_test.test_in_terminal(test_info)
 end
 
-terminal_test.toggle_last_test = function()
+terminal_test.toggle_last_test_teriminal = function()
   local test_name = terminal_test.terminals.last_terminal_name
   if not test_name then
     make_notify 'No last test found'
