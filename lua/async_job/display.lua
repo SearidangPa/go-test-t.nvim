@@ -92,7 +92,7 @@ function GoTestDisplay:parse_test_state_to_lines(tests_info)
     elseif test.status == 'paused' then
       status_icon = '⏸️'
     elseif test.status == 'cont' then
-      status_icon = '▶️'
+      status_icon = '🔥'
     elseif test.status == 'start' then
       status_icon = '🏁'
     end
