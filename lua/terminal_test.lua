@@ -108,7 +108,8 @@ end
 
 local function test_buf(test_format)
   local source_bufnr = vim.api.nvim_get_current_buf()
-  local testsInCurrBuf = Find_all_tests(source_bufnr)
+  local util_find_test = require 'util_find_test'
+  local testsInCurrBuf = util_find_test.find_all_tests(source_bufnr)
   for test_name, test_line in pairs(testsInCurrBuf) do
     M.terminals_tests:delete_terminal(test_name)
     local test_command = string.format(test_format, test_name)
@@ -176,7 +177,8 @@ end
 
 M.go_normal_test = function()
   local source_bufnr = vim.api.nvim_get_current_buf()
-  local test_name, test_line = get_enclosing_test()
+  local util_find_test = require 'util_find_test'
+  local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
   assert(test_line, 'No test line found')
   M.terminals_tests:delete_terminal(test_name)
