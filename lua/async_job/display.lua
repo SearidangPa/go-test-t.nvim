@@ -116,10 +116,7 @@ function GoTestDisplay:update_tracker_buffer(tests_info)
     vim.api.nvim_buf_clear_namespace(self.display_buf, self.ns, 0, -1)
 
     for i, line in ipairs(lines) do
-      if line:match '^📦' then
-        ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'Directory', i - 1, 0, -1)
-      elseif line:match '^  ✅' then
+      if line:match '^  ✅' then
         ---@diagnostic disable-next-line: deprecated
         vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticOk', i - 1, 0, -1)
       elseif line:match '^  ❌' then
