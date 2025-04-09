@@ -1,6 +1,6 @@
 local make_notify = require('mini.notify').make_notify {}
 local ns = vim.api.nvim_create_namespace 'GoTestError'
-local terminal_multiplexer = require 'terminals.terminal_multiplexer'
+local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 
 ---@class terminalTest
 ---@field terminalTest.terminals TerminalMultiplexer
@@ -15,6 +15,19 @@ local terminal_multiplexer = require 'terminals.terminal_multiplexer'
 
 local terminal_test = {}
 terminal_test.terminals = terminal_multiplexer.new()
+
+terminal_test.test_buf_in_terminals = function(test_command_format)
+  local source_bufnr = vim.api.nvim_get_current_buf()
+  local util_find_test = require 'util_find_test'
+  local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
+  for test_name, test_line in pairs(all_tests_in_buf) do
+    terminal_test.terminals:delete_terminal(test_name)
+    local test_command = string.format(test_command_format, test_name)
+    local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
+    make_notify(string.format('Running test: %s', test_name))
+    terminal_test.test_in_terminal(test_info)
+  end
+end
 
 terminal_test.test_in_terminal = function(test_info)
   assert(test_info.test_name, 'No test found')
@@ -99,6 +112,29 @@ terminal_test.test_in_terminal = function(test_info)
   })
 end
 
+terminal_test.test_tracked_in_terminal = function()
+  local terminal_tracker = require 'terminals.track_test_terminal'
+  for _, test_info in ipairs(terminal_tracker.track_test_list) do
+    make_notify(string.format('Running test: %s', test_info.test_name)).go_test_command(test_info)
+    terminal_test.test_in_terminal(test_info)
+  end
+end
+
+---@param test_command_format string
+terminal_test.test_nearest_in_terminal = function(test_command_format)
+  assert(test_command_format, 'No test command format found')
+  local source_bufnr = vim.api.nvim_get_current_buf()
+  local util_find_test = require 'util_find_test'
+  local test_name, test_line = util_find_test.get_enclosing_test()
+  assert(test_name, 'Not inside a test function')
+  assert(test_line, 'No test line found')
+  terminal_test.terminals:delete_terminal(test_name)
+  assert(test_name, 'No test found')
+  local test_command = string.format(test_command_format, test_name)
+  local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
+  terminal_test.test_in_terminal(test_info)
+end
+
 --- === View Teriminal ===
 
 terminal_test.view_enclosing_test = function()
@@ -128,4 +164,5 @@ terminal_test.view_last_test_teriminal = function()
   end
   terminal_test.terminals:toggle_float_terminal(test_name)
 end
+
 return terminal_test
