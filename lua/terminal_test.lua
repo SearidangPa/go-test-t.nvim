@@ -160,19 +160,19 @@ end
 
 terminal_test.windows_test_buf = function()
   local test_format = 'gitBash -c "go test integration_tests/*.go -v -run %s"\r'
-  test_buf(test_format)
+  terminal_test.test_buf(test_format)
 end
 
 terminal_test.drive_test_dev_buf = function()
   vim.env.MODE, vim.env.UKS = 'dev', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
-  test_buf(test_format)
+  terminal_test.test_buf(test_format)
 end
 
 terminal_test.drive_test_staging_buf = function()
   vim.env.MODE, vim.env.UKS = 'staging', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
-  test_buf(test_format)
+  terminal_test.test_buf(test_format)
 end
 
 terminal_test.go_normal_test = function()
@@ -190,7 +190,7 @@ end
 
 terminal_test.test_normal_buf = function()
   local test_format = 'go test ./... -v -run %s'
-  test_buf(test_format)
+  terminal_test.test_buf(test_format)
 end
 
 terminal_test.toggle_last_test = function()
