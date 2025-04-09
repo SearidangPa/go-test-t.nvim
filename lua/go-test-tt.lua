@@ -14,9 +14,11 @@ end
 M.setup = function()
   local terminal_test = require 'terminal_test'
   vim.api.nvim_create_user_command('GoTestSearch', function() terminal_test.terminals:search_terminal() end, {})
-  vim.api.nvim_create_user_command('GoTestDelete', function() terminal_test.terminals_tests:select_delete_terminal() end, {})
+  vim.api.nvim_create_user_command('GoTestDelete', function() terminal_test.terminals:select_delete_terminal() end, {})
+
   vim.api.nvim_create_user_command('GoTestNormalBuf', terminal_test.test_normal_buf, {})
   vim.api.nvim_create_user_command('GoTestNormal', terminal_test.go_normal_test, {})
+
   vim.api.nvim_create_user_command('GoTestDriveDev', terminal_test.drive_test_dev, {})
   vim.api.nvim_create_user_command('GoTestDriveStaging', terminal_test.drive_test_staging, {})
   vim.api.nvim_create_user_command('GoTestDriveStagingBuf', terminal_test.drive_test_staging_buf, {})
@@ -25,7 +27,7 @@ M.setup = function()
   vim.api.nvim_create_user_command('GoTestIntegration', terminal_test.go_integration_test, {})
 
   vim.keymap.set('n', '<leader>G', terminal_test.go_integration_test, { desc = 'Go integration test' })
-  vim.keymap.set('n', '<leader>st', function() M.terminals_tests:search_terminal() end, { desc = 'Select test terminal' })
+  vim.keymap.set('n', '<leader>st', function() terminal_test.terminals:search_terminal() end, { desc = 'Select test terminal' })
   vim.keymap.set('n', '<leader>tg', terminal_test.toggle_view_enclosing_test, { desc = 'Toggle go test terminal' })
   vim.keymap.set('n', '<leader>tl', terminal_test.toggle_last_test, { desc = 'Toggle last go test terminal' })
 

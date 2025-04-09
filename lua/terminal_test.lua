@@ -106,7 +106,7 @@ terminal_test.go_terminal_test_command = function(test_info)
   })
 end
 
-local function test_buf(test_format)
+terminal_test.test_buf = function(test_format)
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local testsInCurrBuf = util_find_test.find_all_tests(source_bufnr)
