@@ -24,10 +24,11 @@ local action_state = {
 
 ---@class gotest.TestInfo
 ---@field name string
----@field fail_at_line number
----@field output string[]
 ---@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
+---@field fail_at_line number
 ---@field file string
+---@field output string[]
+
 M.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
     make_notify(string.format('stopping job: %d', job_id))

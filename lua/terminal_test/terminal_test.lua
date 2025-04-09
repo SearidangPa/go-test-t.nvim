@@ -14,11 +14,12 @@ local terminal_test = {}
 terminal_test.terminals = terminal_multiplexer.new()
 
 ---@class terminal.testInfo
----@field test_name string
----@field test_line number
----@field test_bufnr number
----@field test_command string
+---@field name string
 ---@field status string
+---@field fail_at_line number
+---@field test_bufnr number
+---@field test_line number
+---@field test_command string
 
 local function validate_test_info(info)
   assert(info.test_name, 'No test found')
@@ -106,8 +107,8 @@ end
 ---@param opts terminal.testInfo
 terminal_test.test_in_terminal = function(opts)
   validate_test_info(opts)
-  terminal_test.terminals:toggle_float_terminal(opts.test_name)
-  local float_term_state = terminal_test.terminals:toggle_float_terminal(opts.test_name)
+  terminal_test.terminals:toggle_float_terminal(opts.name)
+  local float_term_state = terminal_test.terminals:toggle_float_terminal(opts.name)
   vim.api.nvim_chan_send(float_term_state.chan, opts.test_command .. '\n')
 
   vim.api.nvim_buf_attach(float_term_state.buf, false, {
