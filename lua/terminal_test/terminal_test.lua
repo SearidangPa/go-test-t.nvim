@@ -1,5 +1,5 @@
 local make_notify = require('mini.notify').make_notify {}
-local ns = vim.api.nvim_create_namespace 'GoTestError'
+local terminal_test_ns = vim.api.nvim_create_namespace 'GoTestError'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 
 ---@class terminalTest
@@ -19,12 +19,16 @@ terminal_test.terminals = terminal_multiplexer.new()
 ---@field test_bufnr number
 ---@field test_command string
 
+local function validate_test_info(info)
+  assert(info.test_name, 'No test found')
+  assert(info.test_bufnr, 'No test buffer found')
+  assert(info.test_line, 'No test line found')
+  assert(info.test_command, 'No test command found')
+  assert(vim.api.nvim_buf_is_valid(info.test_bufnr), 'Invalid buffer')
+end
+
 terminal_test.test_in_terminal = function(terminal_test_info)
-  assert(terminal_test_info.test_name, 'No test found')
-  assert(terminal_test_info.test_bufnr, 'No test buffer found')
-  assert(terminal_test_info.test_line, 'No test line found')
-  assert(terminal_test_info.test_command, 'No test command found')
-  assert(vim.api.nvim_buf_is_valid(terminal_test_info.test_bufnr), 'Invalid buffer')
+  validate_test_info(terminal_test_info)
   local test_name = terminal_test_info.test_name
   local test_line = terminal_test_info.test_line
   local test_command = terminal_test_info.test_command
@@ -42,7 +46,7 @@ terminal_test.test_in_terminal = function(terminal_test_info)
 
       for _, line in ipairs(lines) do
         if string.match(line, '--- FAIL') then
-          vim.api.nvim_buf_set_extmark(source_bufnr, ns, test_line - 1, 0, {
+          vim.api.nvim_buf_set_extmark(source_bufnr, terminal_test_ns, test_line - 1, 0, {
             virt_text = { { string.format('❌ %s', current_time) } },
             virt_text_pos = 'eol',
           })
@@ -53,7 +57,7 @@ terminal_test.test_in_terminal = function(terminal_test_info)
           vim.notify(string.format('Test failed: %s', test_name), vim.log.levels.WARN, { title = 'Test Failure' })
           return true
         elseif string.match(line, '--- PASS') then
-          vim.api.nvim_buf_set_extmark(source_bufnr, ns, test_line - 1, 0, {
+          vim.api.nvim_buf_set_extmark(source_bufnr, terminal_test_ns, test_line - 1, 0, {
             virt_text = { { string.format('✅ %s', current_time) } },
             virt_text_pos = 'eol',
           })
