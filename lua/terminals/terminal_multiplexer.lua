@@ -123,14 +123,17 @@ function TerminalMultiplexer:navigate_terminal(direction)
   local next_index = ((current_index - 1 + direction) % #self.terminal_order) + 1
   local next_terminal_name = self.terminal_order[next_index]
 
-  -- Hide current terminal and show the next one
-  local current_term_state = self.all_terminals[current_terminal_name]
-  if vim.api.nvim_win_is_valid(current_term_state.win) then
-    vim.api.nvim_win_hide(current_term_state.win)
-    vim.api.nvim_win_hide(current_term_state.footer_win)
-  end
-
+  -- show the next one
   self:toggle_float_terminal(next_terminal_name)
+
+  -- Hide current terminal
+  vim.defer_fn(function()
+    local current_term_state = self.all_terminals[current_terminal_name]
+    if vim.api.nvim_win_is_valid(current_term_state.win) then
+      vim.api.nvim_win_hide(current_term_state.win)
+      vim.api.nvim_win_hide(current_term_state.footer_win)
+    end
+  end, 100)
 end
 
 ---Create the floating window for a terminal
