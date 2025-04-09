@@ -1,8 +1,8 @@
 local M = {}
 M.display_win = -1
 M.display_buf = -1
-M.original_win = -1
-M.original_buf = -1
+M.original_test_win = -1
+M.original_test_buf = -1
 M.ns = -1
 
 local make_notify = require('mini.notify').make_notify {}
@@ -141,7 +141,7 @@ M.jump_to_test_location = function()
 
   if file and line_num then
     -- Switch to original window
-    vim.api.nvim_set_current_win(M.original_win)
+    vim.api.nvim_set_current_win(M.original_test_win)
 
     -- Find the file in the project
     local cmd = string.format("find . -name '%s' | head -n 1", file)
@@ -164,8 +164,8 @@ M.setup_display_buffer = function()
   end
 
   -- Save current window and buffer
-  M.original_win = vim.api.nvim_get_current_win()
-  M.original_buf = vim.api.nvim_get_current_buf()
+  M.original_test_win = vim.api.nvim_get_current_win()
+  M.original_test_buf = vim.api.nvim_get_current_buf()
 
   -- Create a new buffer if needed
   if not vim.api.nvim_buf_is_valid(M.display_buf) then
@@ -193,7 +193,7 @@ M.setup_display_buffer = function()
   M.update_tracker_buffer()
 
   -- Return to original window
-  vim.api.nvim_set_current_win(M.original_win)
+  vim.api.nvim_set_current_win(M.original_test_win)
 
   -- Set up keymaps in the tracker buffer
   local setup_keymaps = function()
