@@ -11,7 +11,7 @@ vim.cmd [[highlight TerminalNameUnderline gui=underline]]
 ---@field toggle_float_terminal fun(self: TerminalMultiplexer, terminal_name: string, do_not_open_win: boolean|nil): Float_Term_State|nil
 ---@field create_float_window fun(self: TerminalMultiplexer, float_terminal_state: Float_Term_State, terminal_name: string, do_not_open_win: boolean|nil): nil
 ---@field navigate_terminal fun(self: TerminalMultiplexer, direction: number): nil
----@field search_terminal fun(self: TerminalMultiplexer, filter_pass: boolean): nil
+---@field search_terminal fun(self: TerminalMultiplexer): nil
 ---@field list fun(self: TerminalMultiplexer): string[] List of all terminal names
 ---@field delete_terminal fun(self: TerminalMultiplexer, terminal_name: string): nil
 ---@field select_delete_terminal fun(self: TerminalMultiplexer): nil
@@ -50,7 +50,7 @@ end
 ---Open terminal selector UI
 ---@param filter_pass boolean Whether to filter out passed tests
 ---@return nil
-function TerminalMultiplexer:search_terminal(filter_pass)
+function TerminalMultiplexer:search_terminal()
   local opts = {
     prompt = 'Select terminal:',
     format_item = function(item) return item end,
@@ -61,9 +61,7 @@ function TerminalMultiplexer:search_terminal(filter_pass)
     if terminal_info.status == 'failed' then
       table.insert(all_terminal_names, '\t' .. '❌' .. '  ' .. test_name)
     elseif terminal_info.status == 'passed' then
-      if not filter_pass then
-        table.insert(all_terminal_names, '\t' .. '✅' .. '  ' .. test_name)
-      end
+      table.insert(all_terminal_names, '\t' .. '✅' .. '  ' .. test_name)
     else
       table.insert(all_terminal_names, '\t' .. '🔵' .. '  ' .. test_name)
     end

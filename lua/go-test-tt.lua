@@ -13,8 +13,8 @@ end
 
 M.setup = function()
   local terminal_test = require 'terminal_test'
-  vim.api.nvim_create_user_command('GoTestSearch', function() M.terminals_tests:search_terminal() end, {})
-  vim.api.nvim_create_user_command('GoTestDelete', function() M.terminals_tests:select_delete_terminal() end, {})
+  vim.api.nvim_create_user_command('GoTestSearch', function() terminal_test.terminals:search_terminal() end, {})
+  vim.api.nvim_create_user_command('GoTestDelete', function() terminal_test.terminals_tests:select_delete_terminal() end, {})
   vim.api.nvim_create_user_command('GoTestNormalBuf', terminal_test.test_normal_buf, {})
   vim.api.nvim_create_user_command('GoTestNormal', terminal_test.go_normal_test, {})
   vim.api.nvim_create_user_command('GoTestDriveDev', terminal_test.drive_test_dev, {})
