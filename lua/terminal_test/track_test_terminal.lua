@@ -1,8 +1,8 @@
 local M = {}
-local tt = require 'terminal_test.terminal_test'
+local terminal_test = require 'terminal_test.terminal_test'
 local make_notify = require('mini.notify').make_notify {}
 local map = vim.keymap.set
-local terminals_tests = tt.terminals
+local terminals_tests = terminal_test.terminals
 
 M.track_test_list = {}
 
@@ -45,17 +45,18 @@ M.view_tests_tracked = function()
   vim.keymap.set('n', 'q', function() vim.api.nvim_win_close(M.view_tracker, true) end, { buffer = buf })
 end
 
-M.add_test_to_tracker = function()
-  local test_info = tt.get_test_info_enclosing_test()
-  if not test_info then
-    return nil
-  end
+M.add_test_to_tracker = function(test_command_format)
+  local util_find_test = require 'util_find_test'
+  local test_name, test_line = util_find_test.get_enclosing_test()
+  assert(test_name, 'No test found')
   for _, existing_test_info in ipairs(M.track_test_list) do
-    if existing_test_info.test_name == test_info.test_name then
-      make_notify(string.format('Test already in tracker: %s', test_info.test_name))
+    if existing_test_info.test_name == test_name then
+      make_notify(string.format('Test already in tracker: %s', test_name))
       return
     end
   end
+  local source_bufnr = vim.api.nvim_get_current_buf()
+  local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command_format }
   table.insert(M.track_test_list, test_info)
 end
 

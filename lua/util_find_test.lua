@@ -1,6 +1,6 @@
 local M = {}
 
----@return  string | nil, number | nil
+---@return  string? , number?
 M.get_enclosing_test = function()
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
