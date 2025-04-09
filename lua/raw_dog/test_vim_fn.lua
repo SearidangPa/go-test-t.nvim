@@ -175,7 +175,7 @@ vim.api.nvim_create_user_command('GoTestTrackerToggle', function()
   if vim.api.nvim_win_is_valid(M.tracker_state.tracker_win) then
     M.close_tracker()
   else
-    setup_tracker_buffer()
+    display.setup_tracker_buffer()
   end
 end, {})
 
