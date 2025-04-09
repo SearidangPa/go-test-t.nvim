@@ -9,7 +9,6 @@ local display = require 'async_job.display'
 ---@field original_buf number
 ---@field tests table<string, gotest.TestInfo>
 ---@field job_id number
----@field ns number
 ---@field last_update number
 M.tracker_state = {
   tracker_win = -1,
@@ -18,7 +17,6 @@ M.tracker_state = {
   original_buf = -1,
   tests = {},
   job_id = -1,
-  ns = -1,
 }
 
 ---@class gotest.TestInfo
@@ -111,7 +109,7 @@ M.run_test_all = function(command)
   M.tracker_state.tests = {}
 
   -- Set up tracker buffer
-  display.setup_tracker_buffer()
+  display.setup_display_buffer()
 
   -- Clean up previous job
   M.clean_up_prev_job(M.tracker_state.job_id)
@@ -169,14 +167,6 @@ end
 vim.api.nvim_create_user_command('GoTestAll', function()
   local command = { 'go', 'test', './...', '-json', '-v' }
   M.run_test_all(command)
-end, {})
-
-vim.api.nvim_create_user_command('GoTestTrackerToggle', function()
-  if vim.api.nvim_win_is_valid(M.tracker_state.tracker_win) then
-    M.close_tracker()
-  else
-    display.setup_tracker_buffer()
-  end
 end, {})
 
 return M

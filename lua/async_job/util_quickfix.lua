@@ -1,12 +1,5 @@
 local M = {}
 
-M.close_tracker = function()
-  if vim.api.nvim_win_is_valid(M.tracker_state.tracker_win) then
-    vim.api.nvim_win_close(M.tracker_state.tracker_win, true)
-    M.tracker_state.tracker_win = -1
-  end
-end
-
 local function add_direct_file_entries(test, qf_entries)
   assert(test.file, 'File not found for test: ' .. test.name)
   -- Find the file in the project

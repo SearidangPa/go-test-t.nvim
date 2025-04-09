@@ -150,7 +150,7 @@ M.jump_to_test_location = function()
   end
 end
 
-M.setup_tracker_buffer = function()
+M.setup_display_buffer = function()
   -- Create the namespace for highlights if it doesn't exist
   if M.tracker_state.ns == -1 then
     M.tracker_state.ns = vim.api.nvim_create_namespace 'go_test_tracker'
@@ -191,7 +191,7 @@ M.setup_tracker_buffer = function()
   -- Set up keymaps in the tracker buffer
   local setup_keymaps = function()
     -- Close tracker with q
-    vim.keymap.set('n', 'q', function() M.close_tracker() end, { buffer = M.tracker_state.tracker_buf, noremap = true, silent = true })
+    vim.keymap.set('n', 'q', function() M.close_display() end, { buffer = M.tracker_state.tracker_buf, noremap = true, silent = true })
 
     -- Jump to test file location with <CR>
     vim.keymap.set('n', '<CR>', function() M.jump_to_test_location() end, { buffer = M.tracker_state.tracker_buf, noremap = true, silent = true })
@@ -199,5 +199,20 @@ M.setup_tracker_buffer = function()
 
   setup_keymaps()
 end
+
+M.close_display = function()
+  if vim.api.nvim_win_is_valid(M.tracker_state.tracker_win) then
+    vim.api.nvim_win_close(M.tracker_state.tracker_win, true)
+    M.tracker_state.tracker_win = -1
+  end
+end
+
+vim.api.nvim_create_user_command('GoTestTrackerToggle', function()
+  if vim.api.nvim_win_is_valid(M.tracker_state.tracker_win) then
+    M.close_display()
+  else
+    M.setup_display_buffer()
+  end
+end, {})
 
 return M
