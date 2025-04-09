@@ -57,6 +57,7 @@ local add_golang_test = function(tests, entry)
   }
 end
 
+---@param tests gotest.Test[]
 local add_golang_output = function(tests, entry)
   assert(tests, vim.inspect(tests))
   local key = make_key(entry)
@@ -71,7 +72,9 @@ local add_golang_output = function(tests, entry)
 
   local file, line = string.match(trimmed_output, '([%w_%-]+%.go):(%d+):')
   if file and line then
-    test.fail_at_line = tonumber(line)
+    local line_num = tonumber(line)
+    assert(line_num, 'Line number must be a number')
+    test.fail_at_line = line_num
     test.file = file
   end
 
