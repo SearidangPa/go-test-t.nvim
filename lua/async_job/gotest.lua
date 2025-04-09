@@ -95,18 +95,12 @@ local mark_outcome = function(tests, entry)
   if not test then
     return
   end
-  -- Explicitly set the status based on the Action
   test.status = entry.Action
 end
 
 M.run_test_all = function(command)
-  -- Reset test state
   M.tests = {}
-
-  -- Set up tracker buffer
   displayer:setup(M.tests)
-
-  -- Clean up previous job
   M.clean_up_prev_job(M.job_id)
 
   M.job_id = vim.fn.jobstart(command, {
@@ -143,7 +137,6 @@ M.run_test_all = function(command)
           goto continue
         end
 
-        -- Handle pause, cont, and start actions
         if action_state[decoded.Action] then
           mark_outcome(M.tests, decoded)
           vim.schedule(function() displayer:update_tracker_buffer(M.tests) end)
