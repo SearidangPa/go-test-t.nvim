@@ -8,13 +8,13 @@ M.setup = function()
   vim.api.nvim_create_user_command('TerminalTestToggleLast', terminal_test.toggle_last_test_teriminal, {})
 
   require 'gotest'
-  require 'terminals.terminal_tracker'
+  require 'terminals.track_test_terminal'
 end
 
 --- === Terminal Test ===
 M.test_tracked_in_terminal = function()
   local terminal_test = require 'terminals.terminal_test'
-  local terminal_tracker = require 'terminals.terminal_tracker'
+  local terminal_tracker = require 'terminals.track_test_terminal'
 
   local make_notify = require('mini.notify').make_notify {}
   for _, test_info in ipairs(terminal_tracker.track_test_list) do
