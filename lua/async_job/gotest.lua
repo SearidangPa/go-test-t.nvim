@@ -5,7 +5,7 @@ local display = require 'async_job.display'
 M.tests = {}
 M.job_id = -1
 
----@class gotest.TestInfo
+---@class gotest.Test
 ---@field name string
 ---@field package string
 ---@field full_name string
@@ -43,6 +43,7 @@ local make_key = function(entry)
   return string.format('%s/%s', entry.Package, entry.Test)
 end
 
+---@param tests gotest.Test[]
 local add_golang_test = function(tests, entry)
   local key = make_key(entry)
   tests[key] = {

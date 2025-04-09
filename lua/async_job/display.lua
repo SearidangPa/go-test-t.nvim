@@ -8,7 +8,7 @@ M.ns = -1
 local make_notify = require('mini.notify').make_notify {}
 
 ---@return string[]
-local function parse_test_state_to_lines()
+local function parse_test_state_to_lines(tests)
   local lines = {}
   local packages = {}
   local package_tests = {}
