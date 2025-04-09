@@ -143,9 +143,9 @@ function GoTestDisplay:parse_test_state_to_lines(tests_info)
   return lines
 end
 
----@param tests gotest.TestInfo[]
-function GoTestDisplay:update_tracker_buffer(tests)
-  local lines = self:parse_test_state_to_lines(tests)
+---@param tests_info gotest.TestInfo[]
+function GoTestDisplay:update_tracker_buffer(tests_info)
+  local lines = self:parse_test_state_to_lines(tests_info)
 
   -- Only update if the buffer is valid
   if vim.api.nvim_buf_is_valid(self.display_buf) then
