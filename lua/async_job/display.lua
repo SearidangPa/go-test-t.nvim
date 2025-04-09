@@ -16,7 +16,7 @@ function GoTestDisplay.new()
   return self
 end
 
----@param tests gotest.Test[] | nil
+---@param tests gotest.TestInfo[] | nil
 function GoTestDisplay:setup(tests, title)
   -- Save current window and buffer
   self.original_test_win = vim.api.nvim_get_current_win()
@@ -56,7 +56,7 @@ function GoTestDisplay:setup(tests, title)
   self:setup_keymaps()
 end
 
----@param tests_info gotest.Test[]
+---@param tests_info gotest.TestInfo[]
 function GoTestDisplay:parse_test_state_to_lines(tests_info)
   local lines = {}
   local packages = {}
@@ -143,7 +143,7 @@ function GoTestDisplay:parse_test_state_to_lines(tests_info)
   return lines
 end
 
----@param tests gotest.Test[]
+---@param tests gotest.TestInfo[]
 function GoTestDisplay:update_tracker_buffer(tests)
   local lines = self:parse_test_state_to_lines(tests)
 

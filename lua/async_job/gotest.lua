@@ -3,10 +3,10 @@ local display = require 'async_job.display'
 local displayer = display.new()
 
 ---@class gotest
----@field tests gotest.Test[]
+---@field tests gotest.TestInfo[]
 ---@field job_id number
 local M = {
-  tests = {}, ---@type gotest.Test[]
+  tests = {}, ---@type gotest.TestInfo[]
   job_id = -1, ---@type number
 }
 
@@ -22,7 +22,7 @@ local action_state = {
   pass = true,
 }
 
----@class gotest.Test
+---@class gotest.TestInfo
 ---@field name string
 ---@field package string
 ---@field full_name string
@@ -48,7 +48,7 @@ local make_key = function(entry)
   return string.format('%s/%s', entry.Package, entry.Test)
 end
 
----@param tests gotest.Test[]
+---@param tests gotest.TestInfo[]
 local add_golang_test = function(tests, entry)
   local key = make_key(entry)
   tests[key] = {
@@ -62,7 +62,7 @@ local add_golang_test = function(tests, entry)
   }
 end
 
----@param tests gotest.Test[]
+---@param tests gotest.TestInfo[]
 local add_golang_output = function(tests, entry)
   assert(tests, vim.inspect(tests))
   local key = make_key(entry)
