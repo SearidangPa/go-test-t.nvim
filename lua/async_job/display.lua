@@ -7,14 +7,14 @@ M.ns = -1
 
 local make_notify = require('mini.notify').make_notify {}
 
----@param tests gotest.Test[]
-local function parse_test_state_to_lines(tests)
+---@param tests_info gotest.Test[]
+local function parse_test_state_to_lines(tests_info)
   local lines = {}
   local packages = {}
   local package_tests = {}
 
   -- Group tests by package
-  for _, test in pairs(tests) do
+  for _, test in pairs(tests_info) do
     if not packages[test.package] then
       packages[test.package] = true
       package_tests[test.package] = {}
