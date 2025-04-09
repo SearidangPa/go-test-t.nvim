@@ -4,7 +4,7 @@ local terminal_multiplexer = require 'terminals.terminal_multiplexer'
 
 ---@class terminalTest
 ---@field terminalTest.terminals TerminalMultiplexer
----@field terminalTest.test_in_terminal fun(test_info: table)
+---@field terminalTest.test_in_terminal fun(test_info: testInfo)
 ---@field terminalTest.test_buf_in_terminals fun(test_command_format: string)
 
 ---@class testInfo
