@@ -112,7 +112,7 @@ local function parse_test_state_to_lines()
   local package_tests = {}
 
   -- Group tests by package
-  for key, test in pairs(M.tracker_state.tests) do
+  for _, test in pairs(M.tracker_state.tests) do
     if not packages[test.package] then
       packages[test.package] = true
       package_tests[test.package] = {}

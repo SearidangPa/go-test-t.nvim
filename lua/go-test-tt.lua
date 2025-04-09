@@ -1,8 +1,8 @@
 local M = {}
 
 M.test_track_list = function()
-  local terminal_test = require 'terminal_test'
-  local tracker = require 'tracker'
+  local terminal_test = require 'terminals.terminal_test'
+  local tracker = require 'terminals.terminal_tracker'
 
   local make_notify = require('mini.notify').make_notify {}
   for _, test_info in ipairs(tracker.test_tracker) do
@@ -12,7 +12,7 @@ M.test_track_list = function()
 end
 
 M.setup = function()
-  local terminal_test = require 'terminal_test'
+  local terminal_test = require 'terminals.terminal_test'
   vim.api.nvim_create_user_command('GoTestSearch', function() terminal_test.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command('GoTestDelete', function() terminal_test.terminals:select_delete_terminal() end, {})
 
@@ -33,7 +33,7 @@ M.setup = function()
 
   require 'test_all'
 
-  require 'tracker'
+  require 'terminals.terminal_tracker'
 end
 
 return M
