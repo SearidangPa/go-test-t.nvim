@@ -86,7 +86,6 @@ local function process_one_line(line, opts, float_term_state, current_time)
   return handle_error_trace(line)
 end
 
--- Main function to process buffer lines
 local function process_buffer_lines(_, buf, first_line, last_line, opts, float_term_state)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
