@@ -2,13 +2,8 @@ local M = {}
 local make_notify = require('mini.notify').make_notify {}
 local display = require 'async_job.display'
 
----@class gotest.State
----@field tests table<string, gotest.TestInfo>
----@field job_id number
-M.tracker_state = {
-  tests = {},
-  job_id = -1,
-}
+M.tests = {}
+M.job_id = -1
 
 ---@class gotest.TestInfo
 ---@field name string
@@ -61,10 +56,10 @@ local add_golang_test = function(test_state, entry)
   }
 end
 
-local add_golang_output = function(test_state, entry)
-  assert(test_state.tests, vim.inspect(test_state))
+local add_golang_output = function(tests, entry)
+  assert(tests, vim.inspect(tests))
   local key = make_key(entry)
-  local test = test_state.tests[key]
+  local test = tests[key]
 
   if not test then
     return
@@ -84,9 +79,9 @@ local add_golang_output = function(test_state, entry)
   end
 end
 
-local mark_outcome = function(test_state, entry)
+local mark_outcome = function(tests, entry)
   local key = make_key(entry)
-  local test = test_state.tests[key]
+  local test = tests[key]
 
   if not test then
     return
@@ -97,15 +92,15 @@ end
 
 M.run_test_all = function(command)
   -- Reset test state
-  M.tracker_state.tests = {}
+  M.tests = {}
 
   -- Set up tracker buffer
   display.setup_display_buffer()
 
   -- Clean up previous job
-  M.clean_up_prev_job(M.tracker_state.job_id)
+  M.clean_up_prev_job(M.job_id)
 
-  M.tracker_state.job_id = vim.fn.jobstart(command, {
+  M.job_id = vim.fn.jobstart(command, {
     stdout_buffered = false,
     on_stdout = function(_, data)
       if not data then
@@ -127,21 +122,21 @@ M.run_test_all = function(command)
         end
 
         if decoded.Action == 'run' then
-          add_golang_test(M.tracker_state, decoded)
+          add_golang_test(M.tests, decoded)
           vim.schedule(function() display.update_tracker_buffer() end)
           goto continue
         end
 
         if decoded.Action == 'output' then
           if decoded.Test or decoded.Package then
-            add_golang_output(M.tracker_state, decoded)
+            add_golang_output(M.tests, decoded)
           end
           goto continue
         end
 
         -- Handle pause, cont, and start actions
         if action_state[decoded.Action] then
-          mark_outcome(M.tracker_state, decoded)
+          mark_outcome(M.tests, decoded)
           vim.schedule(function() display.update_tracker_buffer() end)
           goto continue
         end

@@ -12,9 +12,10 @@ local function parse_test_state_to_lines()
   local lines = {}
   local packages = {}
   local package_tests = {}
+  local gotest = require 'async_job.gotest'
 
   -- Group tests by package
-  for _, test in pairs(M.tests) do
+  for _, test in pairs(gotest.tests) do
     if not packages[test.package] then
       packages[test.package] = true
       package_tests[test.package] = {}
@@ -169,7 +170,7 @@ M.setup_display_buffer = function()
   -- Create a new buffer if needed
   if not vim.api.nvim_buf_is_valid(M.tracker_buf) then
     M.tracker_buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(M.tracker_buf, 'GoTestTracker')
+    vim.api.nvim_buf_set_name(M.tracker_buf, 'Go Test All')
     vim.bo[M.tracker_buf].bufhidden = 'hide'
     vim.bo[M.tracker_buf].buftype = 'nofile'
     vim.bo[M.tracker_buf].swapfile = false
