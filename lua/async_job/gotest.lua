@@ -3,10 +3,10 @@ local display = require 'async_job.display'
 local displayer = display.new()
 
 ---@class gotest
----@field tests gotest.TestInfo[]
+---@field tests_info gotest.TestInfo[]
 ---@field job_id number
 local M = {
-  tests = {}, ---@type gotest.TestInfo[]
+  tests_info = {}, ---@type gotest.TestInfo[]
   job_id = -1, ---@type number
 }
 
@@ -99,8 +99,8 @@ local mark_outcome = function(tests, entry)
 end
 
 M.run_test_all = function(command)
-  M.tests = {}
-  displayer:setup(M.tests)
+  M.tests_info = {}
+  displayer:setup(M.tests_info)
   M.clean_up_prev_job(M.job_id)
 
   M.job_id = vim.fn.jobstart(command, {
@@ -125,21 +125,21 @@ M.run_test_all = function(command)
         end
 
         if decoded.Action == 'run' then
-          add_golang_test(M.tests, decoded)
-          vim.schedule(function() displayer:update_tracker_buffer(M.tests) end)
+          add_golang_test(M.tests_info, decoded)
+          vim.schedule(function() displayer:update_tracker_buffer(M.tests_info) end)
           goto continue
         end
 
         if decoded.Action == 'output' then
           if decoded.Test or decoded.Package then
-            add_golang_output(M.tests, decoded)
+            add_golang_output(M.tests_info, decoded)
           end
           goto continue
         end
 
         if action_state[decoded.Action] then
-          mark_outcome(M.tests, decoded)
-          vim.schedule(function() displayer:update_tracker_buffer(M.tests) end)
+          mark_outcome(M.tests_info, decoded)
+          vim.schedule(function() displayer:update_tracker_buffer(M.tests_info) end)
           goto continue
         end
 
@@ -147,7 +147,7 @@ M.run_test_all = function(command)
       end
     end,
     on_exit = function()
-      vim.schedule(function() displayer:update_tracker_buffer(M.tests) end)
+      vim.schedule(function() displayer:update_tracker_buffer(M.tests_info) end)
     end,
   })
 end
