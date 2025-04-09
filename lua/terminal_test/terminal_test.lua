@@ -30,7 +30,6 @@ terminal_test.test_in_terminal = function(test_info)
   assert(float_term_state, 'Failed to create floating terminal')
   vim.api.nvim_chan_send(float_term_state.chan, test_command .. '\n')
 
-  local notification_sent = false
   vim.api.nvim_buf_attach(float_term_state.buf, false, {
     on_lines = function(_, buf, _, first_line, last_line)
       local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
@@ -48,7 +47,6 @@ terminal_test.test_in_terminal = function(test_info)
 
           make_notify(string.format('Test failed: %s', test_name))
           vim.notify(string.format('Test failed: %s', test_name), vim.log.levels.WARN, { title = 'Test Failure' })
-          notification_sent = true
           return true
         elseif string.match(line, '--- PASS') then
           vim.api.nvim_buf_set_extmark(source_bufnr, ns, test_line - 1, 0, {
@@ -58,11 +56,8 @@ terminal_test.test_in_terminal = function(test_info)
           test_info.status = 'passed'
           float_term_state.status = 'passed'
 
-          if not notification_sent then
-            make_notify(string.format('Test passed: %s', test_name))
-            notification_sent = true
-            return true -- detach from the buffer
-          end
+          make_notify(string.format('Test passed: %s', test_name))
+          return true -- detach from the buffer
         end
 
         -- Pattern matches strings like "Error Trace:    /Users/path/file.go:21"
@@ -88,11 +83,9 @@ terminal_test.test_in_terminal = function(test_info)
         end
       end
 
-      -- Only detach if we're done processing (when test is complete)
-      if notification_sent and error_line then
+      if error_line then
         return true
       end
-
       return false
     end,
   })
@@ -106,7 +99,6 @@ terminal_test.test_buf_in_terminals = function(test_command_format)
     terminal_test.terminals:delete_terminal(test_name)
     local test_command = string.format(test_command_format, test_name)
     local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-    make_notify(string.format('Running test: %s', test_name))
     terminal_test.test_in_terminal(test_info)
   end
 end
