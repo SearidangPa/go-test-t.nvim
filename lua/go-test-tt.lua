@@ -7,7 +7,7 @@ M.test_track_list = function()
   local make_notify = require('mini.notify').make_notify {}
   for _, test_info in ipairs(tracker.test_tracker) do
     make_notify(string.format('Running test: %s', test_info.test_name)).go_test_command(test_info)
-    terminal_test.go_terminal_test_command(test_info)
+    terminal_test.test_in_terminal(test_info)
   end
 end
 
@@ -18,7 +18,6 @@ M.setup = function()
   vim.api.nvim_create_user_command('TerminalTestToggleView', terminal_test.toggle_view_enclosing_test, {})
   vim.api.nvim_create_user_command('TerminalTestToggleLast', terminal_test.toggle_last_test, {})
 
-  vim.api.nvim_create_user_command('GoTestNormalBuf', terminal_test.test_normal_buf, {})
   vim.api.nvim_create_user_command('GoTestNormal', terminal_test.go_normal_test, {})
 
   vim.api.nvim_create_user_command('GoTestDriveDev', terminal_test.drive_test_dev, {})

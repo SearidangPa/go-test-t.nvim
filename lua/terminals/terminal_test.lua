@@ -1,4 +1,10 @@
+---@class terminal_test
+---@field terminal_test.terminals TerminalMultiplexer
+---@field terminal_test.toggle_view_enclosing_test fun()
+---@field terminal_test.go_terminal_test_command fun(test_info: { test_name: string, test_bufnr: number, test_line: number, test_command: string })
+
 local terminal_test = {}
+
 local make_notify = require('mini.notify').make_notify {}
 local ns = vim.api.nvim_create_namespace 'GoTestError'
 local terminal_multiplexer = require 'terminals.terminal_multiplexer'
@@ -23,7 +29,7 @@ terminal_test.toggle_view_enclosing_test = function()
   vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
 end
 
-terminal_test.go_terminal_test_command = function(test_info)
+terminal_test.test_in_terminal = function(test_info)
   assert(test_info.test_name, 'No test found')
   assert(test_info.test_bufnr, 'No test buffer found')
   assert(test_info.test_line, 'No test line found')
@@ -106,7 +112,7 @@ terminal_test.go_terminal_test_command = function(test_info)
   })
 end
 
-terminal_test.test_buf = function(test_command_format)
+terminal_test.test_buf_in_terminals = function(test_command_format)
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local testsInCurrBuf = util_find_test.find_all_tests(source_bufnr)
@@ -115,36 +121,18 @@ terminal_test.test_buf = function(test_command_format)
     local test_command = string.format(test_command_format, test_name)
     local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
     make_notify(string.format('Running test: %s', test_name))
-    terminal_test.go_terminal_test_command(test_info)
+    terminal_test.test_in_terminal(test_info)
   end
-end
-
-terminal_test.get_test_info_enclosing_test = function()
-  local util_find_test = require 'util_find_test'
-  local test_name, test_line = util_find_test.get_enclosing_test()
-  if not test_name then
-    make_notify 'No test found'
-    return nil
-  end
-
-  local test_command
-  if vim.fn.has 'win32' == 1 then
-    test_command = string.format('gitBash -c "go test integration_tests/*.go -v -race -run %s"\r', test_name)
-  else
-    test_command = string.format('go test integration_tests/*.go -v -run %s', test_name)
-  end
-  local source_bufnr = vim.api.nvim_get_current_buf()
-  local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-  return test_info
 end
 
 terminal_test.go_integration_test = function()
-  local test_info = terminal_test.get_test_info_enclosing_test()
+  local util_find_test = require 'util_find_test'
+  local test_info = util_find_test.get_test_info_enclosing_test()
   if not test_info then
     return nil
   end
   terminal_test.terminals:delete_terminal(test_info.test_name)
-  terminal_test.go_terminal_test_command(test_info)
+  terminal_test.test_in_terminal(test_info)
   make_notify(string.format('Running test: %s', test_info.test_name))
 end
 
@@ -160,19 +148,19 @@ end
 
 terminal_test.windows_test_buf = function()
   local test_format = 'gitBash -c "go test integration_tests/*.go -v -run %s"\r'
-  terminal_test.test_buf(test_format)
+  terminal_test.test_buf_in_terminals(test_format)
 end
 
 terminal_test.drive_test_dev_buf = function()
   vim.env.MODE, vim.env.UKS = 'dev', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
-  terminal_test.test_buf(test_format)
+  terminal_test.test_buf_in_terminals(test_format)
 end
 
 terminal_test.drive_test_staging_buf = function()
   vim.env.MODE, vim.env.UKS = 'staging', 'others'
   local test_format = 'go test integration_tests/*.go -v -run %s'
-  terminal_test.test_buf(test_format)
+  terminal_test.test_buf_in_terminals(test_format)
 end
 
 terminal_test.go_normal_test = function()
@@ -185,12 +173,7 @@ terminal_test.go_normal_test = function()
   assert(test_name, 'No test found')
   local test_command = string.format('go test ./... -v -run %s\r\n', test_name)
   local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-  terminal_test.go_terminal_test_command(test_info)
-end
-
-terminal_test.test_normal_buf = function()
-  local test_format = 'go test ./... -v -run %s'
-  terminal_test.test_buf(test_format)
+  terminal_test.test_in_terminal(test_info)
 end
 
 terminal_test.toggle_last_test = function()
