@@ -127,7 +127,7 @@ M.run_test_all = function(command)
 
         if decoded.Action == 'run' then
           add_golang_test(M.tests, decoded)
-          vim.schedule(function() display.update_tracker_buffer() end)
+          vim.schedule(function() display.update_tracker_buffer(M.tests) end)
           goto continue
         end
 
@@ -141,7 +141,7 @@ M.run_test_all = function(command)
         -- Handle pause, cont, and start actions
         if action_state[decoded.Action] then
           mark_outcome(M.tests, decoded)
-          vim.schedule(function() display.update_tracker_buffer() end)
+          vim.schedule(function() display.update_tracker_buffer(M.tests) end)
           goto continue
         end
 
@@ -149,7 +149,7 @@ M.run_test_all = function(command)
       end
     end,
     on_exit = function()
-      vim.schedule(function() display.update_tracker_buffer() end)
+      vim.schedule(function() display.update_tracker_buffer(M.tests) end)
     end,
   })
 end

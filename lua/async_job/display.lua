@@ -7,15 +7,14 @@ M.ns = -1
 
 local make_notify = require('mini.notify').make_notify {}
 
----@return string[]
+---@param tests gotest.Test[]
 local function parse_test_state_to_lines(tests)
   local lines = {}
   local packages = {}
   local package_tests = {}
-  local gotest = require 'async_job.gotest'
 
   -- Group tests by package
-  for _, test in pairs(gotest.tests) do
+  for _, test in pairs(tests) do
     if not packages[test.package] then
       packages[test.package] = true
       package_tests[test.package] = {}
@@ -95,8 +94,9 @@ local function parse_test_state_to_lines(tests)
   return lines
 end
 
-M.update_tracker_buffer = function()
-  local lines = parse_test_state_to_lines()
+---@param tests gotest.Test[]
+M.update_tracker_buffer = function(tests)
+  local lines = parse_test_state_to_lines(tests)
 
   -- Only update if the buffer is valid
   if vim.api.nvim_buf_is_valid(M.display_buf) then
@@ -157,7 +157,8 @@ M.jump_to_test_location = function()
   end
 end
 
-M.setup_display_buffer = function()
+---@param tests gotest.Test[]
+M.setup_display_buffer = function(tests)
   -- Create the namespace for highlights if it doesn't exist
   if M.ns == -1 then
     M.ns = vim.api.nvim_create_namespace 'go_test_tracker'
@@ -190,7 +191,7 @@ M.setup_display_buffer = function()
   end
 
   -- Update the buffer with initial content
-  M.update_tracker_buffer()
+  M.update_tracker_buffer(tests)
 
   -- Return to original window
   vim.api.nvim_set_current_win(M.original_test_win)
@@ -214,12 +215,6 @@ M.close_display = function()
   end
 end
 
-vim.api.nvim_create_user_command('GoTestTrackerToggle', function()
-  if vim.api.nvim_win_is_valid(M.display_win) then
-    M.close_display()
-  else
-    M.setup_display_buffer()
-  end
-end, {})
+vim.api.nvim_create_user_command('GoTestDisplayClose', M.close_display, {})
 
 return M
