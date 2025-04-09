@@ -94,9 +94,7 @@ M.run_test_all = function(command)
   M.job_id = vim.fn.jobstart(command, {
     stdout_buffered = false,
     on_stdout = function(_, data)
-      if not data then
-        return
-      end
+      assert(data, 'No data received from job')
       for _, line in ipairs(data) do
         if line == '' then
           goto continue
