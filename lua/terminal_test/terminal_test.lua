@@ -15,16 +15,16 @@ terminal_test.terminals = terminal_multiplexer.new()
 ---@field test_bufnr number
 ---@field test_command string
 
-terminal_test.test_in_terminal = function(test_info)
-  assert(test_info.test_name, 'No test found')
-  assert(test_info.test_bufnr, 'No test buffer found')
-  assert(test_info.test_line, 'No test line found')
-  assert(test_info.test_command, 'No test command found')
-  assert(vim.api.nvim_buf_is_valid(test_info.test_bufnr), 'Invalid buffer')
-  local test_name = test_info.test_name
-  local test_line = test_info.test_line
-  local test_command = test_info.test_command
-  local source_bufnr = test_info.test_bufnr
+terminal_test.test_in_terminal = function(terminal_test_info)
+  assert(terminal_test_info.test_name, 'No test found')
+  assert(terminal_test_info.test_bufnr, 'No test buffer found')
+  assert(terminal_test_info.test_line, 'No test line found')
+  assert(terminal_test_info.test_command, 'No test command found')
+  assert(vim.api.nvim_buf_is_valid(terminal_test_info.test_bufnr), 'Invalid buffer')
+  local test_name = terminal_test_info.test_name
+  local test_line = terminal_test_info.test_line
+  local test_command = terminal_test_info.test_command
+  local source_bufnr = terminal_test_info.test_bufnr
   terminal_test.terminals:toggle_float_terminal(test_name)
   local float_term_state = terminal_test.terminals:toggle_float_terminal(test_name)
   assert(float_term_state, 'Failed to create floating terminal')
@@ -42,7 +42,7 @@ terminal_test.test_in_terminal = function(test_info)
             virt_text = { { string.format('❌ %s', current_time) } },
             virt_text_pos = 'eol',
           })
-          test_info.status = 'failed'
+          terminal_test_info.status = 'failed'
           float_term_state.status = 'failed'
 
           make_notify(string.format('Test failed: %s', test_name))
@@ -53,7 +53,7 @@ terminal_test.test_in_terminal = function(test_info)
             virt_text = { { string.format('✅ %s', current_time) } },
             virt_text_pos = 'eol',
           })
-          test_info.status = 'passed'
+          terminal_test_info.status = 'passed'
           float_term_state.status = 'passed'
 
           make_notify(string.format('Test passed: %s', test_name))
