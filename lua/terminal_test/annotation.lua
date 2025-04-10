@@ -20,7 +20,6 @@
 ---@field filepath string
 
 ---@class Gotest
----@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
 ---@field displayer? TestsDisplay
 ---@field clean_up_prev_job? fun(job_id: number)
