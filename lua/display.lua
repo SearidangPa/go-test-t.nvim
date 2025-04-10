@@ -138,20 +138,13 @@ function Test_Display:update_tracker_buffer(tests_info)
   end
 end
 
--- function Test_Display:assert_display_buf_win()
---   assert(self.display_buf, 'display_buf is nil in jump_to_test_location')
---   assert(self.display_win, 'display_win is nil in jump_to_test_location')
--- end
+function Test_Display:assert_display_buf_win()
+  assert(self.display_buf, 'display_buf is nil in jump_to_test_location')
+  assert(self.display_win, 'display_win is nil in jump_to_test_location')
+end
 
 function Test_Display:jump_to_test_location()
-  if not self.display_buf then
-    vim.notify('display_buf is nil in jump_to_test_location', vim.log.levels.ERROR)
-    return
-  end
-  if not self.display_win then
-    vim.notify('display_win is nil in jump_to_test_location', vim.log.levels.ERROR)
-    return
-  end
+  self:assert_display_buf_win()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
@@ -190,7 +183,6 @@ function Test_Display:_jump_to_test_location_using_lsp(test_name)
       local filename = vim.uri_to_fname(result.location.uri)
       local start = result.location.range.start
 
-      vim.notify('Jumping to test location: ' .. filename .. ':' .. start.line + 1, vim.log.levels.INFO)
       vim.cmd('edit ' .. filename)
       vim.api.nvim_win_set_cursor(0, { start.line + 1, start.character })
     end
