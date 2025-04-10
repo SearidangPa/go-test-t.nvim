@@ -1,39 +1,29 @@
-local util_status_icon = require 'util_status_icon'
-
 ---@class TestsDisplay
 ---@field display_win number
 ---@field display_buf number
 ---@field original_test_win number
 ---@field original_test_buf number
 ---@field ns number
----@field tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
----@field _priority table<string, integer>
+---@field tests_info gotest.TestInfo[] | terminal.testInfo[]
 ---@field close_display fun(self: TestsDisplay)
-local Test_Display = {}
-Test_Display.__index = Test_Display
+local Display = {}
+Display.__index = Display
 
---- @param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
-function Test_Display.new(tests_info)
-  local self = setmetatable({}, Test_Display)
+-- Constructor
+--- @param tests_info gotest.TestInfo[] | terminal.testInfo[]
+function Display.new(tests_info)
+  local self = setmetatable({}, Display)
   self.display_win = -1
   self.display_buf = -1
   self.original_test_win = -1
   self.original_test_buf = -1
   self.ns = vim.api.nvim_create_namespace 'go_test_display'
   self.tests_info = tests_info
-  self._priority = {
-    running = 1,
-    paused = 2,
-    cont = 3,
-    start = 4,
-    fail = 5,
-    pass = 6,
-  }
   return self
 end
 
----@param tests_info? table<string, gotest.TestInfo> | table<string, terminal.testInfo>
-function Test_Display:setup(tests_info)
+---@param tests_info? gotest.TestInfo[] | terminal.testInfo[]
+function Display:setup(tests_info)
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
@@ -64,9 +54,10 @@ function Test_Display:setup(tests_info)
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function Test_Display:parse_test_state_to_lines(tests_info)
+function Display:parse_test_state_to_lines(tests_info)
   local lines = {}
   local tests = {}
+
   for _, test in pairs(tests_info) do
     if test.name then
       table.insert(tests, test)
@@ -77,20 +68,40 @@ function Test_Display:parse_test_state_to_lines(tests_info)
     if a.status == b.status then
       return a.name < b.name
     end
-    if not self._priority[a.status] and self._priority[b.status] then
+    local priority = {
+      running = 1,
+      paused = 2,
+      cont = 3,
+      start = 4,
+      fail = 5,
+      pass = 6,
+    }
+    if not priority[a.status] and priority[b.status] then
       return true
     end
-    if self._priority[a.status] and not self._priority[b.status] then
+    if priority[a.status] and not priority[b.status] then
       return false
     end
-    if not self._priority[a.status] and not self._priority[b.status] then
+    if not priority[a.status] and not priority[b.status] then
       return a.name < b.name
     end
-    return self._priority[a.status] < self._priority[b.status]
+    return priority[a.status] < priority[b.status]
   end)
 
   for _, test in ipairs(tests) do
-    local status_icon = util_status_icon.get_status_icon(test.status)
+    local status_icon = '🔄'
+    if test.status == 'pass' then
+      status_icon = '✅'
+    elseif test.status == 'fail' then
+      status_icon = '❌'
+    elseif test.status == 'paused' then
+      status_icon = '⏸️'
+    elseif test.status == 'cont' then
+      status_icon = '🔥'
+    elseif test.status == 'start' then
+      status_icon = '🏁'
+    end
+
     if test.status == 'fail' and test.file ~= '' then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
       table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
@@ -103,7 +114,7 @@ function Test_Display:parse_test_state_to_lines(tests_info)
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function Test_Display:update_tracker_buffer(tests_info)
+function Display:update_tracker_buffer(tests_info)
   local lines = self:parse_test_state_to_lines(tests_info)
 
   if vim.api.nvim_buf_is_valid(self.display_buf) then
@@ -131,23 +142,28 @@ function Test_Display:update_tracker_buffer(tests_info)
   end
 end
 
-function Test_Display:assert_display_buf_win()
-  assert(self.display_buf, 'display_buf is nil')
-  assert(self.display_win, 'display_win is nil')
-end
-
-function Test_Display:jump_to_test_location()
-  self:assert_display_buf_win()
+function Display:jump_to_test_location()
+  if not self.display_buf then
+    vim.notify('display_buf is nil in jump_to_test_location', vim.log.levels.ERROR)
+    return
+  end
+  if not self.display_win then
+    vim.notify('display_win is nil in jump_to_test_location', vim.log.levels.ERROR)
+    return
+  end
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
   assert(line, 'No line found in display buffer')
 
   local test_name = line:match '[❌✅]%s+([%w_%-]+)'
-  assert(test_name, 'No test name found in line: ' .. line)
+  if not test_name then
+    vim.notify('No test name found in line: ' .. line, vim.log.levels.ERROR)
+    return
+  end
 
   local test_info = self.tests_info[test_name]
-  assert(test_info, string.format('No test info found for test: %s, %s', test_name, vim.inspect(self.tests_info)))
+  assert(test_info, 'No test info found for test: ' .. test_name)
   assert(test_info.test_line, 'No test line found for test: ' .. test_name)
   local filepath = test_info.filepath
   vim.api.nvim_set_current_win(self.original_test_win)
@@ -164,7 +180,7 @@ function Test_Display:jump_to_test_location()
   vim.cmd 'normal! zz'
 end
 
-function Test_Display:setup_keymaps()
+function Display:setup_keymaps()
   local this = self -- Capture the current 'self' reference
   vim.keymap.set('n', 'q', function()
     this:close_display() -- Use the captured reference
@@ -175,14 +191,14 @@ function Test_Display:setup_keymaps()
   end, { buffer = this.display_buf, noremap = true, silent = true })
 end
 
-function Test_Display:close_display()
+function Display:close_display()
   if vim.api.nvim_win_is_valid(self.display_win) then
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
   end
 end
 
-function Test_Display:toggle_display()
+function Display:toggle_display()
   if vim.api.nvim_win_is_valid(self.display_win) then
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
@@ -191,9 +207,11 @@ function Test_Display:toggle_display()
   end
 end
 
-function Test_Display:register_command(command_name)
+-- Create a user command for each instance
+function Display:register_command(command_name)
   local tracker = self
   vim.api.nvim_create_user_command(command_name, function() tracker:toggle_display() end, {})
 end
 
-return Test_Display
+-- Return the constructor for the class
+return Display

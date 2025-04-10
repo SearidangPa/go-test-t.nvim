@@ -2,12 +2,14 @@ local display = require 'display'
 local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 
----@type gotest
-local gotest = {
-  tests_info = {},
+local tests_info = {}
+
+---@type Gotest
+local go_test = {
+  tests_info = tests_info,
   job_id = -1,
+  displayer = display.new(tests_info),
 }
-local displayer = display.new(gotest.tests_info)
 
 local ignored_actions = {
   skip = true,
@@ -21,7 +23,7 @@ local action_state = {
   pass = true,
 }
 
-gotest.clean_up_prev_job = function(job_id)
+go_test.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
     fidget.notify('Stopping job', vim.log.levels.INFO)
     vim.fn.jobstop(job_id)
@@ -29,13 +31,12 @@ gotest.clean_up_prev_job = function(job_id)
   end
 end
 
----@param tests_info table<string, gotest.TestInfo>
-local add_golang_test = function(tests_info, entry)
+local function add_golang_test(entry)
   if not entry.Test then
     return ''
   end
   local key = entry.Test
-  tests_info[key] = {
+  go_test.tests_info[key] = {
     name = entry.Test,
     fail_at_line = 0,
     output = {},
@@ -44,9 +45,8 @@ local add_golang_test = function(tests_info, entry)
   }
 end
 
----@param tests_info gotest.TestInfo[]
-local add_golang_output = function(tests_info, entry)
-  assert(tests_info, vim.inspect(tests_info))
+local add_golang_output = function(entry)
+  assert(go_test.tests_info, vim.inspect(tests_info))
   if not entry.Test then
     return ''
   end
@@ -69,13 +69,12 @@ local add_golang_output = function(tests_info, entry)
   end
 end
 
----@param tests_info gotest.TestInfo[]
-local mark_outcome = function(tests_info, entry)
+local mark_outcome = function(entry)
   if not entry.Test then
     return ''
   end
   local key = entry.Test
-  local test_info = tests_info[key]
+  local test_info = go_test.tests_info[key]
   if not test_info then
     return
   end
@@ -90,11 +89,11 @@ local mark_outcome = function(tests_info, entry)
   end
 end
 
-gotest.run_test_all = function(command)
-  gotest.tests_info = {}
-  displayer:setup(gotest.tests_info)
-  gotest.clean_up_prev_job(gotest.job_id)
-  gotest.job_id = vim.fn.jobstart(command, {
+go_test.run_test_all = function(command)
+  go_test.tests_info = {}
+  go_test.displayer:setup(go_test.tests_info)
+  go_test.clean_up_prev_job(go_test.job_id)
+  go_test.job_id = vim.fn.jobstart(command, {
     stdout_buffered = false,
 
     on_stdout = function(_, data)
@@ -114,21 +113,21 @@ gotest.run_test_all = function(command)
         end
 
         if decoded.Action == 'run' then
-          add_golang_test(gotest.tests_info, decoded)
-          vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
+          add_golang_test(decoded)
+          vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
           goto continue
         end
 
         if decoded.Action == 'output' then
           if decoded.Test or decoded.Package then
-            add_golang_output(gotest.tests_info, decoded)
+            add_golang_output(decoded)
           end
           goto continue
         end
 
         if action_state[decoded.Action] then
-          mark_outcome(gotest.tests_info, decoded)
-          vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
+          mark_outcome(decoded)
+          vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
           goto continue
         end
 
@@ -137,16 +136,16 @@ gotest.run_test_all = function(command)
     end,
 
     on_exit = function()
-      vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
+      vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
     end,
   })
 end
 
 vim.api.nvim_create_user_command('GoTestAll', function()
   local command = { 'go', 'test', './...', '-json', '-v' }
-  gotest.run_test_all(command)
+  go_test.run_test_all(command)
 end, {})
 
-vim.api.nvim_create_user_command('GoTestToggleDisplay', function() displayer:toggle_display() end, {})
-vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info) end, {})
-return gotest
+vim.api.nvim_create_user_command('GoTestToggleDisplay', function() go_test.displayer:toggle_display() end, {})
+vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(go_test.tests_info) end, {})
+return go_test

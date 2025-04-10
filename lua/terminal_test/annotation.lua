@@ -1,7 +1,7 @@
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer
 ---@field tests_info table<string, terminal.testInfo>
----@field displayer TestsDisplay
+---@field displayer? TestsDisplay
 ---@field ns_id number
 ---@field test_in_terminal? fun(test_info: terminal.testInfo, cb_update_tracker?: function)
 ---@field test_buf_in_terminals? fun(test_command_format: string)
@@ -19,7 +19,7 @@
 ---@field test_command string
 ---@field filepath string
 
----@class gotest
+---@class Gotest
 ---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
 ---@field displayer? TestsDisplay
