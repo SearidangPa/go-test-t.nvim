@@ -3,13 +3,14 @@ local util_status_icon = require 'util_status_icon'
 local terminal_test = require 'terminal_test.terminal_test'
 local terminals = terminal_test.terminals
 local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
+
 local help_items = {
   ' Help:',
-  ' q: Close',
-  ' <CR>: Jump',
-  ' t: Toggle',
-  ' r: Run',
-  ' d: Delete',
+  ' q:     Close',
+  ' <CR>:  Jump',
+  ' t:     Toggle',
+  ' r:     Run',
+  ' d:     Delete',
 }
 
 ---@type Tracker
