@@ -1,6 +1,7 @@
 local fidget = require 'fidget'
 local terminal_test = require 'terminal_test.terminal_test'
 local terminals = terminal_test.terminals
+local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
 
 ---@type Tracker
 local tracker = {
@@ -133,7 +134,6 @@ function tracker._create_tracker_window()
 
   -- Add a title to the window
   vim.api.nvim_buf_set_lines(buf, 0, 0, false, { ' Test Tracker ', '' })
-  local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
   vim.api.nvim_buf_set_extmark(buf, ns_id, 0, 0, { hl_group = 'Title' })
   -- Update buffer content
   tracker.update_tracker_window()
@@ -148,10 +148,6 @@ function tracker.update_tracker_window()
   end
   local lines = { ' Test Tracker ', '' }
   for i, test_info in ipairs(tracker.track_list) do
-    local short_name = test_info.name
-    if #short_name > 30 then
-      short_name = '...' .. string.sub(short_name, -27)
-    end
     local status_icon = '❓'
     local status = test_info.status or 'not run'
     if status == 'pass' then
@@ -169,7 +165,7 @@ function tracker.update_tracker_window()
     else
       vim.notify('Unknown status: ' .. status, vim.log.levels.WARN)
     end
-    local line = string.format(' %d. %s: %s', i, short_name, status_icon)
+    local line = string.format(' %d. %s: %s', i, test_info.name, status_icon)
     table.insert(lines, line)
   end
   if #tracker.track_list == 0 then
@@ -184,14 +180,22 @@ function tracker.update_tracker_window()
   table.insert(lines, ' t: Toggle')
   table.insert(lines, ' r: Run')
   table.insert(lines, ' d: Delete')
+
   vim.api.nvim_buf_set_lines(tracker._buf_id, 0, -1, false, lines)
-  local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
+
   vim.api.nvim_buf_clear_namespace(tracker._buf_id, ns_id, 0, -1)
-  vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, 0, 0, { hl_group = 'Title' })
+
+  vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, 0, 0, {
+    end_col = #lines[1],
+    hl_group = 'Title',
+  })
+
   local footer_start = #lines - 6
-  vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, footer_start, 0, { hl_group = 'Comment' })
-  for i = footer_start + 1, #lines - 1 do
-    vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, i, 0, { hl_group = 'Comment' })
+  for i = footer_start, #lines - 1 do
+    vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, i, 0, {
+      end_col = #lines[i + 1],
+      hl_group = 'Comment',
+    })
   end
 end
 
