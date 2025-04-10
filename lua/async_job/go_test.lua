@@ -72,7 +72,6 @@ local filter_golang_output = function(entry)
     test_info.status = 'fail'
     util_quickfix.add_fail_test(test_info)
     go_test.tests_info[entry.Test] = test_info
-    print(vim.inspect(test_info))
     go_test.test_displayer:update_tracker_buffer(go_test.tests_info)
   end
 end

@@ -138,6 +138,11 @@ function Test_Display:update_tracker_buffer(tests_info)
   end
 end
 
+-- function Test_Display:assert_display_buf_win()
+--   assert(self.display_buf, 'display_buf is nil in jump_to_test_location')
+--   assert(self.display_win, 'display_win is nil in jump_to_test_location')
+-- end
+
 function Test_Display:jump_to_test_location()
   if not self.display_buf then
     vim.notify('display_buf is nil in jump_to_test_location', vim.log.levels.ERROR)
@@ -151,19 +156,19 @@ function Test_Display:jump_to_test_location()
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
   assert(line, 'No line found in display buffer')
-
   local test_name = line:match '[❌✅]%s+([%w_%-]+)'
-  if not test_name then
-    vim.notify('No test name found in line: ' .. line, vim.log.levels.ERROR)
-    return
-  end
+  assert(test_name, 'No test name found in line: ' .. line)
 
   local test_info = self.tests_info[test_name]
   assert(test_info, 'No test info found for test: ' .. test_name)
-  assert(test_info.test_line, string.format('No test line found for test: %s', vim.inspect(test_info)))
-  local filepath = test_info.filepath
   vim.api.nvim_set_current_win(self.original_test_win)
-  vim.cmd('edit ' .. filepath)
+  if not test_info.test_line then
+    Test_Display:_jump_to_test_location_using_lsp(test_info.name)
+    return
+  end
+
+  assert(test_info.filepath, 'No filepath found for test: ' .. test_name)
+  vim.cmd('edit ' .. test_info.filepath)
 
   if test_info.fail_at_line and test_info.fail_at_line ~= 0 then
     vim.api.nvim_win_set_cursor(0, { tonumber(test_info.fail_at_line), 0 })
@@ -174,6 +179,22 @@ function Test_Display:jump_to_test_location()
     return
   end
   vim.cmd 'normal! zz'
+end
+
+function Test_Display:_jump_to_test_location_using_lsp(test_name)
+  vim.lsp.buf_request(0, 'workspace/symbol', { query = test_name }, function(err, res)
+    if err or not res or #res == 0 then
+      vim.notify('No definition found for test: ' .. test_name, vim.log.levels.WARN)
+    else
+      local result = res[1] -- Take the first result
+      local filename = vim.uri_to_fname(result.location.uri)
+      local start = result.location.range.start
+
+      vim.notify('Jumping to test location: ' .. filename .. ':' .. start.line + 1, vim.log.levels.INFO)
+      vim.cmd('edit ' .. filename)
+      vim.api.nvim_win_set_cursor(0, { start.line + 1, start.character })
+    end
+  end)
 end
 
 function Test_Display:setup_keymaps()
