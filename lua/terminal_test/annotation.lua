@@ -16,3 +16,13 @@
 ---@field test_line number
 ---@field test_command string
 ---@field file string
+
+---@class gotest
+---@field tests_info gotest.TestInfo[]
+---@field job_id number
+
+---@class gotest.TestInfo
+---@field name string
+---@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
+---@field fail_at_line number
+---@field file string

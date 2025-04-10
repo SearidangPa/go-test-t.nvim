@@ -2,9 +2,6 @@ local make_notify = require('mini.notify').make_notify {}
 local display = require 'go_test_display'
 local displayer = display.new()
 
----@class gotest
----@field tests_info gotest.TestInfo[]
----@field job_id number
 local M = {
   tests_info = {}, ---@type gotest.TestInfo[]
   job_id = -1, ---@type number
@@ -21,12 +18,6 @@ local action_state = {
   fail = true,
   pass = true,
 }
-
----@class gotest.TestInfo
----@field name string
----@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
----@field fail_at_line number
----@field file string
 
 M.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
