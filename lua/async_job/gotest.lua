@@ -5,7 +5,7 @@ local fidget = require 'fidget'
 local tests_info = {}
 
 local gotest = {
-  tests_info = {},
+  tests_info = tests_info,
   job_id = -1,
   displayer = display.new(tests_info),
 }
@@ -30,8 +30,7 @@ gotest.clean_up_prev_job = function(job_id)
   end
 end
 
----@param tests_info gotest.TestInfo[]
-local add_golang_test = function(tests_info, entry)
+local add_golang_test = function(entry)
   if not entry.Test then
     return ''
   end
@@ -45,8 +44,7 @@ local add_golang_test = function(tests_info, entry)
   }
 end
 
----@param tests_info gotest.TestInfo[]
-local add_golang_output = function(tests_info, entry)
+local add_golang_output = function(entry)
   assert(tests_info, vim.inspect(tests_info))
   if not entry.Test then
     return ''
@@ -70,8 +68,7 @@ local add_golang_output = function(tests_info, entry)
   end
 end
 
----@param tests_info gotest.TestInfo[]
-local mark_outcome = function(tests_info, entry)
+local mark_outcome = function(entry)
   if not entry.Test then
     return ''
   end
@@ -110,18 +107,18 @@ gotest.run_test_all = function(command)
           goto continue
         end
         if decoded.Action == 'run' then
-          add_golang_test(gotest.tests_info, decoded)
+          add_golang_test(decoded)
           vim.schedule(function() gotest.displayer:update_tracker_buffer(gotest.tests_info) end)
           goto continue
         end
         if decoded.Action == 'output' then
           if decoded.Test or decoded.Package then
-            add_golang_output(gotest.tests_info, decoded)
+            add_golang_output(decoded)
           end
           goto continue
         end
         if action_state[decoded.Action] then
-          mark_outcome(gotest.tests_info, decoded)
+          mark_outcome(decoded)
           vim.schedule(function() gotest.displayer:update_tracker_buffer(gotest.tests_info) end)
           goto continue
         end
