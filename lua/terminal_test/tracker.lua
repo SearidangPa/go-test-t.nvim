@@ -4,6 +4,7 @@ local terminal_test = require 'terminal_test.terminal_test'
 local terminals = terminal_test.terminals
 local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
 
+local tracker_win_width = 40 -- Fixed width for the split
 local help_items = {
   ' Help',
   ' q       ===  Close Tracker Window',
@@ -99,14 +100,11 @@ function tracker._create_tracker_window()
   vim.api.nvim_set_option_value('filetype', 'test-tracker', { buf = buf })
 
   vim.cmd 'vsplit'
-
   vim.cmd 'wincmd l'
   local win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(win, buf)
 
-  local width = 40 -- Fixed width for the split
-  vim.api.nvim_win_set_width(win, width)
-
+  vim.api.nvim_win_set_width(win, tracker_win_width)
   vim.api.nvim_set_option_value('wrap', false, { win = win })
   vim.api.nvim_set_option_value('cursorline', true, { win = win })
   vim.api.nvim_set_option_value('number', false, { win = win })
@@ -121,23 +119,19 @@ function tracker._create_tracker_window()
       tracker._buf_id = nil
     end,
   })
-
   tracker._win_id = win
   tracker._buf_id = buf
   tracker._is_open = true
 
   local function set_keymap(mode, lhs, rhs) vim.api.nvim_buf_set_keymap(buf, mode, lhs, rhs, { noremap = true, silent = true }) end
-
   set_keymap('n', 'q', '<cmd>lua require("terminal_test.tracker").toggle_tracker_window()<CR>')
   set_keymap('n', '<CR>', '<cmd>lua require("terminal_test.tracker").jump_to_test_under_cursor()<CR>')
   set_keymap('n', 't', '<cmd>lua require("terminal_test.tracker").toggle_terminal_under_cursor()<CR>')
   set_keymap('n', 'd', '<cmd>lua require("terminal_test.tracker").delete_test_under_cursor()<CR>')
   set_keymap('n', 'r', '<cmd>lua require("terminal_test.tracker").run_test_under_cursor()<CR>')
-
   vim.api.nvim_buf_set_lines(buf, 0, 0, false, { ' Test Tracker ', '' })
   vim.api.nvim_buf_set_extmark(buf, ns_id, 0, 0, { hl_group = 'Title' })
   tracker.update_tracker_window()
-
   vim.cmd 'wincmd p'
 end
 
