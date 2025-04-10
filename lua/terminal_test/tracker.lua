@@ -183,6 +183,8 @@ function tracker.update_tracker_window()
       status_icon = '🏁'
     elseif status == 'not run' then
       status_icon = '⏺️'
+    elseif status == 'tracked' then
+      status_icon = '🔍'
     end
 
     -- Add to lines using "Test_name: <status_icon>" format for easier parsing
