@@ -9,8 +9,8 @@ local go_test = {
   job_id = -1,
   tests_info = tests_info,
 }
-go_test.displayer = display.new(go_test.tests_info)
-go_test.displayer:setup()
+go_test.test_displayer = display.new(go_test.tests_info)
+go_test.test_displayer:setup()
 
 local ignored_actions = {
   skip = true,
@@ -116,7 +116,7 @@ go_test.run_test_all = function(command)
 
         if decoded.Action == 'run' then
           add_golang_test(decoded)
-          vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
+          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info) end)
           goto continue
         end
 
@@ -129,7 +129,7 @@ go_test.run_test_all = function(command)
 
         if action_state[decoded.Action] then
           mark_outcome(decoded)
-          vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
+          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info) end)
           goto continue
         end
 
@@ -138,7 +138,7 @@ go_test.run_test_all = function(command)
     end,
 
     on_exit = function()
-      vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
+      vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info) end)
     end,
   })
 end
@@ -148,6 +148,6 @@ vim.api.nvim_create_user_command('GoTestAll', function()
   go_test.run_test_all(command)
 end, {})
 
-vim.api.nvim_create_user_command('GoTestToggleDisplay', function() go_test.displayer:toggle_display() end, {})
+vim.api.nvim_create_user_command('GoTestToggleDisplay', function() go_test.test_displayer:toggle_display() end, {})
 vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(go_test.tests_info) end, {})
 return go_test
