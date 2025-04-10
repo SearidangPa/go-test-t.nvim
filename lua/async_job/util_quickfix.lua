@@ -66,7 +66,7 @@ local function populate_quickfix_list(qf_entries)
 end
 
 ---@param tests_info terminal.testInfo[] | gotest.TestInfo[]
-util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
+util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info, load_stuck_test)
   print 'Loading non-passing tests to quickfix list...'
   local qf_entries = {}
   local tests_to_resolve = {}
@@ -76,10 +76,12 @@ util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
       goto continue
     end
 
-    if test.fail_at_line ~= 0 then
-      qf_entries = add_direct_file_entries(test, qf_entries)
-    else
-      table.insert(tests_to_resolve, test)
+    if load_stuck_test or test.status == 'fail' then
+      if test.fail_at_line ~= 0 then
+        qf_entries = add_direct_file_entries(test, qf_entries)
+      else
+        table.insert(tests_to_resolve, test)
+      end
     end
     ::continue::
   end
