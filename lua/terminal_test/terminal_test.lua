@@ -84,6 +84,7 @@ local function handle_error_trace(line)
   return nil
 end
 
+---@param test_info terminal.testInfo
 local function process_one_line(line, test_info, float_term_state, current_time)
   if string.match(line, '--- FAIL') then
     return handle_test_failed(test_info, float_term_state, current_time)
