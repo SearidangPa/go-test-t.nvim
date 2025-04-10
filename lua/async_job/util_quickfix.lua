@@ -1,4 +1,5 @@
-local M = {}
+local make_notify = require('go.utils').make_notify
+local util_quickfix = {}
 
 local function add_direct_file_entries(test, qf_entries)
   assert(test.file, 'File not found for test: ' .. test.name)
@@ -58,18 +59,19 @@ end
 local function populate_quickfix_list(qf_entries)
   if #qf_entries > 0 then
     vim.fn.setqflist(qf_entries, 'r')
-    vim.cmd 'copen'
+    make_notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list')
     vim.notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list', vim.log.levels.INFO)
   else
     vim.notify('No failing tests found', vim.log.levels.INFO)
   end
 end
 
-M.load_non_passing_tests_to_quickfix = function()
+---@param tests_info terminal.testInfo[] | gotest.TestInfo[]
+util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   local qf_entries = {}
   local tests_to_resolve = {}
 
-  for _, test in pairs(M.tracker_state.tests) do
+  for _, test in pairs(tests_info) do
     if test.status == 'pass' then
       goto continue
     end
@@ -83,8 +85,8 @@ M.load_non_passing_tests_to_quickfix = function()
   end
 
   resolve_test_locations(tests_to_resolve, qf_entries, populate_quickfix_list)
-  M.close_tracker()
+  util_quickfix.close_tracker()
   return qf_entries
 end
 
-return M
+return util_quickfix
