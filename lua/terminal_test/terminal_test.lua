@@ -1,10 +1,9 @@
-local make_notify = require('mini.notify').make_notify {}
-local terminal_test_ns = vim.api.nvim_create_namespace 'GoTestError'
+local fidget = require 'fidget'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go_test_display'
 local displayer = display.new()
-local fidget = require 'fidget'
+local terminal_test_ns = vim.api.nvim_create_namespace 'GoTestError'
 
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
@@ -193,7 +192,7 @@ end
 terminal_test.view_last_test_teriminal = function()
   local test_name = terminal_test.terminals.last_terminal_name
   if not test_name then
-    make_notify 'No last test found'
+    vim.notify('No last test found', vim.log.levels.WARN)
     return
   end
   terminal_test.terminals:toggle_float_terminal(test_name)

@@ -1,4 +1,6 @@
 local fidget = require 'fidget'
+local terminal_test = require 'terminal_test.terminal_test'
+local terminals = terminal_test.terminals
 
 ---@class Tracker
 ---@field track_list terminal.testInfo[]
@@ -15,10 +17,6 @@ local tracker = {
   _buf_id = nil,
   _is_open = false,
 }
-
-local terminal_test = require 'terminal_test.terminal_test'
--- local make_notify = require('mini.notify').make_notify {}
-local terminals = terminal_test.terminals
 
 tracker.add_test_to_tracker = function(test_command_format)
   local util_find_test = require 'util_find_test'
