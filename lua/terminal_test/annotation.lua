@@ -1,12 +1,14 @@
 ---@class terminalTest
----@field terminalTest.terminals TerminalMultiplexer
----@field terminalTest.tests_info table<string, terminal.testInfo>
----@field terminalTest.test_in_terminal fun(test_info: terminal.testInfo)
----@field terminalTest.test_buf_in_terminals fun(test_command_format: string)
----@field terminalTest.test_nearest_in_terminal fun(test_command_format: string)
----@field terminalTest.test_tracked_in_terminal fun()
----@field terminalTest.view_enclosing_test fun()
----@field terminalTest.view_last_test_teriminal fun()
+---@field terminals TerminalMultiplexer
+---@field tests_info table<string, terminal.testInfo>
+---@field displayer TestsDisplay
+---@field ns_id number
+---@field test_in_terminal? fun(test_info: terminal.testInfo, cb_update_tracker?: function)
+---@field test_buf_in_terminals? fun(test_command_format: string)
+---@field test_nearest_in_terminal? fun(test_command_format: string)
+---@field test_tracked_in_terminal? fun()
+---@field view_enclosing_test? fun()
+---@field view_last_test_teriminal? fun()
 
 ---@class terminal.testInfo
 ---@field name string

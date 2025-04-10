@@ -4,6 +4,8 @@ local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'display'
 
 local tests_info = {}
+
+---@type terminalTest
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
   tests_info = tests_info,
