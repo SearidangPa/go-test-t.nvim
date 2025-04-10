@@ -2,12 +2,12 @@ local tracker = {
   track_list = {}, ---@type terminal.testInfo[]
 }
 
----@class tracker
+---@class Tracker
 ---@field track_list terminal.testInfo[]
 ---@field add_test_to_tracker fun(test_command_format: string)
 ---@field jump_to_tracked_test_by_index fun(index: integer)
 ---@field toggle_tracked_terminal_by_index fun(index: integer)
----@field delete_tracked_test fun()
+---@field select_delete_tracked_test fun()
 ---@field reset_test fun()
 
 local terminal_test = require 'terminal_test.terminal_test'
@@ -71,7 +71,7 @@ tracker.toggle_tracked_terminal_by_index = function(index)
   terminals:toggle_float_terminal(target_test)
 end
 
-function tracker.delete_tracked_test()
+function tracker.select_delete_tracked_test()
   local opts = {
     prompt = 'Select tracked test to delete',
     format_item = function(item) return item end,
