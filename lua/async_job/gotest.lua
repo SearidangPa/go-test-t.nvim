@@ -80,8 +80,9 @@ local mark_outcome = function(tests_info, entry)
     return
   end
   test_info.status = entry.Action
-  vim.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.WARN)
-  util_quickfix.add_fail_test(test_info)
+  if entry.Action == 'fail' then
+    util_quickfix.add_fail_test(test_info)
+  end
 end
 
 gotest.run_test_all = function(command)
