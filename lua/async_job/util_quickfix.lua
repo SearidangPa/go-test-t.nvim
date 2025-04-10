@@ -1,4 +1,3 @@
-local make_notify = require('mini.notify').make_notify {}
 local util_quickfix = {}
 
 local function add_direct_file_entries(test, qf_entries)
@@ -58,7 +57,7 @@ end
 
 local function populate_quickfix_list(qf_entries)
   if #qf_entries > 0 then
-    vim.fn.setqflist(qf_entries, 'a')
+    vim.fn.setqflist(qf_entries, 'r')
     vim.notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list', vim.log.levels.INFO)
   else
     vim.notify('No failing tests found', vim.log.levels.INFO)
@@ -77,7 +76,11 @@ util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info, load_stu
       goto continue
     end
 
-    if load_stuck_test or test.status == 'fail' then
+    if test.status ~= 'fail' and not load_stuck_test then
+      goto continue
+    end
+
+    if test.status == 'fail' then
       if test.fail_at_line ~= 0 then
         qf_entries = add_direct_file_entries(test, qf_entries)
       else
