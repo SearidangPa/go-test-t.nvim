@@ -1,5 +1,5 @@
 -- local make_notify = require('mini.notify').make_notify {}
-local display = require 'go_test_display'
+local display = require 'go_display'
 local util_quickfix = require 'async_job.util_quickfix'
 local displayer = display.new()
 local fidget = require 'fidget'

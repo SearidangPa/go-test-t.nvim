@@ -1,7 +1,7 @@
 local fidget = require 'fidget'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
-local display = require 'go_test_display'
+local display = require 'go_display'
 
 local terminal_test = {
   terminals = terminal_multiplexer.new(),

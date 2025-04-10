@@ -6,14 +6,14 @@
 ---@field ns number
 ---@field close_display fun(self: GoTestDisplay)
 
-local GoTestDisplay = {}
-GoTestDisplay.__index = GoTestDisplay
+local Display = {}
+Display.__index = Display
 
 local make_notify = require('mini.notify').make_notify {}
 
 -- Constructor
-function GoTestDisplay.new()
-  local self = setmetatable({}, GoTestDisplay)
+function Display.new()
+  local self = setmetatable({}, Display)
   self.display_win = -1
   self.display_buf = -1
   self.original_test_win = -1
@@ -24,7 +24,7 @@ function GoTestDisplay.new()
 end
 
 ---@param tests_info? gotest.TestInfo[] | terminal.testInfo[]
-function GoTestDisplay:setup(tests_info)
+function Display:setup(tests_info)
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
@@ -55,7 +55,7 @@ function GoTestDisplay:setup(tests_info)
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function GoTestDisplay:parse_test_state_to_lines(tests_info)
+function Display:parse_test_state_to_lines(tests_info)
   local lines = {}
   local tests = {}
 
@@ -114,7 +114,7 @@ function GoTestDisplay:parse_test_state_to_lines(tests_info)
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function GoTestDisplay:update_tracker_buffer(tests_info)
+function Display:update_tracker_buffer(tests_info)
   local lines = self:parse_test_state_to_lines(tests_info)
 
   if vim.api.nvim_buf_is_valid(self.display_buf) then
@@ -142,7 +142,7 @@ function GoTestDisplay:update_tracker_buffer(tests_info)
   end
 end
 
-function GoTestDisplay:jump_to_test_location()
+function Display:jump_to_test_location()
   if not self.display_buf then
     vim.notify('display_buf is nil in jump_to_test_location', vim.log.levels.ERROR)
     return
@@ -175,7 +175,7 @@ function GoTestDisplay:jump_to_test_location()
   end
 end
 
-function GoTestDisplay:setup_keymaps()
+function Display:setup_keymaps()
   local this = self -- Capture the current 'self' reference
   vim.keymap.set('n', 'q', function()
     this:close_display() -- Use the captured reference
@@ -186,14 +186,14 @@ function GoTestDisplay:setup_keymaps()
   end, { buffer = this.display_buf, noremap = true, silent = true })
 end
 
-function GoTestDisplay:close_display()
+function Display:close_display()
   if vim.api.nvim_win_is_valid(self.display_win) then
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
   end
 end
 
-function GoTestDisplay:toggle_display()
+function Display:toggle_display()
   if vim.api.nvim_win_is_valid(self.display_win) then
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
@@ -203,10 +203,10 @@ function GoTestDisplay:toggle_display()
 end
 
 -- Create a user command for each instance
-function GoTestDisplay:register_command(command_name)
+function Display:register_command(command_name)
   local tracker = self
   vim.api.nvim_create_user_command(command_name, function() tracker:toggle_display() end, {})
 end
 
 -- Return the constructor for the class
-return GoTestDisplay
+return Display
