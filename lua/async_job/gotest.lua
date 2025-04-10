@@ -1,5 +1,5 @@
 local make_notify = require('mini.notify').make_notify {}
-local display = require 'async_job.display'
+local display = require 'display'
 local displayer = display.new()
 
 ---@class gotest
