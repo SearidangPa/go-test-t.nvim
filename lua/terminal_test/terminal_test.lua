@@ -80,6 +80,7 @@ local function handle_error_trace(line, test_info, cb_update_tracker)
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
     vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
+    fidget.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.ERROR)
     util_quickfix.add_fail_test(test_info)
     if cb_update_tracker then
       cb_update_tracker(test_info)
@@ -143,7 +144,7 @@ terminal_test.test_buf_in_terminals = function(test_command_format)
       test_bufnr = source_bufnr,
       test_command = test_command,
       status = 'start',
-      file = vim.fn.expand '%:t',
+      file = vim.fn.expand '%:p',
     }
     terminal_test.tests_info[test_name] = test_info
     terminal_test.test_in_terminal(test_info)
@@ -169,7 +170,7 @@ terminal_test.test_nearest_in_terminal = function(test_command_format)
     test_bufnr = source_bufnr,
     test_command = test_command,
     status = 'start',
-    file = vim.fn.expand '%:t',
+    file = vim.fn.expand '%:p',
   }
 end
 
