@@ -1,3 +1,5 @@
+local util_status_icon = require 'util_status_icon'
+
 ---@class TestsDisplay
 ---@field display_win number
 ---@field display_buf number
@@ -84,19 +86,7 @@ function Test_Display:parse_test_state_to_lines(tests_info)
   end)
 
   for _, test in ipairs(tests) do
-    local status_icon = '🔄'
-    if test.status == 'pass' then
-      status_icon = '✅'
-    elseif test.status == 'fail' then
-      status_icon = '❌'
-    elseif test.status == 'paused' then
-      status_icon = '⏸️'
-    elseif test.status == 'cont' then
-      status_icon = '🔥'
-    elseif test.status == 'start' then
-      status_icon = '🏁'
-    end
-
+    local status_icon = util_status_icon.get_status_icon(test.status)
     if test.status == 'fail' and test.filepath ~= '' then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
       table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
