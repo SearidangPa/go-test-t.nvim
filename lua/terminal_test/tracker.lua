@@ -2,24 +2,7 @@ local fidget = require 'fidget'
 local terminal_test = require 'terminal_test.terminal_test'
 local terminals = terminal_test.terminals
 
----@class Tracker
----@field track_list terminal.testInfo[]
----@field add_test_to_tracker fun(test_command_format: string)
----@field jump_to_tracked_test_by_index fun(index: integer)
----@field toggle_tracked_terminal_by_index fun(index: integer)
----@field select_delete_tracked_test fun()
----@field reset_tracker fun()
----@field toggle_tracker_window fun()
----@field update_tracker_window fun()
----@field get_test_index_under_cursor fun(): integer
----@field jump_to_test_under_cursor fun()
----@field toggle_terminal_under_cursor fun()
----@field delete_test_under_cursor fun()
----@field run_test_under_cursor fun()
----@field _original_win_id? integer
----@field _win_id? integer
----@field _buf_id? integer
----@field _is_open boolean
+---@type Tracker
 local tracker = {
   track_list = {},
   _original_win_id = nil,
