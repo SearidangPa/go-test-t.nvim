@@ -6,11 +6,11 @@ local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
 
 local help_items = {
   ' Help',
-  ' q       =>  Close',
-  ' <Enter> =>  Jump',
-  ' t       =>  Toggle',
-  ' r       =>  Run',
-  ' d       =>  Delete',
+  ' q       =>  Close Tracker Window',
+  ' <Enter> =>  Jump to test code',
+  ' t       =>  Toggle test terminal',
+  ' r       =>  Run test in terminal',
+  ' d       =>  Delete from tracker',
 }
 
 ---@type Tracker
