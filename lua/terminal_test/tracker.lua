@@ -93,40 +93,41 @@ function tracker.reset_tracker()
   end
 end
 
--- Create the tracker window
+-- Create the tracker window as a split window instead of floating
 function tracker._create_tracker_window()
   -- Create buffer for the tracker window
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
   vim.api.nvim_buf_set_option(buf, 'filetype', 'test-tracker')
 
-  -- Get dimensions for the window
-  local width = math.floor(vim.o.columns * 0.2) -- 20% of screen width
-  local height = vim.o.lines - 4
-  local col = vim.o.columns - width - 1
-  local row = 2
+  -- Set up a split window to the right
+  vim.cmd 'vsplit'
+
+  -- Move to the new window and set its buffer
+  vim.cmd 'wincmd l'
+  local win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(win, buf)
+
+  -- Set the width of the new window
+  local width = 40 -- Fixed width for the split
+  vim.api.nvim_win_set_width(win, width)
 
   -- Set window options
-  local opts = {
-    relative = 'editor',
-    width = width,
-    height = height,
-    col = col,
-    row = row,
-    style = 'minimal',
-    border = 'rounded',
-    title = ' Test Tracker ',
-    title_pos = 'center',
-  }
-
-  -- Create window
-  local win = vim.api.nvim_open_win(buf, false, opts)
-
-  -- Set window options
-  -- vim.api.nvim_set_option_value('winhl', 'Normal:Normal,FloatBorder:FloatBorder', { win = win })
-  vim.api.nvim_win_set_option(win, 'winhighlight', 'Normal:Normal,FloatBorder:FloatBorder')
   vim.api.nvim_win_set_option(win, 'wrap', false)
   vim.api.nvim_win_set_option(win, 'cursorline', true)
+  vim.api.nvim_win_set_option(win, 'number', false)
+  vim.api.nvim_win_set_option(win, 'relativenumber', false)
+  vim.api.nvim_win_set_option(win, 'signcolumn', 'no')
+
+  -- Add a buffer-local auto command to close the window properly
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = buf,
+    callback = function()
+      tracker._is_open = false
+      tracker._win_id = nil
+      tracker._buf_id = nil
+    end,
+  })
 
   -- Save window and buffer IDs
   tracker._win_id = win
@@ -151,8 +152,16 @@ function tracker._create_tracker_window()
   -- Run test under cursor
   set_keymap('n', 'r', '<cmd>lua require("test_tracker").run_test_under_cursor()<CR>')
 
+  -- Add a title to the window
+  vim.api.nvim_buf_set_lines(buf, 0, 0, false, { ' Test Tracker ', '' })
+  local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
+  vim.api.nvim_buf_add_highlight(buf, ns_id, 'Title', 0, 0, -1)
+
   -- Update buffer content
   tracker.update_tracker_window()
+
+  -- Return focus to the previous window
+  vim.cmd 'wincmd p'
 end
 
 -- Update the tracker window content
@@ -161,11 +170,11 @@ function tracker.update_tracker_window()
     return
   end
 
-  local lines = {}
+  local lines = { ' Test Tracker ', '' } -- Title and empty line
 
   -- Add test entries
   for i, test_info in ipairs(tracker.track_list) do
-    -- Get a shorter version of test name for display (max 30 chars)
+    -- Get a shorter version of test name for display
     local short_name = test_info.name
     if #short_name > 30 then
       short_name = '...' .. string.sub(short_name, -27)
@@ -186,7 +195,8 @@ function tracker.update_tracker_window()
 
   -- Add help footer
   table.insert(lines, '')
-  table.insert(lines, string.rep('─', vim.api.nvim_win_get_width(tracker._win_id) - 2))
+  local window_width = vim.api.nvim_win_get_width(tracker._win_id)
+  table.insert(lines, string.rep('─', window_width - 2))
   table.insert(lines, ' Help:')
   table.insert(lines, ' q: Close')
   table.insert(lines, ' <CR>: Jump')
@@ -200,6 +210,9 @@ function tracker.update_tracker_window()
   -- Apply highlighting
   local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
   vim.api.nvim_buf_clear_namespace(tracker._buf_id, ns_id, 0, -1)
+
+  -- Highlight title
+  vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, 'Title', 0, 0, -1)
 
   -- Highlight footer
   local footer_start = #lines - 6 -- This should point to the separator line
@@ -228,7 +241,7 @@ function tracker.update_tracker_window()
           hl_group = 'DiagnosticWarn'
         end
 
-        vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, hl_group, i - 1, status_col_start, status_col_end)
+        vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, hl_group, i, status_col_start, status_col_end)
       end
     end
   end
@@ -300,25 +313,6 @@ function tracker.run_test_under_cursor()
       local formatted_command = string.format(test_info.test_command, test_info.name)
       fidget.notify('Running test: ' .. formatted_command, vim.log.levels.INFO)
       terminal_test.test_in_terminal(test_info)
-      -- terminal_test.test_in_terminal(test_info.name, formatted_command, {
-      --   on_stdout = function(_, data)
-      --     -- Simple success/failure detection
-      --     if data and data:match 'test passed' then
-      --       test_info.status = 'passed'
-      --     elseif data and data:match 'test failed' then
-      --       test_info.status = 'failed'
-      --     end
-      --     tracker.update_tracker_window()
-      --   end,
-      --   on_exit = function(_, code)
-      --     if code == 0 then
-      --       test_info.status = 'passed'
-      --     else
-      --       test_info.status = 'failed'
-      --     end
-      --     tracker.update_tracker_window()
-      --   end,
-      -- })
 
       -- Also toggle the terminal to show it
       tracker.toggle_tracked_terminal_by_index(index)
