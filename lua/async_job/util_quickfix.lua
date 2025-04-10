@@ -109,7 +109,6 @@ util_quickfix.add_fail_test = function(test_info)
 
   local already_exist = already_exist_in_quickfix(test_info)
   if already_exist then
-    vim.notify(string.format('%s already exists in quickfix list', test_info.name), vim.log.levels.INFO)
     return
   end
 
