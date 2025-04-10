@@ -136,14 +136,12 @@ function GoTestDisplay:update_tracker_buffer(tests_info)
 end
 
 function GoTestDisplay:jump_to_test_location()
-  -- Debug output
   if not self.display_buf then
-    make_notify('display_buf is nil in jump_to_test_location', 'error')
+    vim.notify('display_buf is nil in jump_to_test_location', vim.log.levels.ERROR)
     return
   end
-
   if not self.display_win then
-    make_notify('display_win is nil in jump_to_test_location', 'error')
+    vim.notify('display_win is nil in jump_to_test_location', vim.log.levels.ERROR)
     return
   end
   local cursor = vim.api.nvim_win_get_cursor(0)
