@@ -42,6 +42,7 @@ local function handle_test_failed(test_info, float_term_state, current_time)
   float_term_state.status = 'fail'
   terminal_test.tests_info[test_info.name] = test_info
   make_notify(string.format('Test failed: %s', test_info.name))
+  util_quickfix.add_fail_test(test_info)
   vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
 end
 
@@ -197,10 +198,6 @@ terminal_test.view_last_test_teriminal = function()
 end
 
 vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() displayer:toggle_display() end, {})
-vim.api.nvim_create_user_command(
-  'TerminalTestLoadStuckTest',
-  function() util_quickfix.load_non_passing_tests_to_quickfix(terminal_test.tests_info, true) end,
-  {}
-)
+vim.api.nvim_create_user_command('TerminalTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(terminal_test.tests_info) end, {})
 
 return terminal_test
