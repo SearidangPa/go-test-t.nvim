@@ -3,7 +3,7 @@ local M = {
 }
 
 ---@class track_test_terminal
----@field track_test_list table[]terminal.testInfo
+---@field track_test_list terminal.testInfo[]
 
 local terminal_test = require 'terminal_test.terminal_test'
 local make_notify = require('mini.notify').make_notify {}
