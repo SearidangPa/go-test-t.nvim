@@ -86,13 +86,11 @@ function tracker.reset_tracker()
   vim.api.nvim_buf_clear_namespace(0, -1, 0, -1)
   tracker.track_list = {}
 
-  -- Update the tracker window if it's open
   if tracker._is_open then
     tracker.update_tracker_window()
   end
 end
 
--- Create the tracker window as a split window instead of floating
 function tracker._create_tracker_window()
   tracker._original_win_id = vim.api.nvim_get_current_win()
   local buf = vim.api.nvim_create_buf(false, true)
@@ -101,23 +99,19 @@ function tracker._create_tracker_window()
 
   vim.cmd 'vsplit'
 
-  -- Move to the new window and set its buffer
   vim.cmd 'wincmd l'
   local win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(win, buf)
 
-  -- Set the width of the new window
   local width = 40 -- Fixed width for the split
   vim.api.nvim_win_set_width(win, width)
 
-  -- Set window options
   vim.api.nvim_set_option_value('wrap', false, { win = win })
   vim.api.nvim_set_option_value('cursorline', true, { win = win })
   vim.api.nvim_set_option_value('number', false, { win = win })
   vim.api.nvim_set_option_value('relativenumber', false, { win = win })
   vim.api.nvim_set_option_value('signcolumn', 'no', { win = win })
 
-  -- Add a buffer-local auto command to close the window properly
   vim.api.nvim_create_autocmd('BufWipeout', {
     buffer = buf,
     callback = function()
@@ -127,7 +121,6 @@ function tracker._create_tracker_window()
     end,
   })
 
-  -- Save window and buffer IDs
   tracker._win_id = win
   tracker._buf_id = buf
   tracker._is_open = true
@@ -140,13 +133,10 @@ function tracker._create_tracker_window()
   set_keymap('n', 'd', '<cmd>lua require("terminal_test.tracker").delete_test_under_cursor()<CR>')
   set_keymap('n', 'r', '<cmd>lua require("terminal_test.tracker").run_test_under_cursor()<CR>')
 
-  -- Add a title to the window
   vim.api.nvim_buf_set_lines(buf, 0, 0, false, { ' Test Tracker ', '' })
   vim.api.nvim_buf_set_extmark(buf, ns_id, 0, 0, { hl_group = 'Title' })
-  -- Update buffer content
   tracker.update_tracker_window()
 
-  -- Return focus to the previous window
   vim.cmd 'wincmd p'
 end
 
@@ -202,7 +192,6 @@ function tracker.update_tracker_window()
   end
 end
 
--- Toggle tracker window visibility
 tracker.toggle_tracker_window = function()
   if tracker._is_open and tracker._win_id and vim.api.nvim_win_is_valid(tracker._win_id) then
     vim.api.nvim_win_close(tracker._win_id, true)
