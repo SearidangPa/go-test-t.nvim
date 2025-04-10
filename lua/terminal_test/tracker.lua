@@ -185,6 +185,8 @@ function tracker.update_tracker_window()
       status_icon = '⏺️'
     elseif status == 'tracked' then
       status_icon = '🔍'
+    else
+      vim.notify('Unknown status: ' .. status, vim.log.levels.WARN)
     end
 
     -- Add to lines using "Test_name: <status_icon>" format for easier parsing
@@ -327,7 +329,6 @@ function tracker.run_test_under_cursor()
     local test_info = tracker.track_list[index]
     if test_info then
       -- Update status
-      test_info.status = 'running'
       tracker.update_tracker_window()
       terminal_test.test_in_terminal(test_info)
 
