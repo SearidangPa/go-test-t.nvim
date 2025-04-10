@@ -4,28 +4,10 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local display = require 'go_test_display'
 local displayer = display.new()
 
----@class terminalTest
----@field terminalTest.terminals TerminalMultiplexer
----@field terminalTest.tests_info table<string, terminal.testInfo>
----@field terminalTest.test_in_terminal fun(test_info: terminal.testInfo)
----@field terminalTest.test_buf_in_terminals fun(test_command_format: string)
----@field terminalTest.test_nearest_in_terminal fun(test_command_format: string)
----@field terminalTest.test_tracked_in_terminal fun()
----@field terminalTest.view_enclosing_test fun()
----@field terminalTest.view_last_test_teriminal fun()
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
   tests_info = {}, ---@type terminal.testInfo[]
 }
-
----@class terminal.testInfo
----@field name string
----@field status string
----@field fail_at_line? number
----@field test_bufnr number
----@field test_line number
----@field test_command string
----@field file string
 
 ---@param test_info terminal.testInfo
 local function validate_test_info(test_info)
