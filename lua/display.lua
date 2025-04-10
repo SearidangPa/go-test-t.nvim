@@ -111,29 +111,8 @@ end
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
 function Test_Display:update_tracker_buffer(tests_info)
   local lines = self:parse_test_state_to_lines(tests_info)
-
   if vim.api.nvim_buf_is_valid(self.display_buf) then
     vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)
-    vim.api.nvim_buf_clear_namespace(self.display_buf, self.ns, 0, -1)
-
-    for i, line in ipairs(lines) do
-      if line:match '^  ✅' then
-        ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticOk', i - 1, 0, -1)
-      elseif line:match '^  ❌' then
-        ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticError', i - 1, 0, -1)
-      elseif line:match '^  ⏸️' then
-        ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticWarn', i - 1, 0, -1)
-      elseif line:match '^  ▶️' then
-        ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'DiagnosticInfo', i - 1, 0, -1)
-      elseif line:match '^    ↳' then
-        ---@diagnostic disable-next-line: deprecated
-        vim.api.nvim_buf_add_highlight(self.display_buf, self.ns, 'Comment', i - 1, 0, -1)
-      end
-    end
   end
 end
 
