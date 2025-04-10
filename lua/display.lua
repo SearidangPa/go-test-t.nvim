@@ -164,10 +164,15 @@ function Display:jump_to_test_location()
   local test_info = self.tests_info[test_name]
   local filepath = test_info.filepath
   vim.cmd('edit ' .. filepath)
-  if test_info.fail_at_line == 0 then
-    vim.api.nvim_win_set_cursor(0, { tonumber(test_info.test_line), 0 })
+
+  if test_info.fail_at_line and test_info.fail_at_line == 0 then
+    assert(test_info.test_line, 'No test line found')
+    vim.api.nvim_win_set_cursor(0, { test_info.test_line, 0 })
+  elseif test_info.test_line then
+    vim.api.nvim_win_set_cursor(0, { tonumber(test_info.fail_at_line), 0 })
   else
-    vim.api.nvim_win_set_cursor(0, { tonumber(test_info), 0 })
+    vim.notify(string.format('No test line found for test: %s', test_name), vim.log.levels.ERROR)
+    return
   end
   vim.cmd 'normal! zz'
 end
