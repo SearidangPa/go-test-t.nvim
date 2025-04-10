@@ -27,14 +27,12 @@ M.clean_up_prev_job = function(job_id)
   end
 end
 
-local make_key = function(entry)
-  assert(entry.Test, 'Must have test name' .. vim.inspect(entry))
-  return entry.Test
-end
-
 ---@param tests gotest.TestInfo[]
 local add_golang_test = function(tests, entry)
-  local key = make_key(entry)
+  if not entry.Test then
+    return ''
+  end
+  local key = entry.Test
   tests[key] = {
     name = entry.Test,
     fail_at_line = 0,
@@ -47,7 +45,10 @@ end
 ---@param tests gotest.TestInfo[]
 local add_golang_output = function(tests, entry)
   assert(tests, vim.inspect(tests))
-  local key = make_key(entry)
+  if not entry.Test then
+    return ''
+  end
+  local key = entry.Test
   local test = tests[key]
   if not test then
     return
@@ -66,7 +67,10 @@ local add_golang_output = function(tests, entry)
 end
 
 local mark_outcome = function(tests, entry)
-  local key = make_key(entry)
+  if not entry.Test then
+    return ''
+  end
+  local key = entry.Test
   local test = tests[key]
   if not test then
     return
