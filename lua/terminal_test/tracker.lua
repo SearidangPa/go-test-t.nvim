@@ -1,3 +1,5 @@
+local fidget = require 'fidget'
+
 local tracker = {
   track_list = {}, ---@type terminal.testInfo[]
   _win_id = nil,
@@ -137,7 +139,6 @@ function tracker._create_tracker_window()
 
   -- Close window with q or <Esc>
   set_keymap('n', 'q', '<cmd>lua require("test_tracker").toggle_tracker_window()<CR>')
-  set_keymap('n', '<Esc>', '<cmd>lua require("test_tracker").toggle_tracker_window()<CR>')
 
   -- Jump to test under cursor
   set_keymap('n', '<CR>', '<cmd>lua require("test_tracker").jump_to_test_under_cursor()<CR>')
@@ -187,6 +188,8 @@ function tracker.update_tracker_window()
   -- Add help footer
   table.insert(lines, '')
   table.insert(lines, string.rep('─', vim.api.nvim_win_get_width(tracker._win_id) - 2))
+  table.insert(lines, ' Help:')
+  table.insert(lines, ' q: Close')
   table.insert(lines, ' <CR>: Jump')
   table.insert(lines, ' t: Toggle')
   table.insert(lines, ' r: Run')
@@ -200,7 +203,7 @@ function tracker.update_tracker_window()
   vim.api.nvim_buf_clear_namespace(tracker._buf_id, ns_id, 0, -1)
 
   -- Highlight footer
-  local footer_start = #lines - 4 -- This should point to the separator line
+  local footer_start = #lines - 6 -- This should point to the separator line
   vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, 'NonText', footer_start, 0, -1)
 
   -- Highlight help text lines
@@ -296,7 +299,8 @@ function tracker.run_test_under_cursor()
 
       -- Run the test
       local formatted_command = string.format(test_info.test_command, test_info.name)
-      vim.notify('Mock Running test: ' .. formatted_command, vim.log.levels.INFO)
+      fidget.notify('Running test: ' .. formatted_command, vim.log.levels.INFO)
+      terminal_test.test_in_terminal(test_info)
       -- terminal_test.test_in_terminal(test_info.name, formatted_command, {
       --   on_stdout = function(_, data)
       --     -- Simple success/failure detection
