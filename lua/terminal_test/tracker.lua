@@ -1,9 +1,14 @@
 local tracker = {
-  track_list = {}, ---@type table[]terminal.testInfo
+  track_list = {}, ---@type terminal.testInfo[]
 }
 
----@class track_test_terminal
----@field track_test_list terminal.testInfo[]
+---@class tracker
+---@field track_list terminal.testInfo[]
+---@field add_test_to_tracker fun(test_command_format: string)
+---@field jump_to_tracked_test_by_index fun(index: integer)
+---@field toggle_tracked_terminal_by_index fun(index: integer)
+---@field delete_tracked_test fun()
+---@field reset_test fun()
 
 local terminal_test = require 'terminal_test.terminal_test'
 local make_notify = require('mini.notify').make_notify {}
@@ -14,7 +19,7 @@ tracker.add_test_to_tracker = function(test_command_format)
   local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
   for _, existing_test_info in ipairs(tracker.track_list) do
-    if existing_test_info.test_name == test_name then
+    if existing_test_info.name == test_name then
       make_notify(string.format('Test already in tracker: %s', test_name))
       return
     end
@@ -31,7 +36,7 @@ end
 
 vim.keymap.set('n', '<leader>at', tracker.add_test_to_tracker, { desc = '[A]dd [T]est to tracker' })
 
-local function jump_to_tracked_test_by_index(index)
+tracker.jump_to_tracked_test_by_index = function(index)
   if index > #tracker.track_list then
     index = #tracker.track_list
   end
@@ -40,7 +45,7 @@ local function jump_to_tracked_test_by_index(index)
     return
   end
 
-  local target_test = tracker.track_list[index].test_name
+  local target_test = tracker.track_list[index].name
 
   vim.lsp.buf_request(0, 'workspace/symbol', { query = target_test }, function(err, res)
     if err or not res or #res == 0 then
@@ -58,21 +63,13 @@ local function jump_to_tracked_test_by_index(index)
   end)
 end
 
--- for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
---   map('n', string.format('<leader>%d', idx), function() jump_to_tracked_test_by_index(idx) end, { desc = string.format('Jump to tracked test %d', idx) })
--- end
-
-local function toggle_tracked_test_by_index(index)
+tracker.toggle_tracked_terminal_by_index = function(index)
   if index > #tracker.track_list then
     index = #tracker.track_list
   end
-  local target_test = tracker.track_list[index].test_name
+  local target_test = tracker.track_list[index].name
   terminals:toggle_float_terminal(target_test)
 end
-
--- for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
---   map('n', string.format('<localleader>v%d', idx), function() toggle_tracked_test_by_index(idx) end, { desc = string.format('Toggle tracked test %d', idx) })
--- end
 
 function tracker.delete_tracked_test()
   local opts = {
@@ -82,12 +79,12 @@ function tracker.delete_tracked_test()
 
   local all_tracked_test_names = {}
   for _, testInfo in ipairs(tracker.track_list) do
-    table.insert(all_tracked_test_names, testInfo.test_name)
+    table.insert(all_tracked_test_names, testInfo.name)
   end
 
   local handle_choice = function(tracked_test_name)
     for index, testInfo in ipairs(tracker.track_list) do
-      if testInfo.test_name == tracked_test_name then
+      if testInfo.name == tracked_test_name then
         terminals:delete_terminal(tracked_test_name)
         table.remove(tracker.track_list, index)
         make_notify(string.format('Deleted test terminal from tracker: %s', tracked_test_name))
@@ -99,7 +96,7 @@ function tracker.delete_tracked_test()
   vim.ui.select(all_tracked_test_names, opts, function(choice) handle_choice(choice) end)
 end
 
-tracker.reset_test = function()
+tracker.reset_tracker = function()
   for test_name, _ in pairs(terminals.all_terminals) do
     terminals:delete_terminal(test_name)
   end
