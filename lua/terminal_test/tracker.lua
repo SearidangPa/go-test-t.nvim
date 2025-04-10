@@ -2,6 +2,14 @@ local fidget = require 'fidget'
 local terminal_test = require 'terminal_test.terminal_test'
 local terminals = terminal_test.terminals
 local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
+local help_items = {
+  ' Help:',
+  ' q: Close',
+  ' <CR>: Jump',
+  ' t: Toggle',
+  ' r: Run',
+  ' d: Delete',
+}
 
 ---@type Tracker
 local tracker = {
@@ -172,24 +180,19 @@ function tracker.update_tracker_window()
     table.insert(lines, ' No tests tracked')
   end
   table.insert(lines, '')
+
   local window_width = vim.api.nvim_win_get_width(tracker._win_id)
   table.insert(lines, string.rep('─', window_width - 2))
-  table.insert(lines, ' Help:')
-  table.insert(lines, ' q: Close')
-  table.insert(lines, ' <CR>: Jump')
-  table.insert(lines, ' t: Toggle')
-  table.insert(lines, ' r: Run')
-  table.insert(lines, ' d: Delete')
+  for _, item in ipairs(help_items) do
+    table.insert(lines, ' ' .. item)
+  end
 
   vim.api.nvim_buf_set_lines(tracker._buf_id, 0, -1, false, lines)
-
   vim.api.nvim_buf_clear_namespace(tracker._buf_id, ns_id, 0, -1)
-
   vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, 0, 0, {
     end_col = #lines[1],
     hl_group = 'Title',
   })
-
   local footer_start = #lines - 6
   for i = footer_start, #lines - 1 do
     vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, i, 0, {
@@ -271,12 +274,8 @@ function tracker.run_test_under_cursor()
   if index then
     local test_info = tracker.track_list[index]
     if test_info then
-      -- Update status
       tracker.update_tracker_window()
       terminal_test.test_in_terminal(test_info)
-
-      -- Also toggle the terminal to show it
-      tracker.toggle_tracked_terminal_by_index(index)
     end
   end
 end
