@@ -121,13 +121,15 @@ function Test_Display:assert_display_buf_win()
   assert(self.display_win, 'display_win is nil in jump_to_test_location')
 end
 
+local icons = '🔥❌✅🔄⏸️🪵⏺️🏁'
+
 function Test_Display:jump_to_test_location()
   self:assert_display_buf_win()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
   assert(line, 'No line found in display buffer')
-  local test_name = line:match '[❌✅]%s+([%w_%-]+)'
+  local test_name = line:match('[' .. icons:gsub('.', '%%%1') .. ']%s+([%w_%-]+)')
   assert(test_name, 'No test name found in line: ' .. line)
 
   local test_info = self.tests_info[test_name]
