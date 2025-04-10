@@ -81,7 +81,7 @@ local function handle_error_trace(line, test_info, cb_update_tracker)
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
     vim.schedule(function() terminal_test.displayer:update_tracker_buffer(terminal_test.tests_info) end)
-    fidget.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.ERROR)
+    fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
     util_quickfix.add_fail_test(test_info)
     if cb_update_tracker then
       cb_update_tracker(test_info)
