@@ -146,12 +146,14 @@ function tracker.update_tracker_window()
     vim.notify('Tracker window is not valid', vim.log.levels.WARN)
     return
   end
+
   local lines = { ' Test Tracker ', '' }
   for i, test_info in ipairs(tracker.track_list) do
     local status_icon = util_status_icon.get_status_icon(test_info.status)
     local line = string.format(' %d. %s: %s', i, test_info.name, status_icon)
     table.insert(lines, line)
   end
+
   if #tracker.track_list == 0 then
     table.insert(lines, ' No tests tracked')
   end
@@ -164,6 +166,7 @@ function tracker.update_tracker_window()
   end
 
   vim.api.nvim_buf_set_lines(tracker._buf_id, 0, -1, false, lines)
+
   vim.api.nvim_buf_clear_namespace(tracker._buf_id, ns_id, 0, -1)
   vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, 0, 0, {
     end_col = #lines[1],
