@@ -2,15 +2,14 @@ local display = require 'display'
 local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 
-local tests_info = {}
+local tests_info_instance = {}
 
 ---@type Gotest
 local go_test = {
   job_id = -1,
-  tests_info = tests_info,
+  tests_info = tests_info_instance,
+  test_displayer = display.new(tests_info_instance),
 }
-go_test.test_displayer = display.new(go_test.tests_info)
-go_test.test_displayer:setup()
 
 local ignored_actions = {
   skip = true,
@@ -60,16 +59,21 @@ local filter_golang_output = function(entry)
   end
 
   local trimmed_output = vim.trim(entry.Output)
+
+  local file, line_num_any = string.match(trimmed_output, 'Error Trace:%s+([^:]+):(%d+)')
+  if file and line_num_any then
+    local line_num = tonumber(line_num_any)
+    assert(line_num, 'Line number must be a number')
+    test_info.fail_at_line = line_num
+    test_info.filepath = file
+  end
+
   if trimmed_output:match '^--- FAIL:' then
-    local file, line = string.match(trimmed_output, '([%w_%-]+%.go):(%d+):')
-    if file and line then
-      local line_num = tonumber(line)
-      assert(line_num, 'Line number must be a number')
-      test_info.fail_at_line = line_num
-      test_info.filepath = file
-    end
     test_info.status = 'fail'
     util_quickfix.add_fail_test(test_info)
+    go_test.tests_info[entry.Test] = test_info
+    print(vim.inspect(test_info))
+    go_test.test_displayer:update_tracker_buffer(go_test.tests_info)
   end
 end
 
@@ -94,6 +98,8 @@ local mark_outcome = function(entry)
 end
 
 go_test.run_test_all = function(command)
+  go_test.test_displayer:setup()
+
   go_test.clean_up_prev_job(go_test.job_id)
   go_test.job_id = vim.fn.jobstart(command, {
     stdout_buffered = false,

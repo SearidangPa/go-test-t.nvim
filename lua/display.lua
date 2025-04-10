@@ -49,7 +49,7 @@ function Test_Display:setup()
   self:setup_keymaps()
 end
 
----@param tests_info gotest.TestInfo[] | terminal.testInfo[]
+---@param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
 function Test_Display:parse_test_state_to_lines(tests_info)
   local lines = {}
   local tests = {}
@@ -98,7 +98,7 @@ function Test_Display:parse_test_state_to_lines(tests_info)
       status_icon = '🏁'
     end
 
-    if test.status == 'fail' and test.file ~= '' then
+    if test.status == 'fail' and test.filepath ~= '' then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
       table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
     else
@@ -160,7 +160,7 @@ function Test_Display:jump_to_test_location()
 
   local test_info = self.tests_info[test_name]
   assert(test_info, 'No test info found for test: ' .. test_name)
-  assert(test_info.test_line, 'No test line found for test: ' .. test_name)
+  assert(test_info.test_line, string.format('No test line found for test: %s', vim.inspect(test_info)))
   local filepath = test_info.filepath
   vim.api.nvim_set_current_win(self.original_test_win)
   vim.cmd('edit ' .. filepath)
