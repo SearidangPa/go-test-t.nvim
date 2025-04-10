@@ -1,3 +1,5 @@
+local util_status_icon = require 'util_status_icon'
+
 ---@class TestsDisplay
 ---@field display_win number
 ---@field display_buf number
@@ -5,11 +7,11 @@
 ---@field original_test_buf number
 ---@field ns number
 ---@field tests_info gotest.TestInfo[] | terminal.testInfo[]
+---@field _priority table<string, integer>
 ---@field close_display fun(self: TestsDisplay)
 local Display = {}
 Display.__index = Display
 
--- Constructor
 --- @param tests_info gotest.TestInfo[] | terminal.testInfo[]
 function Display.new(tests_info)
   local self = setmetatable({}, Display)
@@ -19,6 +21,14 @@ function Display.new(tests_info)
   self.original_test_buf = -1
   self.ns = vim.api.nvim_create_namespace 'go_test_display'
   self.tests_info = tests_info
+  self._priority = {
+    running = 1,
+    paused = 2,
+    cont = 3,
+    start = 4,
+    fail = 5,
+    pass = 6,
+  }
   return self
 end
 
@@ -57,7 +67,6 @@ end
 function Display:parse_test_state_to_lines(tests_info)
   local lines = {}
   local tests = {}
-
   for _, test in pairs(tests_info) do
     if test.name then
       table.insert(tests, test)
@@ -68,40 +77,20 @@ function Display:parse_test_state_to_lines(tests_info)
     if a.status == b.status then
       return a.name < b.name
     end
-    local priority = {
-      running = 1,
-      paused = 2,
-      cont = 3,
-      start = 4,
-      fail = 5,
-      pass = 6,
-    }
-    if not priority[a.status] and priority[b.status] then
+    if not self._priority[a.status] and self._priority[b.status] then
       return true
     end
-    if priority[a.status] and not priority[b.status] then
+    if self._priority[a.status] and not self._priority[b.status] then
       return false
     end
-    if not priority[a.status] and not priority[b.status] then
+    if not self._priority[a.status] and not self._priority[b.status] then
       return a.name < b.name
     end
-    return priority[a.status] < priority[b.status]
+    return self._priority[a.status] < self._priority[b.status]
   end)
 
   for _, test in ipairs(tests) do
-    local status_icon = '🔄'
-    if test.status == 'pass' then
-      status_icon = '✅'
-    elseif test.status == 'fail' then
-      status_icon = '❌'
-    elseif test.status == 'paused' then
-      status_icon = '⏸️'
-    elseif test.status == 'cont' then
-      status_icon = '🔥'
-    elseif test.status == 'start' then
-      status_icon = '🏁'
-    end
-
+    local status_icon = util_status_icon.get_status_icon(test.status)
     if test.status == 'fail' and test.file ~= '' then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
       table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
