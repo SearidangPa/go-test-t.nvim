@@ -1,18 +1,5 @@
 local fidget = require 'fidget'
 
----@class Tracker
----@field track_list terminal.testInfo[]
----@field add_test_to_tracker fun(test_command_format: string)
----@field jump_to_tracked_test_by_index fun(index: integer)
----@field toggle_tracked_terminal_by_index fun(index: integer)
----@field select_delete_tracked_test fun()
----@field reset_tracker fun()
----@field toggle_tracker_window fun()
----@field update_tracker_window fun()
----@field _create_tracker_window fun()
----@field _win_id integer|nil
----@field _buf_id integer|nil
----@field _is_open boolean
 local tracker = {
   track_list = {}, ---@type terminal.testInfo[]
   _win_id = nil,
@@ -138,19 +125,19 @@ function tracker._create_tracker_window()
   local function set_keymap(mode, lhs, rhs) vim.api.nvim_buf_set_keymap(buf, mode, lhs, rhs, { noremap = true, silent = true }) end
 
   -- Close window with q or <Esc>
-  set_keymap('n', 'q', '<cmd>lua require("test_tracker").toggle_tracker_window()<CR>')
+  set_keymap('n', 'q', '<cmd>lua require("terminal_test.tracker").toggle_tracker_window()<CR>')
 
   -- Jump to test under cursor
-  set_keymap('n', '<CR>', '<cmd>lua require("test_tracker").jump_to_test_under_cursor()<CR>')
+  set_keymap('n', '<CR>', '<cmd>lua require("terminal_test.tracker").jump_to_test_under_cursor()<CR>')
 
   -- Toggle terminal for test under cursor
-  set_keymap('n', 't', '<cmd>lua require("test_tracker").toggle_terminal_under_cursor()<CR>')
+  set_keymap('n', 't', '<cmd>lua require("terminal_test.tracker").toggle_terminal_under_cursor()<CR>')
 
   -- Delete test under cursor
-  set_keymap('n', 'd', '<cmd>lua require("test_tracker").delete_test_under_cursor()<CR>')
+  set_keymap('n', 'd', '<cmd>lua require("terminal_test.tracker").delete_test_under_cursor()<CR>')
 
   -- Run test under cursor
-  set_keymap('n', 'r', '<cmd>lua require("test_tracker").run_test_under_cursor()<CR>')
+  set_keymap('n', 'r', '<cmd>lua require("terminal_test.tracker").run_test_under_cursor()<CR>')
 
   -- Add a title to the window
   vim.api.nvim_buf_set_lines(buf, 0, 0, false, { ' Test Tracker ', '' })
