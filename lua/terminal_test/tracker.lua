@@ -17,7 +17,7 @@ local tracker = {
 }
 
 local terminal_test = require 'terminal_test.terminal_test'
-local make_notify = require('mini.notify').make_notify {}
+-- local make_notify = require('mini.notify').make_notify {}
 local terminals = terminal_test.terminals
 
 tracker.add_test_to_tracker = function(test_command_format)
@@ -26,7 +26,7 @@ tracker.add_test_to_tracker = function(test_command_format)
   assert(test_name, 'No test found')
   for _, existing_test_info in ipairs(tracker.track_list) do
     if existing_test_info.name == test_name then
-      make_notify(string.format('Test already in tracker: %s', test_name))
+      fidget.notify(string.format('Test already in tracker: %s', test_name))
       return
     end
   end
@@ -334,7 +334,7 @@ function tracker.delete_test_under_cursor()
     if test_info then
       terminals:delete_terminal(test_info.name)
       table.remove(tracker.track_list, index)
-      make_notify(string.format('Deleted test terminal: %s', test_info.name))
+      fidget.notify(string.format('Deleted test terminal: %s', test_info.name))
       tracker.update_tracker_window()
     end
   end
