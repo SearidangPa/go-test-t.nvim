@@ -78,6 +78,7 @@ local mark_outcome = function(tests_info, entry)
   if not test_info then
     return
   end
+
   test_info.status = entry.Action
   if entry.Action == 'fail' then
     util_quickfix.add_fail_test(test_info)
@@ -94,38 +95,46 @@ gotest.run_test_all = function(command)
   gotest.clean_up_prev_job(gotest.job_id)
   gotest.job_id = vim.fn.jobstart(command, {
     stdout_buffered = false,
+
     on_stdout = function(_, data)
       assert(data, 'No data received from job')
       for _, line in ipairs(data) do
         if line == '' then
           goto continue
         end
-        local success, decoded = pcall(vim.json.decode, line)
-        if not success or not decoded then
+
+        local ok, decoded = pcall(vim.json.decode, line)
+        if not ok or not decoded then
           goto continue
         end
+
         if ignored_actions[decoded.Action] then
           goto continue
         end
+
         if decoded.Action == 'run' then
           add_golang_test(gotest.tests_info, decoded)
           vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
           goto continue
         end
+
         if decoded.Action == 'output' then
           if decoded.Test or decoded.Package then
             add_golang_output(gotest.tests_info, decoded)
           end
           goto continue
         end
+
         if action_state[decoded.Action] then
           mark_outcome(gotest.tests_info, decoded)
           vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
           goto continue
         end
+
         ::continue::
       end
     end,
+
     on_exit = function()
       vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
     end,

@@ -189,14 +189,9 @@ end
 
 ---@return integer?
 function tracker.get_test_index_under_cursor()
-  -- Get the current cursor position
   local cursor_pos = vim.api.nvim_win_get_cursor(tracker._win_id)
   local line_nr = cursor_pos[1]
-
-  -- Get the text of the current line
   local line_text = vim.api.nvim_buf_get_lines(tracker._buf_id, line_nr - 1, line_nr, false)[1]
-
-  -- If the line is empty or we're in the header/footer section, return nil
   if
     not line_text
     or line_text == ''
@@ -214,7 +209,6 @@ function tracker.get_test_index_under_cursor()
   return index
 end
 
--- Action functions for keymaps
 function tracker.jump_to_test_under_cursor()
   local index = tracker.get_test_index_under_cursor()
   if index then
