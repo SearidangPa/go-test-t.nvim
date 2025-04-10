@@ -28,9 +28,6 @@ M.clean_up_prev_job = function(job_id)
 end
 
 local make_key = function(entry)
-  if not entry.Test then
-    return entry.Package -- Fallback for package-level tests
-  end
   assert(entry.Test, 'Must have test name' .. vim.inspect(entry))
   return entry.Test
 end
