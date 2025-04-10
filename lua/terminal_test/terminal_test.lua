@@ -15,7 +15,7 @@ local displayer = display.new()
 ---@field terminalTest.view_last_test_teriminal fun()
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
-  tests_info = {}, ---@type gotest.TestInfo[]
+  tests_info = {}, ---@type terminal.testInfo[]
 }
 
 ---@class terminal.testInfo
@@ -25,6 +25,7 @@ local terminal_test = {
 ---@field test_bufnr number
 ---@field test_line number
 ---@field test_command string
+---@field file string
 
 ---@param test_info terminal.testInfo
 local function validate_test_info(test_info)
@@ -44,7 +45,7 @@ local function handle_test_passed(test_info, float_term_state, current_time)
   test_info.status = 'passed'
   float_term_state.status = 'passed'
   make_notify(string.format('Test passed: %s', test_info.name))
-  return true -- detach from the buffer
+  vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
 end
 
 ---@param test_info terminal.testInfo
@@ -56,8 +57,7 @@ local function handle_test_failed(test_info, float_term_state, current_time)
   test_info.status = 'failed'
   float_term_state.status = 'failed'
   make_notify(string.format('Test failed: %s', test_info.name))
-  vim.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.WARN, { title = 'Test Failure' })
-  return true
+  vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
 end
 
 local function find_buffer_for_file(file)
@@ -70,7 +70,8 @@ local function find_buffer_for_file(file)
   return nil
 end
 
-local function handle_error_trace(line)
+---@param test_info terminal.testInfo
+local function handle_error_trace(line, test_info)
   -- Pattern matches strings like "Error Trace:    /Users/path/file.go:21"
   local file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
   if file and line_num then
@@ -81,6 +82,9 @@ local function handle_error_trace(line)
       vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = line_num })
     end
 
+    test_info.status = 'failed'
+    test_info.fail_at_line = line_num
+    vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
     return error_line
   end
   return nil
@@ -93,7 +97,7 @@ local function process_one_line(line, test_info, float_term_state, current_time)
   elseif string.match(line, '--- PASS') then
     return handle_test_passed(test_info, float_term_state, current_time)
   end
-  return handle_error_trace(line)
+  return handle_error_trace(line, test_info)
 end
 
 local function process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state)
@@ -132,19 +136,19 @@ terminal_test.test_buf_in_terminals = function(test_command_format)
   for test_name, test_line in pairs(all_tests_in_buf) do
     terminal_test.terminals:delete_terminal(test_name)
     local test_command = string.format(test_command_format, test_name)
-    table.insert(terminal_test.tests_info, {
-      name = test_name,
-      status = 'start',
-      file = vim.fn.expand '%:t',
-    })
-    terminal_test.test_in_terminal {
+    local test_info = {
       name = test_name,
       test_line = test_line,
       test_bufnr = source_bufnr,
       test_command = test_command,
       status = 'start',
+      file = vim.fn.expand '%:t',
     }
+    terminal_test.tests_info[test_name] = test_info
+    terminal_test.test_in_terminal(test_info)
   end
+
+  displayer:setup(terminal_test.tests_info)
 end
 
 ---@param test_command_format string
@@ -164,6 +168,7 @@ terminal_test.test_nearest_in_terminal = function(test_command_format)
     test_bufnr = source_bufnr,
     test_command = test_command,
     status = 'start',
+    file = vim.fn.expand '%:t',
   }
 end
 
