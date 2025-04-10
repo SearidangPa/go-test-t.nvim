@@ -21,14 +21,14 @@ function GoTestDisplay:setup(tests_info)
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
-  if not vim.api.nvim_buf_is_valid(self.display_buf) then
+  if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
     self.display_buf = vim.api.nvim_create_buf(false, true)
     vim.bo[self.display_buf].bufhidden = 'hide'
     vim.bo[self.display_buf].buftype = 'nofile'
     vim.bo[self.display_buf].swapfile = false
   end
 
-  if not vim.api.nvim_win_is_valid(self.display_win) then
+  if not self.display_win or not vim.api.nvim_win_is_valid(self.display_win) then
     vim.cmd 'vsplit'
     self.display_win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(self.display_win, self.display_buf)
@@ -136,7 +136,16 @@ function GoTestDisplay:update_tracker_buffer(tests_info)
 end
 
 function GoTestDisplay:jump_to_test_location()
-  -- Get current line
+  -- Debug output
+  if not self.display_buf then
+    make_notify('display_buf is nil in jump_to_test_location', 'error')
+    return
+  end
+
+  if not self.display_win then
+    make_notify('display_win is nil in jump_to_test_location', 'error')
+    return
+  end
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
@@ -162,8 +171,14 @@ function GoTestDisplay:jump_to_test_location()
 end
 
 function GoTestDisplay:setup_keymaps()
-  vim.keymap.set('n', 'q', function() GoTestDisplay:close_display() end, { buffer = self.display_buf, noremap = true, silent = true })
-  vim.keymap.set('n', '<CR>', function() GoTestDisplay:jump_to_test_location() end, { buffer = self.display_buf, noremap = true, silent = true })
+  local this = self -- Capture the current 'self' reference
+  vim.keymap.set('n', 'q', function()
+    this:close_display() -- Use the captured reference
+  end, { buffer = this.display_buf, noremap = true, silent = true })
+
+  vim.keymap.set('n', '<CR>', function()
+    this:jump_to_test_location() -- Use the captured reference
+  end, { buffer = this.display_buf, noremap = true, silent = true })
 end
 
 function GoTestDisplay:close_display()
