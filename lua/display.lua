@@ -6,13 +6,13 @@ local util_status_icon = require 'util_status_icon'
 ---@field original_test_win number
 ---@field original_test_buf number
 ---@field ns number
----@field tests_info gotest.TestInfo[] | terminal.testInfo[]
+---@field tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
 ---@field _priority table<string, integer>
 ---@field close_display fun(self: TestsDisplay)
 local Test_Display = {}
 Test_Display.__index = Test_Display
 
---- @param tests_info gotest.TestInfo[] | terminal.testInfo[]
+--- @param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
 function Test_Display.new(tests_info)
   local self = setmetatable({}, Test_Display)
   self.display_win = -1
@@ -32,7 +32,7 @@ function Test_Display.new(tests_info)
   return self
 end
 
----@param tests_info? gotest.TestInfo[] | terminal.testInfo[]
+---@param tests_info? table<string, gotest.TestInfo> | table<string, terminal.testInfo>
 function Test_Display:setup(tests_info)
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()

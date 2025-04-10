@@ -2,9 +2,10 @@ local display = require 'display'
 local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 
+---@type gotest
 local gotest = {
-  tests_info = {}, ---@type gotest.TestInfo[]
-  job_id = -1, ---@type number
+  tests_info = {},
+  job_id = -1,
 }
 local displayer = display.new(gotest.tests_info)
 
@@ -28,7 +29,7 @@ gotest.clean_up_prev_job = function(job_id)
   end
 end
 
----@param tests_info gotest.TestInfo[]
+---@param tests_info table<string, gotest.TestInfo>
 local add_golang_test = function(tests_info, entry)
   if not entry.Test then
     return ''
