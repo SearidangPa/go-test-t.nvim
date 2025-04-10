@@ -50,17 +50,7 @@ function Test_Display:setup()
   self:setup_keymaps()
 end
 
----@param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
-function Test_Display:parse_test_state_to_lines(tests_info)
-  local lines = {}
-  local tests = {}
-
-  for _, test in pairs(tests_info) do
-    if test.name then
-      table.insert(tests, test)
-    end
-  end
-
+local function sort_tests_by_status(tests)
   table.sort(tests, function(a, b)
     if a.status == b.status then
       return a.name < b.name
@@ -84,18 +74,31 @@ function Test_Display:parse_test_state_to_lines(tests_info)
     end
     return priority[a.status] < priority[b.status]
   end)
+end
 
-  for _, test in ipairs(tests) do
+---@param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
+function Test_Display:parse_test_state_to_lines(tests_info)
+  local buf_lines = {}
+  local tests_table = {}
+
+  for _, test in pairs(tests_info) do
+    if test.name then
+      table.insert(tests_table, test)
+    end
+  end
+  sort_tests_by_status(tests_table)
+
+  for _, test in ipairs(tests_table) do
     local status_icon = util_status_icon.get_status_icon(test.status)
     if test.status == 'fail' and test.filepath ~= '' then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
-      table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
+      table.insert(buf_lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
     else
-      table.insert(lines, string.format('%s %s', status_icon, test.name))
+      table.insert(buf_lines, string.format('%s %s', status_icon, test.name))
     end
   end
 
-  return lines
+  return buf_lines
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
