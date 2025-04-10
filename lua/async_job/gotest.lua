@@ -3,7 +3,7 @@ local display = require 'go_test_display'
 local util_quickfix = require 'async_job.util_quickfix'
 local displayer = display.new()
 
-local M = {
+local gotest = {
   tests_info = {}, ---@type gotest.TestInfo[]
   job_id = -1, ---@type number
 }
@@ -20,7 +20,7 @@ local action_state = {
   pass = true,
 }
 
-M.clean_up_prev_job = function(job_id)
+gotest.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
     make_notify(string.format('stopping job: %d', job_id))
     vim.fn.jobstop(job_id)
@@ -78,15 +78,15 @@ local mark_outcome = function(tests, entry)
   end
   test.status = entry.Action
   if test.status == 'fail' then
-    util_quickfix.load_non_passing_tests_to_quickfix(M.tests_info)
+    util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, false)
   end
 end
 
-M.run_test_all = function(command)
-  M.tests_info = {}
-  displayer:setup(M.tests_info)
-  M.clean_up_prev_job(M.job_id)
-  M.job_id = vim.fn.jobstart(command, {
+gotest.run_test_all = function(command)
+  gotest.tests_info = {}
+  displayer:setup(gotest.tests_info)
+  gotest.clean_up_prev_job(gotest.job_id)
+  gotest.job_id = vim.fn.jobstart(command, {
     stdout_buffered = false,
     on_stdout = function(_, data)
       assert(data, 'No data received from job')
@@ -102,34 +102,35 @@ M.run_test_all = function(command)
           goto continue
         end
         if decoded.Action == 'run' then
-          add_golang_test(M.tests_info, decoded)
-          vim.schedule(function() displayer:update_tracker_buffer(M.tests_info) end)
+          add_golang_test(gotest.tests_info, decoded)
+          vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
           goto continue
         end
         if decoded.Action == 'output' then
           if decoded.Test or decoded.Package then
-            add_golang_output(M.tests_info, decoded)
+            add_golang_output(gotest.tests_info, decoded)
           end
           goto continue
         end
         if action_state[decoded.Action] then
-          mark_outcome(M.tests_info, decoded)
-          vim.schedule(function() displayer:update_tracker_buffer(M.tests_info) end)
+          mark_outcome(gotest.tests_info, decoded)
+          vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
           goto continue
         end
         ::continue::
       end
     end,
     on_exit = function()
-      vim.schedule(function() displayer:update_tracker_buffer(M.tests_info) end)
+      vim.schedule(function() displayer:update_tracker_buffer(gotest.tests_info) end)
     end,
   })
 end
 
 vim.api.nvim_create_user_command('GoTestAll', function()
   local command = { 'go', 'test', './...', '-json', '-v' }
-  M.run_test_all(command)
+  gotest.run_test_all(command)
 end, {})
 
 vim.api.nvim_create_user_command('GoTestToggleDisplay', function() displayer:toggle_display() end, {})
-return M
+vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, true) end, {})
+return gotest

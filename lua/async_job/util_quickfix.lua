@@ -66,6 +66,7 @@ local function populate_quickfix_list(qf_entries)
 end
 
 ---@param tests_info terminal.testInfo[] | gotest.TestInfo[]
+---@param load_stuck_test? boolean
 util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info, load_stuck_test)
   print 'Loading non-passing tests to quickfix list...'
   local qf_entries = {}

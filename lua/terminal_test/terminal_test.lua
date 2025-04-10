@@ -1,6 +1,7 @@
 local make_notify = require('mini.notify').make_notify {}
 local terminal_test_ns = vim.api.nvim_create_namespace 'GoTestError'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
+local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go_test_display'
 local displayer = display.new()
 
@@ -196,5 +197,10 @@ terminal_test.view_last_test_teriminal = function()
 end
 
 vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() displayer:toggle_display() end, {})
+vim.api.nvim_create_user_command(
+  'TerminalTestLoadStuckTest',
+  function() util_quickfix.load_non_passing_tests_to_quickfix(terminal_test.tests_info, true) end,
+  {}
+)
 
 return terminal_test
