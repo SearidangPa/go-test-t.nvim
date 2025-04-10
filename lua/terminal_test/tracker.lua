@@ -271,7 +271,7 @@ tracker.toggle_tracker_window = function()
   end
 end
 
--- Helper function to get test index under cursor by parsing the line text
+---@return integer?
 function tracker.get_test_index_under_cursor()
   -- Get the current cursor position
   local cursor_pos = vim.api.nvim_win_get_cursor(tracker._win_id)
@@ -279,7 +279,6 @@ function tracker.get_test_index_under_cursor()
 
   -- Get the text of the current line
   local line_text = vim.api.nvim_buf_get_lines(tracker._buf_id, line_nr - 1, line_nr, false)[1]
-  print(line_text)
 
   -- If the line is empty or we're in the header/footer section, return nil
   if
@@ -294,13 +293,11 @@ function tracker.get_test_index_under_cursor()
     return nil
   end
 
-  -- Extract the index number from the line (e.g., " 1. Test_name: ✅")
-  local index = tonumber(line_text:match '^%s*(%d+)%.%s')
+  local index = tonumber(line_text:match '^%s*(%d+)%.%s') -- (e.g., " 1. Test_name: ✅")
   assert(index, 'Failed to extract index from line: ' .. line_text)
-
-  vim.notify(string.format('Index under cursor: %d', index), vim.log.levels.INFO)
   return index
 end
+
 -- Action functions for keymaps
 function tracker.jump_to_test_under_cursor()
   local index = tracker.get_test_index_under_cursor()
