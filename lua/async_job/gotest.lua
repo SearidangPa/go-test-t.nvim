@@ -28,13 +28,13 @@ gotest.clean_up_prev_job = function(job_id)
   end
 end
 
----@param tests gotest.TestInfo[]
-local add_golang_test = function(tests, entry)
+---@param tests_info gotest.TestInfo[]
+local add_golang_test = function(tests_info, entry)
   if not entry.Test then
     return ''
   end
   local key = entry.Test
-  tests[key] = {
+  tests_info[key] = {
     name = entry.Test,
     fail_at_line = 0,
     output = {},
@@ -43,15 +43,15 @@ local add_golang_test = function(tests, entry)
   }
 end
 
----@param tests gotest.TestInfo[]
-local add_golang_output = function(tests, entry)
-  assert(tests, vim.inspect(tests))
+---@param tests_info gotest.TestInfo[]
+local add_golang_output = function(tests_info, entry)
+  assert(tests_info, vim.inspect(tests_info))
   if not entry.Test then
     return ''
   end
   local key = entry.Test
-  local test = tests[key]
-  if not test then
+  local test_info = tests_info[key]
+  if not test_info then
     return
   end
   local trimmed_output = vim.trim(entry.Output)
@@ -59,11 +59,12 @@ local add_golang_output = function(tests, entry)
   if file and line then
     local line_num = tonumber(line)
     assert(line_num, 'Line number must be a number')
-    test.fail_at_line = line_num
-    test.file = file
+    test_info.fail_at_line = line_num
+    test_info.file = file
   end
   if trimmed_output:match '^--- FAIL:' then
-    test.status = 'fail'
+    test_info.status = 'fail'
+    util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, true)
   end
 end
 
@@ -77,9 +78,7 @@ local mark_outcome = function(tests, entry)
     return
   end
   test.status = entry.Action
-  if test.status == 'fail' then
-    util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, false)
-  end
+  util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, false)
 end
 
 gotest.run_test_all = function(command)
