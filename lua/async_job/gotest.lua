@@ -1,13 +1,13 @@
 -- local make_notify = require('mini.notify').make_notify {}
-local display = require 'go_display'
+local display = require 'display'
 local util_quickfix = require 'async_job.util_quickfix'
-local displayer = display.new()
 local fidget = require 'fidget'
 
 local gotest = {
   tests_info = {}, ---@type gotest.TestInfo[]
   job_id = -1, ---@type number
 }
+local displayer = display.new(gotest.tests_info)
 
 local ignored_actions = {
   skip = true,

@@ -2,9 +2,9 @@ local util_quickfix = {}
 
 ---@param test_info terminal.testInfo | gotest.TestInfo
 local function add_direct_file_entries(test_info, qf_entries)
-  assert(test_info.file, 'File not found for test: ' .. test_info.name)
+  assert(test_info.filepath, 'File not found for test: ' .. test_info.name)
   table.insert(qf_entries, {
-    filename = test_info.file,
+    filename = test_info.filepath,
     lnum = test_info.fail_at_line,
     text = string.format('%s', test_info.name),
   })

@@ -1,12 +1,13 @@
 local fidget = require 'fidget'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
-local display = require 'go_display'
+local display = require 'display'
 
+local tests_info = {}
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
-  tests_info = {}, ---@type terminal.testInfo[]
-  displayer = display.new(),
+  tests_info = tests_info,
+  displayer = display.new(tests_info),
   ns_id = vim.api.nvim_create_namespace 'GoTestError',
 }
 
@@ -118,7 +119,7 @@ local function process_buffer_lines(_, buf, first_line, last_line, test_info, fl
 end
 
 ---@param test_info terminal.testInfo
-terminal_test.test_in_terminal = function(test_info, cb_update_tracker)
+function terminal_test.test_in_terminal(test_info, cb_update_tracker)
   validate_test_info(test_info)
   terminal_test.terminals:toggle_float_terminal(test_info.name)
   local float_term_state = terminal_test.terminals:toggle_float_terminal(test_info.name)
@@ -131,20 +132,22 @@ terminal_test.test_in_terminal = function(test_info, cb_update_tracker)
   })
 end
 
-terminal_test.test_buf_in_terminals = function(test_command_format)
+function terminal_test.test_buf_in_terminals(test_command_format)
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
   for test_name, test_line in pairs(all_tests_in_buf) do
     terminal_test.terminals:delete_terminal(test_name)
     local test_command = string.format(test_command_format, test_name)
+
+    ---@type terminal.testInfo
     local test_info = {
       name = test_name,
       test_line = test_line,
       test_bufnr = source_bufnr,
       test_command = test_command,
       status = 'start',
-      file = vim.fn.expand '%:p',
+      filepath = vim.fn.expand '%:p',
     }
     terminal_test.tests_info[test_name] = test_info
     terminal_test.test_in_terminal(test_info)
@@ -154,7 +157,7 @@ terminal_test.test_buf_in_terminals = function(test_command_format)
 end
 
 ---@param test_command_format string
-terminal_test.test_nearest_in_terminal = function(test_command_format)
+function terminal_test.test_nearest_in_terminal(test_command_format)
   assert(test_command_format, 'No test command format found')
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
@@ -170,11 +173,11 @@ terminal_test.test_nearest_in_terminal = function(test_command_format)
     test_bufnr = source_bufnr,
     test_command = test_command,
     status = 'start',
-    file = vim.fn.expand '%:p',
+    filepath = vim.fn.expand '%:p',
   }
 end
 
-terminal_test.test_tracked_in_terminal = function()
+function terminal_test.test_tracked_in_terminal()
   local terminal_tracker = require 'terminals.track_test_terminal'
   for _, test_info in ipairs(terminal_tracker.track_test_list) do
     fidget.notify(string.format('Running test: %s', test_info.test_name), vim.log.levels.INFO)
@@ -184,7 +187,7 @@ end
 
 --- === View Teriminal ===
 
-terminal_test.view_enclosing_test = function()
+function terminal_test.view_enclosing_test()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
@@ -203,7 +206,7 @@ terminal_test.view_enclosing_test = function()
   vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
 end
 
-terminal_test.view_last_test_teriminal = function()
+function terminal_test.view_last_test_teriminal()
   local test_name = terminal_test.terminals.last_terminal_name
   if not test_name then
     vim.notify('No last test found', vim.log.levels.WARN)

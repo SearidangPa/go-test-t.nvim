@@ -15,7 +15,7 @@
 ---@field test_bufnr number
 ---@field test_line number
 ---@field test_command string
----@field file string
+---@field filepath string
 
 ---@class gotest
 ---@field tests_info gotest.TestInfo[]

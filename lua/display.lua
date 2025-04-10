@@ -1,25 +1,24 @@
----@class GoTestDisplay
+---@class TestsDisplay
 ---@field display_win number
 ---@field display_buf number
 ---@field original_test_win number
 ---@field original_test_buf number
 ---@field ns number
----@field close_display fun(self: GoTestDisplay)
-
+---@field tests_info gotest.TestInfo[] | terminal.testInfo[]
+---@field close_display fun(self: TestsDisplay)
 local Display = {}
 Display.__index = Display
 
-local make_notify = require('mini.notify').make_notify {}
-
 -- Constructor
-function Display.new()
+--- @param tests_info gotest.TestInfo[] | terminal.testInfo[]
+function Display.new(tests_info)
   local self = setmetatable({}, Display)
   self.display_win = -1
   self.display_buf = -1
   self.original_test_win = -1
   self.original_test_buf = -1
   self.ns = vim.api.nvim_create_namespace 'go_test_display'
-
+  self.tests_info = tests_info
   return self
 end
 
@@ -104,7 +103,8 @@ function Display:parse_test_state_to_lines(tests_info)
     end
 
     if test.status == 'fail' and test.file ~= '' then
-      table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, test.file, test.fail_at_line))
+      local filename = vim.fn.fnamemodify(test.file, ':t')
+      table.insert(lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
     else
       table.insert(lines, string.format('%s %s', status_icon, test.name))
     end
@@ -151,28 +151,25 @@ function Display:jump_to_test_location()
     vim.notify('display_win is nil in jump_to_test_location', vim.log.levels.ERROR)
     return
   end
+
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
+  assert(line, 'No line found in display buffer')
 
-  local file, line_num = line:match '->%s+([%w_%-]+%.go):(%d+)'
-
-  if file and line_num then
-    -- Switch to original window
-    vim.api.nvim_set_current_win(self.original_test_win)
-
-    -- Find the file in the project
-    local cmd = string.format("find . -name '%s' | head -n 1", file)
-    local filepath = vim.fn.system(cmd):gsub('\n', '')
-
-    if filepath ~= '' then
-      vim.cmd('edit ' .. filepath)
-      vim.api.nvim_win_set_cursor(0, { tonumber(line_num), 0 })
-      vim.cmd 'normal! zz'
-    else
-      make_notify('File not found: ' .. file, 'error')
-    end
+  local test_name = line:match '[❌✅]%s+([%w_%-]+)'
+  if not test_name then
+    vim.notify('No test name found in line: ' .. line, vim.log.levels.ERROR)
   end
+  local test_info = self.tests_info[test_name]
+  local filepath = test_info.filepath
+  vim.cmd('edit ' .. filepath)
+  if test_info.fail_at_line == 0 then
+    vim.api.nvim_win_set_cursor(0, { tonumber(test_info.test_line), 0 })
+  else
+    vim.api.nvim_win_set_cursor(0, { tonumber(test_info), 0 })
+  end
+  vim.cmd 'normal! zz'
 end
 
 function Display:setup_keymaps()
