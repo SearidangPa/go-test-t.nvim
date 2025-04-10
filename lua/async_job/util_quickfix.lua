@@ -93,8 +93,6 @@ util_quickfix.add_fail_test = function(test_info)
   assert(test_info, 'No test info provided')
   assert(test_info.status, 'No test status provided')
   assert(test_info.name, 'No test name provided')
-  assert(test_info.test_bufnr, 'No test buffer number provided')
-  assert(test_info.test_line, 'No test line provided')
   if test_info.status ~= 'fail' then
     return
   end
