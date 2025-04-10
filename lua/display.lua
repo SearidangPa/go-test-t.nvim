@@ -9,7 +9,6 @@
 local Test_Display = {}
 Test_Display.__index = Test_Display
 
--- Constructor
 --- @param tests_info gotest.TestInfo[] | terminal.testInfo[]
 function Test_Display.new(tests_info)
   local self = setmetatable({}, Test_Display)
