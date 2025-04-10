@@ -7,7 +7,7 @@ M.setup = function()
   vim.api.nvim_create_user_command('TerminalTestToggleView', terminal_test.view_enclosing_test, {})
   vim.api.nvim_create_user_command('TerminalTestToggleLast', terminal_test.view_last_test_teriminal, {})
 
-  require 'async_job.gotest'
+  require 'async_job.go_test'
   require 'terminal_test.tracker'
 end
 

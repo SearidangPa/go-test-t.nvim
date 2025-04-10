@@ -7,8 +7,10 @@ local tests_info = {}
 ---@type Gotest
 local go_test = {
   job_id = -1,
+  tests_info = tests_info,
 }
-go_test.displayer = display.new(tests_info)
+go_test.displayer = display.new(go_test.tests_info)
+go_test.displayer:setup()
 
 local ignored_actions = {
   skip = true,
@@ -34,14 +36,16 @@ local function add_golang_test(entry)
   if not entry.Test then
     return ''
   end
-  local key = entry.Test
-  tests_info[key] = {
+  fidget.notify('Adding test: ' .. entry.Test, vim.log.levels.INFO)
+
+  local test_info = {
     name = entry.Test,
-    fail_at_line = 0,
-    output = {},
     status = 'running',
+    fail_at_line = 0,
     filepath = '',
   }
+
+  go_test.tests_info[entry.Test] = test_info
 end
 
 local filter_golang_output = function(entry)
@@ -49,7 +53,7 @@ local filter_golang_output = function(entry)
   if not entry.Test then
     return ''
   end
-  local test_info = tests_info[entry.Test]
+  local test_info = go_test.tests_info[entry.Test]
   if not test_info then
     vim.notify('Filter Output: Test info not found for ' .. entry.Test, vim.log.levels.WARN)
     return
@@ -74,13 +78,13 @@ local mark_outcome = function(entry)
     return ''
   end
   local key = entry.Test
-  local test_info = tests_info[key]
+  local test_info = go_test.tests_info[key]
   if not test_info then
     return
   end
 
   test_info.status = entry.Action
-  tests_info[key] = test_info
+  go_test.tests_info[key] = test_info
   if entry.Action == 'fail' then
     util_quickfix.add_fail_test(test_info)
     fidget.notify(string.format('%s failed', test_info.name), vim.log.levels.WARN)
@@ -90,8 +94,6 @@ local mark_outcome = function(entry)
 end
 
 go_test.run_test_all = function(command)
-  tests_info = {}
-  go_test.displayer:setup(tests_info)
   go_test.clean_up_prev_job(go_test.job_id)
   go_test.job_id = vim.fn.jobstart(command, {
     stdout_buffered = false,
@@ -114,7 +116,7 @@ go_test.run_test_all = function(command)
 
         if decoded.Action == 'run' then
           add_golang_test(decoded)
-          vim.schedule(function() go_test.displayer:update_tracker_buffer(tests_info) end)
+          vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
           goto continue
         end
 
@@ -127,7 +129,7 @@ go_test.run_test_all = function(command)
 
         if action_state[decoded.Action] then
           mark_outcome(decoded)
-          vim.schedule(function() go_test.displayer:update_tracker_buffer(tests_info) end)
+          vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
           goto continue
         end
 
@@ -136,7 +138,7 @@ go_test.run_test_all = function(command)
     end,
 
     on_exit = function()
-      vim.schedule(function() go_test.displayer:update_tracker_buffer(tests_info) end)
+      vim.schedule(function() go_test.displayer:update_tracker_buffer(go_test.tests_info) end)
     end,
   })
 end
@@ -147,5 +149,5 @@ vim.api.nvim_create_user_command('GoTestAll', function()
 end, {})
 
 vim.api.nvim_create_user_command('GoTestToggleDisplay', function() go_test.displayer:toggle_display() end, {})
-vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(tests_info) end, {})
+vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(go_test.tests_info) end, {})
 return go_test

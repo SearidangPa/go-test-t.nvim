@@ -3,13 +3,13 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'display'
 
-local tests_info = {}
+local tests_info_instance = {}
 
 ---@type terminalTest
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
-  tests_info = tests_info,
-  displayer = display.new(tests_info),
+  tests_info = tests_info_instance,
+  displayer = display.new(tests_info_instance),
   ns_id = vim.api.nvim_create_namespace 'GoTestError',
 }
 
@@ -155,7 +155,7 @@ function terminal_test.test_buf_in_terminals(test_command_format)
     terminal_test.test_in_terminal(test_info)
   end
 
-  terminal_test.displayer:setup(terminal_test.tests_info)
+  terminal_test.displayer:setup()
 end
 
 ---@param test_command_format string

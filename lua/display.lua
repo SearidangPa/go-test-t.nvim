@@ -6,13 +6,13 @@
 ---@field ns number
 ---@field tests_info gotest.TestInfo[] | terminal.testInfo[]
 ---@field close_display fun(self: TestsDisplay)
-local Display = {}
-Display.__index = Display
+local Test_Display = {}
+Test_Display.__index = Test_Display
 
 -- Constructor
 --- @param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function Display.new(tests_info)
-  local self = setmetatable({}, Display)
+function Test_Display.new(tests_info)
+  local self = setmetatable({}, Test_Display)
   self.display_win = -1
   self.display_buf = -1
   self.original_test_win = -1
@@ -22,8 +22,7 @@ function Display.new(tests_info)
   return self
 end
 
----@param tests_info? gotest.TestInfo[] | terminal.testInfo[]
-function Display:setup(tests_info)
+function Test_Display:setup()
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
@@ -46,15 +45,12 @@ function Display:setup(tests_info)
     vim.wo[self.display_win].foldenable = false
   end
 
-  if tests_info then
-    self:update_tracker_buffer(tests_info)
-  end
   vim.api.nvim_set_current_win(self.original_test_win)
   self:setup_keymaps()
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function Display:parse_test_state_to_lines(tests_info)
+function Test_Display:parse_test_state_to_lines(tests_info)
   local lines = {}
   local tests = {}
 
@@ -114,7 +110,7 @@ function Display:parse_test_state_to_lines(tests_info)
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function Display:update_tracker_buffer(tests_info)
+function Test_Display:update_tracker_buffer(tests_info)
   local lines = self:parse_test_state_to_lines(tests_info)
 
   if vim.api.nvim_buf_is_valid(self.display_buf) then
@@ -142,7 +138,7 @@ function Display:update_tracker_buffer(tests_info)
   end
 end
 
-function Display:jump_to_test_location()
+function Test_Display:jump_to_test_location()
   if not self.display_buf then
     vim.notify('display_buf is nil in jump_to_test_location', vim.log.levels.ERROR)
     return
@@ -180,7 +176,7 @@ function Display:jump_to_test_location()
   vim.cmd 'normal! zz'
 end
 
-function Display:setup_keymaps()
+function Test_Display:setup_keymaps()
   local this = self -- Capture the current 'self' reference
   vim.keymap.set('n', 'q', function()
     this:close_display() -- Use the captured reference
@@ -191,14 +187,14 @@ function Display:setup_keymaps()
   end, { buffer = this.display_buf, noremap = true, silent = true })
 end
 
-function Display:close_display()
+function Test_Display:close_display()
   if vim.api.nvim_win_is_valid(self.display_win) then
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
   end
 end
 
-function Display:toggle_display()
+function Test_Display:toggle_display()
   if vim.api.nvim_win_is_valid(self.display_win) then
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
@@ -208,10 +204,10 @@ function Display:toggle_display()
 end
 
 -- Create a user command for each instance
-function Display:register_command(command_name)
+function Test_Display:register_command(command_name)
   local tracker = self
   vim.api.nvim_create_user_command(command_name, function() tracker:toggle_display() end, {})
 end
 
 -- Return the constructor for the class
-return Display
+return Test_Display
