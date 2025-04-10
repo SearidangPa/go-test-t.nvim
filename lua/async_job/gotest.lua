@@ -1,5 +1,5 @@
 local make_notify = require('mini.notify').make_notify {}
-local display = require 'display'
+local display = require 'go_test_display'
 local displayer = display.new()
 
 ---@class gotest

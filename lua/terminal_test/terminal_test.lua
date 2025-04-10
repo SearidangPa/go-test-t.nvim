@@ -1,7 +1,7 @@
 local make_notify = require('mini.notify').make_notify {}
 local terminal_test_ns = vim.api.nvim_create_namespace 'GoTestError'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
-local display = require 'display'
+local display = require 'go_test_display'
 local displayer = display.new()
 
 ---@class terminalTest

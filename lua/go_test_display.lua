@@ -23,7 +23,6 @@ function GoTestDisplay:setup(tests_info)
 
   if not vim.api.nvim_buf_is_valid(self.display_buf) then
     self.display_buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(self.display_buf, 'Go Test Results')
     vim.bo[self.display_buf].bufhidden = 'hide'
     vim.bo[self.display_buf].buftype = 'nofile'
     vim.bo[self.display_buf].swapfile = false
