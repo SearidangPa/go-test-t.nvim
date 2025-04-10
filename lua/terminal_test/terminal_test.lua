@@ -4,6 +4,7 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go_test_display'
 local displayer = display.new()
+local fidget = require 'fidget'
 
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
@@ -28,7 +29,7 @@ local function handle_test_passed(test_info, float_term_state, current_time)
   test_info.status = 'pass'
   float_term_state.status = 'pass'
   terminal_test.tests_info[test_info.name] = test_info
-  make_notify(string.format('Test passed: %s', test_info.name))
+  fidget.notify(string.format('Test passed: %s', test_info.name, vim.log.levels.INFO))
   vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
 end
 
@@ -41,7 +42,7 @@ local function handle_test_failed(test_info, float_term_state, current_time)
   test_info.status = 'fail'
   float_term_state.status = 'fail'
   terminal_test.tests_info[test_info.name] = test_info
-  make_notify(string.format('Test failed: %s', test_info.name))
+  fidget.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.ERROR)
   util_quickfix.add_fail_test(test_info)
   vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
 end
@@ -72,6 +73,7 @@ local function handle_error_trace(line, test_info)
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
     vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
+    util_quickfix.add_fail_test(test_info)
     return error_line
   end
   return nil
@@ -162,7 +164,7 @@ end
 terminal_test.test_tracked_in_terminal = function()
   local terminal_tracker = require 'terminals.track_test_terminal'
   for _, test_info in ipairs(terminal_tracker.track_test_list) do
-    make_notify(string.format('Running test: %s', test_info.test_name)).go_test_command(test_info)
+    fidget.notify(string.format('Running test: %s', test_info.test_name), vim.log.levels.INFO)
     terminal_test.test_in_terminal(test_info)
   end
 end

@@ -1,7 +1,8 @@
-local make_notify = require('mini.notify').make_notify {}
+-- local make_notify = require('mini.notify').make_notify {}
 local display = require 'go_test_display'
 local util_quickfix = require 'async_job.util_quickfix'
 local displayer = display.new()
+local fidget = require 'fidget'
 
 local gotest = {
   tests_info = {}, ---@type gotest.TestInfo[]
@@ -22,7 +23,7 @@ local action_state = {
 
 gotest.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
-    make_notify(string.format('stopping job: %d', job_id))
+    fidget.notify('Stopping job', vim.log.levels.INFO)
     vim.fn.jobstop(job_id)
     vim.diagnostic.reset()
   end
@@ -81,7 +82,10 @@ local mark_outcome = function(tests_info, entry)
   test_info.status = entry.Action
   if entry.Action == 'fail' then
     util_quickfix.add_fail_test(test_info)
+    fidget.notify(string.format('%s failed', test_info.name), vim.log.levels.WARN)
     vim.notify(string.format('Added failed test to quickfix: %s', test_info.name), vim.log.levels.WARN)
+  elseif entry.Action == 'pass' then
+    fidget.notify(string.format('%s passed', test_info.name), vim.log.levels.INFO)
   end
 end
 
