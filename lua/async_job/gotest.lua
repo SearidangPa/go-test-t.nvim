@@ -1,4 +1,3 @@
--- local make_notify = require('mini.notify').make_notify {}
 local display = require 'display'
 local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
