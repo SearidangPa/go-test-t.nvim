@@ -11,8 +11,18 @@ local terminals = terminal_test.terminals
 ---@field reset_tracker fun()
 ---@field toggle_tracker_window fun()
 ---@field update_tracker_window fun()
+---@field get_test_index_under_cursor fun(): integer
+---@field jump_to_test_under_cursor fun()
+---@field toggle_terminal_under_cursor fun()
+---@field delete_test_under_cursor fun()
+---@field run_test_under_cursor fun()
+---@field _original_win_id? integer
+---@field _win_id? integer
+---@field _buf_id? integer
+---@field _is_open boolean
 local tracker = {
   track_list = {},
+  _original_win_id = nil,
   _win_id = nil,
   _buf_id = nil,
   _is_open = false,
@@ -57,6 +67,7 @@ function tracker.jump_to_tracked_test_by_index(index)
   local target_test = test_info.name
 
   fidget.notify(string.format('Jumping to test: %s', target_test), vim.log.levels.INFO)
+  vim.api.nvim_set_current_win(tracker._original_win_id)
 
   -- Jump directly to the buffer and line where the test was found
   if vim.api.nvim_buf_is_valid(test_info.test_bufnr) then
@@ -91,6 +102,7 @@ end
 
 -- Create the tracker window as a split window instead of floating
 function tracker._create_tracker_window()
+  tracker._original_win_id = vim.api.nvim_get_current_win()
   -- Create buffer for the tracker window
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
