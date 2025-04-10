@@ -1,7 +1,16 @@
 local fidget = require 'fidget'
 
+---@class Tracker
+---@field track_list terminal.testInfo[]
+---@field add_test_to_tracker fun(test_command_format: string)
+---@field jump_to_tracked_test_by_index fun(index: integer)
+---@field toggle_tracked_terminal_by_index fun(index: integer)
+---@field select_delete_tracked_test fun()
+---@field reset_tracker fun()
+---@field toggle_tracker_window fun()
+---@field update_tracker_window fun()
 local tracker = {
-  track_list = {}, ---@type terminal.testInfo[]
+  track_list = {},
   _win_id = nil,
   _buf_id = nil,
   _is_open = false,
@@ -22,11 +31,12 @@ tracker.add_test_to_tracker = function(test_command_format)
     end
   end
   local source_bufnr = vim.api.nvim_get_current_buf()
+  local test_command = string.format(test_command_format, test_name)
   table.insert(tracker.track_list, {
     name = test_name,
     test_line = test_line,
     test_bufnr = source_bufnr,
-    test_command = test_command_format,
+    test_command = test_command,
     status = 'start',
   })
 
@@ -121,22 +131,12 @@ function tracker._create_tracker_window()
   tracker._buf_id = buf
   tracker._is_open = true
 
-  -- Set up keymaps for the tracker window
   local function set_keymap(mode, lhs, rhs) vim.api.nvim_buf_set_keymap(buf, mode, lhs, rhs, { noremap = true, silent = true }) end
 
-  -- Close window with q or <Esc>
   set_keymap('n', 'q', '<cmd>lua require("terminal_test.tracker").toggle_tracker_window()<CR>')
-
-  -- Jump to test under cursor
   set_keymap('n', '<CR>', '<cmd>lua require("terminal_test.tracker").jump_to_test_under_cursor()<CR>')
-
-  -- Toggle terminal for test under cursor
   set_keymap('n', 't', '<cmd>lua require("terminal_test.tracker").toggle_terminal_under_cursor()<CR>')
-
-  -- Delete test under cursor
   set_keymap('n', 'd', '<cmd>lua require("terminal_test.tracker").delete_test_under_cursor()<CR>')
-
-  -- Run test under cursor
   set_keymap('n', 'r', '<cmd>lua require("terminal_test.tracker").run_test_under_cursor()<CR>')
 
   -- Add a title to the window
@@ -167,11 +167,24 @@ function tracker.update_tracker_window()
       short_name = '...' .. string.sub(short_name, -27)
     end
 
-    -- Format status
+    -- Format status with icons
+    local status_icon = '❓' -- default for unknown status
     local status = test_info.status or 'not run'
 
+    if status == 'passed' then
+      status_icon = '✅'
+    elseif status == 'failed' then
+      status_icon = '❌'
+    elseif status == 'running' then
+      status_icon = '🔥'
+    elseif status == 'start' then
+      status_icon = '🏁'
+    elseif status == 'not run' then
+      status_icon = '⏺️'
+    end
+
     -- Add to lines (with padding)
-    local line = string.format(' %s%s%s ', short_name, string.rep(' ', 30 - #short_name), status)
+    local line = string.format(' %s%s%s ', short_name, string.rep(' ', 30 - #short_name), status_icon)
 
     table.insert(lines, line)
   end
@@ -197,7 +210,6 @@ function tracker.update_tracker_window()
   -- Apply highlighting
   local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
   vim.api.nvim_buf_clear_namespace(tracker._buf_id, ns_id, 0, -1)
-
   -- Highlight title
   vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, 'Title', 0, 0, -1)
 
@@ -210,21 +222,24 @@ function tracker.update_tracker_window()
     vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, 'Comment', i, 0, -1)
   end
 
-  -- Highlight test statuses
+  -- Highlight test statuses (icons)
   for i = 3, footer_start - 1 do
     if i - 3 < #tracker.track_list then
       local test_info = tracker.track_list[i - 2]
-      if test_info and test_info.status then
+      if test_info then
         local status_col_start = 32
-        local status_col_end = status_col_start + #test_info.status + 1
+        local status = test_info.status or 'not run'
+        local icon_width = 2 -- Most emoji are 2 cells wide in terminal
+        local status_col_end = status_col_start + icon_width
 
-        -- Different highlight based on status
+        -- No need for additional highlights with icons, they're already colored
+        -- But we can still add highlights for text-mode terminals or if desired
         local hl_group = 'Normal'
-        if test_info.status == 'passed' then
+        if status == 'passed' then
           hl_group = 'DiagnosticOk'
-        elseif test_info.status == 'failed' then
+        elseif status == 'failed' then
           hl_group = 'DiagnosticError'
-        elseif test_info.status == 'running' then
+        elseif status == 'running' then
           hl_group = 'DiagnosticWarn'
         end
 
@@ -246,16 +261,54 @@ tracker.toggle_tracker_window = function()
   end
 end
 
--- Helper function to get test index under cursor
+-- Helper function to get test index under cursor by parsing the line text
 function tracker.get_test_index_under_cursor()
+  -- Get the current cursor position
   local cursor_pos = vim.api.nvim_win_get_cursor(tracker._win_id)
   local line_nr = cursor_pos[1]
 
-  -- Accounting for header (2 lines) and only considering test lines
-  if line_nr >= 3 and line_nr < 3 + #tracker.track_list then
-    return line_nr - 2
+  -- Get the text of the current line
+  local line_text = vim.api.nvim_buf_get_lines(tracker._buf_id, line_nr - 1, line_nr, false)[1]
+
+  -- If the line is empty or we're in the header/footer section, return nil
+  if
+    not line_text
+    or line_text == ''
+    or line_text:match '^%s*$'
+    or line_text:match 'Test Tracker'
+    or line_text:match 'Help:'
+    or line_text:match '^%s*─+%s*$'
+  then
+    return nil
   end
 
+  -- Extract the test name from the line text (the part before the padding spaces)
+  local test_name = line_text:match '^%s*(.-)%s%s+'
+
+  -- Trim leading/trailing whitespace from the extracted name
+  if test_name then
+    test_name = test_name:match '^%s*(.-)%s*$'
+  end
+
+  -- If we couldn't extract a name or the line is "No tests tracked", return nil
+  if not test_name or test_name == 'No' or line_text:match 'No tests tracked' then
+    return nil
+  end
+
+  -- Find the test index by comparing with the track_list
+  for i, test_info in ipairs(tracker.track_list) do
+    local short_name = test_info.name
+    if #short_name > 30 then
+      short_name = '...' .. string.sub(short_name, -27)
+    end
+
+    -- If the name in track_list matches the one from the line
+    if short_name:match '^%s*(.-)%s*$' == test_name then
+      return i
+    end
+  end
+
+  -- If we didn't find a matching test, return nil
   return nil
 end
 
@@ -295,10 +348,6 @@ function tracker.run_test_under_cursor()
       -- Update status
       test_info.status = 'running'
       tracker.update_tracker_window()
-
-      -- Run the test
-      local formatted_command = string.format(test_info.test_command, test_info.name)
-      fidget.notify('Running test: ' .. formatted_command, vim.log.levels.INFO)
       terminal_test.test_in_terminal(test_info)
 
       -- Also toggle the terminal to show it
