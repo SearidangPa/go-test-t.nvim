@@ -62,7 +62,6 @@ function tracker.jump_to_tracked_test_by_index(index)
   fidget.notify(string.format('Jumping to test: %s', target_test), vim.log.levels.INFO)
   vim.api.nvim_set_current_win(tracker._original_win_id)
 
-  -- Jump directly to the buffer and line where the test was found
   if vim.api.nvim_buf_is_valid(test_info.test_bufnr) then
     vim.api.nvim_set_current_buf(test_info.test_bufnr)
     vim.api.nvim_win_set_cursor(0, { test_info.test_line, 0 })
