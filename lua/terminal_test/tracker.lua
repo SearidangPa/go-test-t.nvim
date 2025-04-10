@@ -5,12 +5,12 @@ local terminals = terminal_test.terminals
 local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
 
 local help_items = {
-  ' Help:',
-  ' q   :  Close',
-  ' <CR>: Jump',
-  ' t   :  Toggle',
-  ' r   :  Run',
-  ' d   :  Delete',
+  ' Help :',
+  ' q    :  Close',
+  ' <CR> : Jump',
+  ' t    :  Toggle',
+  ' r    :  Run',
+  ' d    :  Delete',
 }
 
 ---@type Tracker
