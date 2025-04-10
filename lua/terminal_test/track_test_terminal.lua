@@ -8,7 +8,7 @@ local M = {
 local terminal_test = require 'terminal_test.terminal_test'
 local make_notify = require('mini.notify').make_notify {}
 local map = vim.keymap.set
-local test_terminals = terminal_test.terminals
+local terminals = terminal_test.terminals
 
 M.add_test_to_tracker = function(test_command_format)
   local util_find_test = require 'util_find_test'
@@ -68,7 +68,7 @@ local function toggle_tracked_test_by_index(index)
     index = #M.track_test_list
   end
   local target_test = M.track_test_list[index].test_name
-  test_terminals:toggle_float_terminal(target_test)
+  terminals:toggle_float_terminal(target_test)
 end
 
 for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
@@ -89,7 +89,7 @@ function M.delete_tracked_test()
   local handle_choice = function(tracked_test_name)
     for index, testInfo in ipairs(M.track_test_list) do
       if testInfo.test_name == tracked_test_name then
-        test_terminals:delete_terminal(tracked_test_name)
+        terminals:delete_terminal(tracked_test_name)
         table.remove(M.track_test_list, index)
         make_notify(string.format('Deleted test terminal from tracker: %s', tracked_test_name))
         break
@@ -101,8 +101,8 @@ function M.delete_tracked_test()
 end
 
 M.reset_test = function()
-  for test_name, _ in pairs(test_terminals.all_terminals) do
-    test_terminals:delete_terminal(test_name)
+  for test_name, _ in pairs(terminals.all_terminals) do
+    terminals:delete_terminal(test_name)
   end
 
   vim.api.nvim_buf_clear_namespace(0, -1, 0, -1)
