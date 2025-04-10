@@ -42,8 +42,9 @@ local function handle_test_passed(test_info, float_term_state, current_time)
     virt_text = { { string.format('✅ %s', current_time) } },
     virt_text_pos = 'eol',
   })
-  test_info.status = 'passed'
-  float_term_state.status = 'passed'
+  test_info.status = 'pass'
+  float_term_state.status = 'pass'
+  terminal_test.tests_info[test_info.name] = test_info
   make_notify(string.format('Test passed: %s', test_info.name))
   vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
 end
@@ -54,8 +55,9 @@ local function handle_test_failed(test_info, float_term_state, current_time)
     virt_text = { { string.format('❌ %s', current_time) } },
     virt_text_pos = 'eol',
   })
-  test_info.status = 'failed'
-  float_term_state.status = 'failed'
+  test_info.status = 'fail'
+  float_term_state.status = 'fail'
+  terminal_test.tests_info[test_info.name] = test_info
   make_notify(string.format('Test failed: %s', test_info.name))
   vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
 end
@@ -84,6 +86,7 @@ local function handle_error_trace(line, test_info)
 
     test_info.status = 'failed'
     test_info.fail_at_line = line_num
+    terminal_test.tests_info[test_info.name] = test_info
     vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
     return error_line
   end
