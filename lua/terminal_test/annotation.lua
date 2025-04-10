@@ -42,6 +42,7 @@
 ---@field toggle_terminal_under_cursor? fun()
 ---@field delete_test_under_cursor? fun()
 ---@field run_test_under_cursor? fun()
+---@field _create_tracker_window? fun()
 ---@field _original_win_id? integer
 ---@field _win_id? integer
 ---@field _buf_id? integer

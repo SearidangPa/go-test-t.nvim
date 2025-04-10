@@ -86,12 +86,10 @@ end
 -- Create the tracker window as a split window instead of floating
 function tracker._create_tracker_window()
   tracker._original_win_id = vim.api.nvim_get_current_win()
-  -- Create buffer for the tracker window
   local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
-  vim.api.nvim_buf_set_option(buf, 'filetype', 'test-tracker')
+  vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
+  vim.api.nvim_set_option_value('filetype', 'test-tracker', { buf = buf })
 
-  -- Set up a split window to the right
   vim.cmd 'vsplit'
 
   -- Move to the new window and set its buffer
@@ -104,11 +102,11 @@ function tracker._create_tracker_window()
   vim.api.nvim_win_set_width(win, width)
 
   -- Set window options
-  vim.api.nvim_win_set_option(win, 'wrap', false)
-  vim.api.nvim_win_set_option(win, 'cursorline', true)
-  vim.api.nvim_win_set_option(win, 'number', false)
-  vim.api.nvim_win_set_option(win, 'relativenumber', false)
-  vim.api.nvim_win_set_option(win, 'signcolumn', 'no')
+  vim.api.nvim_set_option_value('wrap', false, { win = win })
+  vim.api.nvim_set_option_value('cursorline', true, { win = win })
+  vim.api.nvim_set_option_value('number', false, { win = win })
+  vim.api.nvim_set_option_value('relativenumber', false, { win = win })
+  vim.api.nvim_set_option_value('signcolumn', 'no', { win = win })
 
   -- Add a buffer-local auto command to close the window properly
   vim.api.nvim_create_autocmd('BufWipeout', {
@@ -136,7 +134,7 @@ function tracker._create_tracker_window()
   -- Add a title to the window
   vim.api.nvim_buf_set_lines(buf, 0, 0, false, { ' Test Tracker ', '' })
   local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
-  vim.api.nvim_buf_add_highlight(buf, ns_id, 'Title', 0, 0, -1)
+  vim.api.nvim_buf_set_extmark(buf, ns_id, 0, 0, { hl_group = 'Title' })
 
   -- Update buffer content
   tracker.update_tracker_window()
