@@ -178,11 +178,11 @@ function tracker.update_tracker_window()
     elseif status == 'cont' then
       status_icon = '🔥'
     elseif status == 'start' then
-      status_icon = '🏁'
+      status_icon = '🚀'
     elseif status == 'not run' then
       status_icon = '⏺️'
     elseif status == 'tracked' then
-      status_icon = '🔍'
+      status_icon = '🏁'
     else
       vim.notify('Unknown status: ' .. status, vim.log.levels.WARN)
     end
@@ -285,13 +285,10 @@ function tracker.get_test_index_under_cursor()
 
   -- Extract the index number from the line (e.g., " 1. Test_name: ✅")
   local index = tonumber(line_text:match '^%s*(%d+)%.%s')
+  assert(index, 'Failed to extract index from line: ' .. line_text)
 
-  if index and index <= #tracker.track_list then
-    return index
-  end
-
-  -- If we couldn't extract a valid index, return nil
-  return nil
+  vim.notify(string.format('Index under cursor: %d', index), vim.log.levels.INFO)
+  return index
 end
 -- Action functions for keymaps
 function tracker.jump_to_test_under_cursor()
