@@ -1,4 +1,5 @@
 local fidget = require 'fidget'
+local util_status_icon = require 'util_status_icon'
 local terminal_test = require 'terminal_test.terminal_test'
 local terminals = terminal_test.terminals
 local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
@@ -142,27 +143,12 @@ end
 
 function tracker.update_tracker_window()
   if not tracker._win_id or not vim.api.nvim_win_is_valid(tracker._win_id) then
+    vim.notify('Tracker window is not valid', vim.log.levels.WARN)
     return
   end
   local lines = { ' Test Tracker ', '' }
   for i, test_info in ipairs(tracker.track_list) do
-    local status_icon = '❓'
-    local status = test_info.status or 'not run'
-    if status == 'pass' then
-      status_icon = '✅'
-    elseif status == 'fail' then
-      status_icon = '❌'
-    elseif status == 'cont' then
-      status_icon = '🔥'
-    elseif status == 'start' then
-      status_icon = '🚀'
-    elseif status == 'not run' then
-      status_icon = '⏺️'
-    elseif status == 'tracked' then
-      status_icon = '🏁'
-    else
-      vim.notify('Unknown status: ' .. status, vim.log.levels.WARN)
-    end
+    local status_icon = util_status_icon.get_status_icon(test_info.status)
     local line = string.format(' %d. %s: %s', i, test_info.name, status_icon)
     table.insert(lines, line)
   end
