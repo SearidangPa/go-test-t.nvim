@@ -202,5 +202,4 @@ function Test_Display:register_command(command_name)
   vim.api.nvim_create_user_command(command_name, function() tracker:toggle_display() end, {})
 end
 
--- Return the constructor for the class
 return Test_Display
