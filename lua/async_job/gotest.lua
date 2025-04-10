@@ -64,7 +64,7 @@ local add_golang_output = function(tests_info, entry)
   end
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
-    util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, true)
+    util_quickfix.add_fail_test(test_info)
   end
 end
 
@@ -78,7 +78,7 @@ local mark_outcome = function(tests, entry)
     return
   end
   test.status = entry.Action
-  util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, false)
+  util_quickfix.add_fail_test(test)
 end
 
 gotest.run_test_all = function(command)
@@ -131,5 +131,5 @@ vim.api.nvim_create_user_command('GoTestAll', function()
 end, {})
 
 vim.api.nvim_create_user_command('GoTestToggleDisplay', function() displayer:toggle_display() end, {})
-vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info, true) end, {})
+vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(gotest.tests_info) end, {})
 return gotest

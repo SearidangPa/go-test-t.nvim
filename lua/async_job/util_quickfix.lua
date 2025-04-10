@@ -57,7 +57,7 @@ end
 
 local function populate_quickfix_list(qf_entries)
   if #qf_entries > 0 then
-    vim.fn.setqflist(qf_entries, 'r')
+    vim.fn.setqflist(qf_entries, 'a')
     vim.notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list', vim.log.levels.INFO)
   else
     vim.notify('No failing tests found', vim.log.levels.INFO)
@@ -65,9 +65,7 @@ local function populate_quickfix_list(qf_entries)
 end
 
 ---@param tests_info terminal.testInfo[] | gotest.TestInfo[]
----@param load_stuck_test? boolean
-util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info, load_stuck_test)
-  print 'Loading non-passing tests to quickfix list...'
+util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   local qf_entries = {}
   local tests_to_resolve = {}
 
@@ -76,18 +74,35 @@ util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info, load_stu
       goto continue
     end
 
-    if test.status ~= 'fail' and not load_stuck_test then
-      goto continue
-    end
-
-    if test.status == 'fail' then
-      if test.fail_at_line ~= 0 then
-        qf_entries = add_direct_file_entries(test, qf_entries)
-      else
-        table.insert(tests_to_resolve, test)
-      end
+    if test.fail_at_line ~= 0 then
+      qf_entries = add_direct_file_entries(test, qf_entries)
+    else
+      table.insert(tests_to_resolve, test)
     end
     ::continue::
+  end
+
+  resolve_test_locations(tests_to_resolve, qf_entries, populate_quickfix_list)
+  return qf_entries
+end
+
+---@param test_info terminal.testInfo | gotest.TestInfo
+util_quickfix.add_fail_test = function(test_info)
+  local qf_entries = {}
+  local tests_to_resolve = {}
+  assert(test_info, 'No test info provided')
+  assert(test_info.status, 'No test status provided')
+  assert(test_info.name, 'No test name provided')
+  assert(test_info.test_bufnr, 'No test buffer number provided')
+  assert(test_info.test_line, 'No test line provided')
+  if test_info.status ~= 'fail' then
+    return
+  end
+
+  if test_info.fail_at_line ~= 0 then
+    qf_entries = add_direct_file_entries(test_info, qf_entries)
+  else
+    table.insert(tests_to_resolve, test_info)
   end
 
   resolve_test_locations(tests_to_resolve, qf_entries, populate_quickfix_list)
