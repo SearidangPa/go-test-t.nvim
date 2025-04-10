@@ -135,7 +135,6 @@ function tracker._create_tracker_window()
   vim.api.nvim_buf_set_lines(buf, 0, 0, false, { ' Test Tracker ', '' })
   local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
   vim.api.nvim_buf_set_extmark(buf, ns_id, 0, 0, { hl_group = 'Title' })
-
   -- Update buffer content
   tracker.update_tracker_window()
 
@@ -143,26 +142,18 @@ function tracker._create_tracker_window()
   vim.cmd 'wincmd p'
 end
 
--- Update the tracker window content
 function tracker.update_tracker_window()
   if not tracker._win_id or not vim.api.nvim_win_is_valid(tracker._win_id) then
     return
   end
-
-  local lines = { ' Test Tracker ', '' } -- Title and empty line
-
-  -- Add test entries
+  local lines = { ' Test Tracker ', '' }
   for i, test_info in ipairs(tracker.track_list) do
-    -- Get a shorter version of test name for display
     local short_name = test_info.name
     if #short_name > 30 then
       short_name = '...' .. string.sub(short_name, -27)
     end
-
-    -- Format status with icons
-    local status_icon = '❓' -- default for unknown status
+    local status_icon = '❓'
     local status = test_info.status or 'not run'
-
     if status == 'pass' then
       status_icon = '✅'
     elseif status == 'fail' then
@@ -178,18 +169,12 @@ function tracker.update_tracker_window()
     else
       vim.notify('Unknown status: ' .. status, vim.log.levels.WARN)
     end
-
-    -- Add to lines using "Test_name: <status_icon>" format for easier parsing
     local line = string.format(' %d. %s: %s', i, short_name, status_icon)
-
     table.insert(lines, line)
   end
-
   if #tracker.track_list == 0 then
     table.insert(lines, ' No tests tracked')
   end
-
-  -- Add help footer
   table.insert(lines, '')
   local window_width = vim.api.nvim_win_get_width(tracker._win_id)
   table.insert(lines, string.rep('─', window_width - 2))
@@ -199,47 +184,17 @@ function tracker.update_tracker_window()
   table.insert(lines, ' t: Toggle')
   table.insert(lines, ' r: Run')
   table.insert(lines, ' d: Delete')
-
-  -- Set buffer content
   vim.api.nvim_buf_set_lines(tracker._buf_id, 0, -1, false, lines)
-
-  -- Apply highlighting
   local ns_id = vim.api.nvim_create_namespace 'test_tracker_highlight'
   vim.api.nvim_buf_clear_namespace(tracker._buf_id, ns_id, 0, -1)
-  -- Highlight title
-  vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, 'Title', 0, 0, -1)
-
-  -- Highlight footer
-  local footer_start = #lines - 6 -- This should point to the separator line
-  vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, 'NonText', footer_start, 0, -1)
-
-  -- Highlight help text lines
+  vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, 0, 0, { hl_group = 'Title' })
+  local footer_start = #lines - 6
+  vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, footer_start, 0, { hl_group = 'Comment' })
   for i = footer_start + 1, #lines - 1 do
-    vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, 'Comment', i, 0, -1)
-  end
-
-  -- Highlight test statuses (icons)
-  for i = 3, footer_start - 1 do
-    if i - 3 < #tracker.track_list then
-      local status = tracker.track_list[i - 2].status or 'not run'
-      local line = lines[i]
-      local icon_pos = line:find ': [^%s]'
-      if icon_pos then
-        local hl_group = 'Normal'
-        if status == 'passed' then
-          hl_group = 'DiagnosticOk'
-        elseif status == 'failed' then
-          hl_group = 'DiagnosticError'
-        elseif status == 'running' then
-          hl_group = 'DiagnosticWarn'
-        end
-
-        -- Highlight the icon
-        vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, hl_group, i, icon_pos + 1, -1)
-      end
-    end
+    vim.api.nvim_buf_set_extmark(tracker._buf_id, ns_id, i, 0, { hl_group = 'Comment' })
   end
 end
+
 -- Toggle tracker window visibility
 tracker.toggle_tracker_window = function()
   if tracker._is_open and tracker._win_id and vim.api.nvim_win_is_valid(tracker._win_id) then
