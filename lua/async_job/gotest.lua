@@ -40,7 +40,7 @@ local add_golang_test = function(tests_info, entry)
     fail_at_line = 0,
     output = {},
     status = 'running',
-    file = '',
+    filepath = '',
   }
 end
 
@@ -61,7 +61,7 @@ local add_golang_output = function(tests_info, entry)
     local line_num = tonumber(line)
     assert(line_num, 'Line number must be a number')
     test_info.fail_at_line = line_num
-    test_info.file = file
+    test_info.filepath = file
   end
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'

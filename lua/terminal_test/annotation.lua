@@ -25,7 +25,7 @@
 ---@field name string
 ---@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
 ---@field fail_at_line number
----@field file string
+---@field filepath string
 ---
 ---
 ---@class Tracker
