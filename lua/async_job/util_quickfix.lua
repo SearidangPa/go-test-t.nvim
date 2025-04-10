@@ -41,7 +41,7 @@ local function resolve_test_locations(tests_to_resolve, qf_entries, on_complete)
           filename = filename,
           lnum = start.line + 1,
           col = start.character + 1,
-          text = string.format('%s', test.name),
+          text = test.name,
         })
       end
 
@@ -85,10 +85,11 @@ util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   return qf_entries
 end
 
-local function already_exist_in_quickfix(item)
+---@param test_info terminal.testInfo | gotest.TestInfo
+local function already_exist_in_quickfix(test_info)
   local qf_list = vim.fn.getqflist()
-  for i, existing_item in ipairs(qf_list) do
-    if existing_item.bufnr == item.bufnr and existing_item.lnum == item.lnum then
+  for _, existing_item in ipairs(qf_list) do
+    if existing_item.text == test_info.name then
       return true
     end
   end

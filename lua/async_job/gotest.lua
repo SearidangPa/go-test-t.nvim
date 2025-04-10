@@ -64,7 +64,7 @@ local add_golang_output = function(tests_info, entry)
   end
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
-    vim.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.WARN)
+    vim.notify(string.format('Adding failed test to quickfix: %s', test_info.name), vim.log.levels.INFO)
     util_quickfix.add_fail_test(test_info)
   end
 end
@@ -81,6 +81,7 @@ local mark_outcome = function(tests_info, entry)
   end
   test_info.status = entry.Action
   if entry.Action == 'fail' then
+    vim.notify(string.format('Adding failed test to quickfix: %s', test_info.name), vim.log.levels.INFO)
     util_quickfix.add_fail_test(test_info)
   end
 end
