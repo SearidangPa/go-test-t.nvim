@@ -2,12 +2,12 @@ local fidget = require 'fidget'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go_test_display'
-local displayer = display.new()
-local terminal_test_ns = vim.api.nvim_create_namespace 'GoTestError'
 
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
   tests_info = {}, ---@type terminal.testInfo[]
+  displayer = display.new(),
+  ns_id = vim.api.nvim_create_namespace 'GoTestError',
 }
 
 ---@param test_info terminal.testInfo
@@ -21,7 +21,7 @@ end
 
 ---@param test_info terminal.testInfo
 local function handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
-  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test_ns, test_info.test_line - 1, 0, {
+  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test.ns_id, test_info.test_line - 1, 0, {
     virt_text = { { string.format('✅ %s', current_time) } },
     virt_text_pos = 'eol',
   })
@@ -29,7 +29,7 @@ local function handle_test_passed(test_info, float_term_state, current_time, cb_
   float_term_state.status = 'pass'
   terminal_test.tests_info[test_info.name] = test_info
   fidget.notify(string.format('Test passed: %s', test_info.name, vim.log.levels.INFO))
-  vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
+  vim.schedule(function() terminal_test.displayer:update_tracker_buffer(terminal_test.tests_info) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   else
@@ -39,7 +39,7 @@ end
 
 ---@param test_info terminal.testInfo
 local function handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
-  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test_ns, test_info.test_line - 1, 0, {
+  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test.ns_id, test_info.test_line - 1, 0, {
     virt_text = { { string.format('❌ %s', current_time) } },
     virt_text_pos = 'eol',
   })
@@ -48,7 +48,7 @@ local function handle_test_failed(test_info, float_term_state, current_time, cb_
   terminal_test.tests_info[test_info.name] = test_info
   fidget.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.ERROR)
   util_quickfix.add_fail_test(test_info)
-  vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
+  vim.schedule(function() terminal_test.displayer:update_tracker_buffer(terminal_test.tests_info) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   end
@@ -79,7 +79,7 @@ local function handle_error_trace(line, test_info, cb_update_tracker)
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
-    vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
+    vim.schedule(function() terminal_test.displayer:update_tracker_buffer(terminal_test.tests_info) end)
     fidget.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.ERROR)
     util_quickfix.add_fail_test(test_info)
     if cb_update_tracker then
@@ -150,7 +150,7 @@ terminal_test.test_buf_in_terminals = function(test_command_format)
     terminal_test.test_in_terminal(test_info)
   end
 
-  displayer:setup(terminal_test.tests_info)
+  terminal_test.displayer:setup(terminal_test.tests_info)
 end
 
 ---@param test_command_format string
@@ -212,7 +212,7 @@ terminal_test.view_last_test_teriminal = function()
   terminal_test.terminals:toggle_float_terminal(test_name)
 end
 
-vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() displayer:toggle_display() end, {})
+vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() terminal_test.displayer:toggle_display() end, {})
 vim.api.nvim_create_user_command('TerminalTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(terminal_test.tests_info) end, {})
 
 return terminal_test
