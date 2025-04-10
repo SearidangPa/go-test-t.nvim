@@ -53,20 +53,19 @@ function tracker.jump_to_tracked_test_by_index(index)
     return
   end
 
-  local target_test = tracker.track_list[index].name
+  local test_info = tracker.track_list[index]
+  local target_test = test_info.name
+
   fidget.notify(string.format('Jumping to test: %s', target_test), vim.log.levels.INFO)
-  vim.lsp.buf_request(0, 'workspace/symbol', { query = target_test }, function(err, res)
-    if err or not res or #res == 0 then
-      vim.notify('No definition found for test: ' .. target_test, vim.log.levels.ERROR)
-      return
-    end
-    local result = res[1] -- Take the first result
-    local filename = vim.uri_to_fname(result.location.uri)
-    local start = result.location.range.start
-    vim.cmd('edit ' .. filename)
-    vim.api.nvim_win_set_cursor(0, { start.line + 1, start.character })
+
+  -- Jump directly to the buffer and line where the test was found
+  if vim.api.nvim_buf_is_valid(test_info.test_bufnr) then
+    vim.api.nvim_set_current_buf(test_info.test_bufnr)
+    vim.api.nvim_win_set_cursor(0, { test_info.test_line, 0 })
     vim.cmd [[normal! zz]]
-  end)
+  else
+    vim.notify('Test buffer no longer valid for: ' .. target_test, vim.log.levels.ERROR)
+  end
 end
 
 function tracker.toggle_tracked_terminal_by_index(index)
