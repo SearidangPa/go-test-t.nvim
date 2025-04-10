@@ -151,7 +151,6 @@ function Display:jump_to_test_location()
     vim.notify('display_win is nil in jump_to_test_location', vim.log.levels.ERROR)
     return
   end
-
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
@@ -160,9 +159,12 @@ function Display:jump_to_test_location()
   local test_name = line:match '[❌✅]%s+([%w_%-]+)'
   if not test_name then
     vim.notify('No test name found in line: ' .. line, vim.log.levels.ERROR)
+    return
   end
+
   local test_info = self.tests_info[test_name]
   local filepath = test_info.filepath
+  vim.api.nvim_set_current_win(self.original_test_win)
   vim.cmd('edit ' .. filepath)
 
   if test_info.fail_at_line and test_info.fail_at_line ~= 0 then
