@@ -58,7 +58,6 @@ end
 local function populate_quickfix_list(qf_entries)
   if #qf_entries > 0 then
     vim.fn.setqflist(qf_entries, 'a')
-    vim.notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list', vim.log.levels.INFO)
   else
     vim.notify('No failing tests found', vim.log.levels.INFO)
   end
@@ -86,6 +85,16 @@ util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   return qf_entries
 end
 
+local function already_exist_in_quickfix(item)
+  local qf_list = vim.fn.getqflist()
+  for i, existing_item in ipairs(qf_list) do
+    if existing_item.bufnr == item.bufnr and existing_item.lnum == item.lnum then
+      return true
+    end
+  end
+  return false
+end
+
 ---@param test_info terminal.testInfo | gotest.TestInfo
 util_quickfix.add_fail_test = function(test_info)
   local qf_entries = {}
@@ -94,6 +103,12 @@ util_quickfix.add_fail_test = function(test_info)
   assert(test_info.status, 'No test status provided')
   assert(test_info.name, 'No test name provided')
   if test_info.status ~= 'fail' then
+    return
+  end
+
+  local already_exist = already_exist_in_quickfix(test_info)
+  if already_exist then
+    vim.notify(string.format('%s already exists in quickfix list', test_info.name), vim.log.levels.INFO)
     return
   end
 

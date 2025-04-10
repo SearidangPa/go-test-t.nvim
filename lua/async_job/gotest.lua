@@ -64,21 +64,24 @@ local add_golang_output = function(tests_info, entry)
   end
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
+    vim.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.WARN)
     util_quickfix.add_fail_test(test_info)
   end
 end
 
-local mark_outcome = function(tests, entry)
+---@param tests_info gotest.TestInfo[]
+local mark_outcome = function(tests_info, entry)
   if not entry.Test then
     return ''
   end
   local key = entry.Test
-  local test = tests[key]
-  if not test then
+  local test_info = tests_info[key]
+  if not test_info then
     return
   end
-  test.status = entry.Action
-  util_quickfix.add_fail_test(test)
+  test_info.status = entry.Action
+  vim.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.WARN)
+  util_quickfix.add_fail_test(test_info)
 end
 
 gotest.run_test_all = function(command)
