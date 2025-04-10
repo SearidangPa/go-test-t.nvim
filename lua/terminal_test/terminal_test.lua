@@ -24,34 +24,37 @@ local terminal_test = {
 ---@field test_line number
 ---@field test_command string
 
-local function validate_test_info(info)
-  assert(info.name, 'No test found')
-  assert(info.test_bufnr, 'No test buffer found')
-  assert(info.test_line, 'No test line found')
-  assert(info.test_command, 'No test command found')
-  assert(vim.api.nvim_buf_is_valid(info.test_bufnr), 'Invalid buffer')
+---@param test_info terminal.testInfo
+local function validate_test_info(test_info)
+  assert(test_info.name, 'No test found')
+  assert(test_info.test_bufnr, 'No test buffer found')
+  assert(test_info.test_line, 'No test line found')
+  assert(test_info.test_command, 'No test command found')
+  assert(vim.api.nvim_buf_is_valid(test_info.test_bufnr), 'Invalid buffer')
 end
 
-local function handle_test_passed(opts, float_term_state, current_time)
-  vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
+---@param test_info terminal.testInfo
+local function handle_test_passed(test_info, float_term_state, current_time)
+  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test_ns, test_info.test_line - 1, 0, {
     virt_text = { { string.format('✅ %s', current_time) } },
     virt_text_pos = 'eol',
   })
-  opts.status = 'passed'
+  test_info.status = 'passed'
   float_term_state.status = 'passed'
-  make_notify(string.format('Test passed: %s', opts.test_name))
+  make_notify(string.format('Test passed: %s', test_info.name))
   return true -- detach from the buffer
 end
 
-local function handle_test_failed(opts, float_term_state, current_time)
-  vim.api.nvim_buf_set_extmark(opts.test_bufnr, terminal_test_ns, opts.test_line - 1, 0, {
+---@param test_info terminal.testInfo
+local function handle_test_failed(test_info, float_term_state, current_time)
+  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test_ns, test_info.test_line - 1, 0, {
     virt_text = { { string.format('❌ %s', current_time) } },
     virt_text_pos = 'eol',
   })
-  opts.status = 'failed'
+  test_info.status = 'failed'
   float_term_state.status = 'failed'
-  make_notify(string.format('Test failed: %s', opts.test_name))
-  vim.notify(string.format('Test failed: %s', opts.test_name), vim.log.levels.WARN, { title = 'Test Failure' })
+  make_notify(string.format('Test failed: %s', test_info.name))
+  vim.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.WARN, { title = 'Test Failure' })
   return true
 end
 
@@ -81,22 +84,22 @@ local function handle_error_trace(line)
   return nil
 end
 
-local function process_one_line(line, opts, float_term_state, current_time)
+local function process_one_line(line, test_info, float_term_state, current_time)
   if string.match(line, '--- FAIL') then
-    return handle_test_failed(opts, float_term_state, current_time)
+    return handle_test_failed(test_info, float_term_state, current_time)
   elseif string.match(line, '--- PASS') then
-    return handle_test_passed(opts, float_term_state, current_time)
+    return handle_test_passed(test_info, float_term_state, current_time)
   end
   return handle_error_trace(line)
 end
 
-local function process_buffer_lines(_, buf, first_line, last_line, opts, float_term_state)
+local function process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
   local found_error = false
 
   for _, line in ipairs(lines) do
-    local result = process_one_line(line, opts, float_term_state, current_time)
+    local result = process_one_line(line, test_info, float_term_state, current_time)
     if result == true then
       return true -- Detach requested by handler
     elseif result then
@@ -107,15 +110,15 @@ local function process_buffer_lines(_, buf, first_line, last_line, opts, float_t
   return found_error
 end
 
----@param opts terminal.testInfo
-terminal_test.test_in_terminal = function(opts)
-  validate_test_info(opts)
-  terminal_test.terminals:toggle_float_terminal(opts.name)
-  local float_term_state = terminal_test.terminals:toggle_float_terminal(opts.name)
-  vim.api.nvim_chan_send(float_term_state.chan, opts.test_command .. '\n')
+---@param test_info terminal.testInfo
+terminal_test.test_in_terminal = function(test_info)
+  validate_test_info(test_info)
+  terminal_test.terminals:toggle_float_terminal(test_info.name)
+  local float_term_state = terminal_test.terminals:toggle_float_terminal(test_info.name)
+  vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
 
   vim.api.nvim_buf_attach(float_term_state.buf, false, {
-    on_lines = function(_, buf, _, first_line, last_line) return process_buffer_lines(_, buf, first_line, last_line, opts, float_term_state) end,
+    on_lines = function(_, buf, _, first_line, last_line) return process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state) end,
   })
 end
 
