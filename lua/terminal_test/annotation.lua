@@ -20,6 +20,9 @@
 ---@class gotest
 ---@field tests_info gotest.TestInfo[]
 ---@field job_id number
+---@field displayer TestsDisplay
+---@field clean_up_prev_job? fun(job_id: number)
+---@field run_test_all? fun(command: string[])
 
 ---@class gotest.TestInfo
 ---@field name string
