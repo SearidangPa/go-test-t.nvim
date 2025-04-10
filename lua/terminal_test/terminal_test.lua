@@ -31,12 +31,10 @@ local function handle_test_passed(test_info, float_term_state, current_time, cb_
   test_info.status = 'pass'
   float_term_state.status = 'pass'
   terminal_test.tests_info[test_info.name] = test_info
-  fidget.notify(string.format('Test passed: %s', test_info.name, vim.log.levels.INFO))
+  fidget.notify(string.format('%s pass', test_info.name, vim.log.levels.INFO))
   vim.schedule(function() terminal_test.displayer:update_tracker_buffer(terminal_test.tests_info) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
-  else
-    vim.notify('cb_update_tracker is nil', vim.log.levels.WARN)
   end
 end
 
@@ -49,7 +47,7 @@ local function handle_test_failed(test_info, float_term_state, current_time, cb_
   test_info.status = 'fail'
   float_term_state.status = 'fail'
   terminal_test.tests_info[test_info.name] = test_info
-  fidget.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.ERROR)
+  fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
   util_quickfix.add_fail_test(test_info)
   vim.schedule(function() terminal_test.displayer:update_tracker_buffer(terminal_test.tests_info) end)
   if cb_update_tracker then
