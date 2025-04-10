@@ -7,7 +7,6 @@ local M = {
 
 local terminal_test = require 'terminal_test.terminal_test'
 local make_notify = require('mini.notify').make_notify {}
-local map = vim.keymap.set
 local terminals = terminal_test.terminals
 
 M.add_test_to_tracker = function(test_command_format)
@@ -59,9 +58,9 @@ local function jump_to_tracked_test_by_index(index)
   end)
 end
 
-for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
-  map('n', string.format('<leader>%d', idx), function() jump_to_tracked_test_by_index(idx) end, { desc = string.format('Jump to tracked test %d', idx) })
-end
+-- for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
+--   map('n', string.format('<leader>%d', idx), function() jump_to_tracked_test_by_index(idx) end, { desc = string.format('Jump to tracked test %d', idx) })
+-- end
 
 local function toggle_tracked_test_by_index(index)
   if index > #M.track_test_list then
@@ -71,9 +70,9 @@ local function toggle_tracked_test_by_index(index)
   terminals:toggle_float_terminal(target_test)
 end
 
-for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
-  map('n', string.format('<localleader>v%d', idx), function() toggle_tracked_test_by_index(idx) end, { desc = string.format('Toggle tracked test %d', idx) })
-end
+-- for _, idx in ipairs { 1, 2, 3, 4, 5, 6 } do
+--   map('n', string.format('<localleader>v%d', idx), function() toggle_tracked_test_by_index(idx) end, { desc = string.format('Toggle tracked test %d', idx) })
+-- end
 
 function M.delete_tracked_test()
   local opts = {
