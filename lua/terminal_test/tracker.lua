@@ -55,6 +55,7 @@ function tracker.jump_to_tracked_test_by_index(index)
   end
 
   local target_test = tracker.track_list[index].name
+  fidget.notify(string.format('Jumping to test: %s', target_test), vim.log.levels.INFO)
   vim.lsp.buf_request(0, 'workspace/symbol', { query = target_test }, function(err, res)
     if err or not res or #res == 0 then
       vim.notify('No definition found for test: ' .. target_test, vim.log.levels.ERROR)
