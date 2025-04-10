@@ -69,7 +69,7 @@ local function handle_error_trace(line, test_info)
       vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = line_num })
     end
 
-    test_info.status = 'failed'
+    test_info.status = 'fail'
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
     vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)

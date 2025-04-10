@@ -37,12 +37,13 @@ tracker.add_test_to_tracker = function(test_command_format)
     test_line = test_line,
     test_bufnr = source_bufnr,
     test_command = test_command,
-    status = 'start',
+    status = 'tracked',
   })
 
-  if tracker._is_open then
-    tracker.update_tracker_window()
+  if not tracker._is_open then
+    tracker.toggle_tracker_window()
   end
+  tracker.update_tracker_window()
 end
 
 function tracker.jump_to_tracked_test_by_index(index)
@@ -172,11 +173,11 @@ function tracker.update_tracker_window()
     local status_icon = '❓' -- default for unknown status
     local status = test_info.status or 'not run'
 
-    if status == 'passed' then
+    if status == 'pass' then
       status_icon = '✅'
-    elseif status == 'failed' then
+    elseif status == 'fail' then
       status_icon = '❌'
-    elseif status == 'running' then
+    elseif status == 'cont' then
       status_icon = '🔥'
     elseif status == 'start' then
       status_icon = '🏁'
@@ -184,8 +185,8 @@ function tracker.update_tracker_window()
       status_icon = '⏺️'
     end
 
-    -- Add to lines (with padding)
-    local line = string.format(' %s%s%s ', short_name, string.rep(' ', 30 - #short_name), status_icon)
+    -- Add to lines using "Test_name: <status_icon>" format for easier parsing
+    local line = string.format(' %d. %s: %s', i, short_name, status_icon)
 
     table.insert(lines, line)
   end
@@ -226,15 +227,10 @@ function tracker.update_tracker_window()
   -- Highlight test statuses (icons)
   for i = 3, footer_start - 1 do
     if i - 3 < #tracker.track_list then
-      local test_info = tracker.track_list[i - 2]
-      if test_info then
-        local status_col_start = 32
-        local status = test_info.status or 'not run'
-        local icon_width = 2 -- Most emoji are 2 cells wide in terminal
-        local status_col_end = status_col_start + icon_width
-
-        -- No need for additional highlights with icons, they're already colored
-        -- But we can still add highlights for text-mode terminals or if desired
+      local status = tracker.track_list[i - 2].status or 'not run'
+      local line = lines[i]
+      local icon_pos = line:find ': [^%s]'
+      if icon_pos then
         local hl_group = 'Normal'
         if status == 'passed' then
           hl_group = 'DiagnosticOk'
@@ -244,12 +240,12 @@ function tracker.update_tracker_window()
           hl_group = 'DiagnosticWarn'
         end
 
-        vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, hl_group, i, status_col_start, status_col_end)
+        -- Highlight the icon
+        vim.api.nvim_buf_add_highlight(tracker._buf_id, ns_id, hl_group, i, icon_pos + 1, -1)
       end
     end
   end
 end
-
 -- Toggle tracker window visibility
 tracker.toggle_tracker_window = function()
   if tracker._is_open and tracker._win_id and vim.api.nvim_win_is_valid(tracker._win_id) then
@@ -270,6 +266,7 @@ function tracker.get_test_index_under_cursor()
 
   -- Get the text of the current line
   local line_text = vim.api.nvim_buf_get_lines(tracker._buf_id, line_nr - 1, line_nr, false)[1]
+  print(line_text)
 
   -- If the line is empty or we're in the header/footer section, return nil
   if
@@ -279,40 +276,21 @@ function tracker.get_test_index_under_cursor()
     or line_text:match 'Test Tracker'
     or line_text:match 'Help:'
     or line_text:match '^%s*─+%s*$'
+    or line_text:match 'No tests tracked'
   then
     return nil
   end
 
-  -- Extract the test name from the line text (the part before the padding spaces)
-  local test_name = line_text:match '^%s*(.-)%s%s+'
+  -- Extract the index number from the line (e.g., " 1. Test_name: ✅")
+  local index = tonumber(line_text:match '^%s*(%d+)%.%s')
 
-  -- Trim leading/trailing whitespace from the extracted name
-  if test_name then
-    test_name = test_name:match '^%s*(.-)%s*$'
+  if index and index <= #tracker.track_list then
+    return index
   end
 
-  -- If we couldn't extract a name or the line is "No tests tracked", return nil
-  if not test_name or test_name == 'No' or line_text:match 'No tests tracked' then
-    return nil
-  end
-
-  -- Find the test index by comparing with the track_list
-  for i, test_info in ipairs(tracker.track_list) do
-    local short_name = test_info.name
-    if #short_name > 30 then
-      short_name = '...' .. string.sub(short_name, -27)
-    end
-
-    -- If the name in track_list matches the one from the line
-    if short_name:match '^%s*(.-)%s*$' == test_name then
-      return i
-    end
-  end
-
-  -- If we didn't find a matching test, return nil
+  -- If we couldn't extract a valid index, return nil
   return nil
 end
-
 -- Action functions for keymaps
 function tracker.jump_to_test_under_cursor()
   local index = tracker.get_test_index_under_cursor()
