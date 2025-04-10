@@ -41,6 +41,7 @@ tracker.add_test_to_tracker = function(test_command_format)
     test_bufnr = source_bufnr,
     test_command = test_command,
     status = 'tracked',
+    file = vim.fn.expand '%:p',
   })
 
   if not tracker._is_open then
@@ -247,7 +248,9 @@ function tracker.run_test_under_cursor()
     local test_info = tracker.track_list[index]
     if test_info then
       tracker.update_tracker_window()
-      terminal_test.test_in_terminal(test_info)
+      terminal_test.test_in_terminal(test_info, function()
+        vim.schedule(function() tracker.update_tracker_window() end)
+      end)
     end
   end
 end

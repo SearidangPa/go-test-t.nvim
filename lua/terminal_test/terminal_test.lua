@@ -20,7 +20,7 @@ local function validate_test_info(test_info)
 end
 
 ---@param test_info terminal.testInfo
-local function handle_test_passed(test_info, float_term_state, current_time)
+local function handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
   vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test_ns, test_info.test_line - 1, 0, {
     virt_text = { { string.format('✅ %s', current_time) } },
     virt_text_pos = 'eol',
@@ -30,10 +30,15 @@ local function handle_test_passed(test_info, float_term_state, current_time)
   terminal_test.tests_info[test_info.name] = test_info
   fidget.notify(string.format('Test passed: %s', test_info.name, vim.log.levels.INFO))
   vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
+  if cb_update_tracker then
+    cb_update_tracker(test_info)
+  else
+    vim.notify('cb_update_tracker is nil', vim.log.levels.WARN)
+  end
 end
 
 ---@param test_info terminal.testInfo
-local function handle_test_failed(test_info, float_term_state, current_time)
+local function handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
   vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test_ns, test_info.test_line - 1, 0, {
     virt_text = { { string.format('❌ %s', current_time) } },
     virt_text_pos = 'eol',
@@ -44,6 +49,9 @@ local function handle_test_failed(test_info, float_term_state, current_time)
   fidget.notify(string.format('Test failed: %s', test_info.name), vim.log.levels.ERROR)
   util_quickfix.add_fail_test(test_info)
   vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
+  if cb_update_tracker then
+    cb_update_tracker(test_info)
+  end
 end
 
 local function find_buffer_for_file(file)
@@ -57,7 +65,7 @@ local function find_buffer_for_file(file)
 end
 
 ---@param test_info terminal.testInfo
-local function handle_error_trace(line, test_info)
+local function handle_error_trace(line, test_info, cb_update_tracker)
   -- Pattern matches strings like "Error Trace:    /Users/path/file.go:21"
   local file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
   if file and line_num then
@@ -73,28 +81,31 @@ local function handle_error_trace(line, test_info)
     terminal_test.tests_info[test_info.name] = test_info
     vim.schedule(function() displayer:update_tracker_buffer(terminal_test.tests_info) end)
     util_quickfix.add_fail_test(test_info)
+    if cb_update_tracker then
+      cb_update_tracker(test_info)
+    end
     return error_line
   end
   return nil
 end
 
 ---@param test_info terminal.testInfo
-local function process_one_line(line, test_info, float_term_state, current_time)
+local function process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
   if string.match(line, '--- FAIL') then
-    return handle_test_failed(test_info, float_term_state, current_time)
+    return handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
   elseif string.match(line, '--- PASS') then
-    return handle_test_passed(test_info, float_term_state, current_time)
+    return handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
   end
-  return handle_error_trace(line, test_info)
+  return handle_error_trace(line, test_info, cb_update_tracker)
 end
 
-local function process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state)
+local function process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
   local found_error = false
 
   for _, line in ipairs(lines) do
-    local result = process_one_line(line, test_info, float_term_state, current_time)
+    local result = process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
     if result == true then
       return true -- Detach requested by handler
     elseif result then
@@ -106,14 +117,16 @@ local function process_buffer_lines(_, buf, first_line, last_line, test_info, fl
 end
 
 ---@param test_info terminal.testInfo
-terminal_test.test_in_terminal = function(test_info)
+terminal_test.test_in_terminal = function(test_info, cb_update_tracker)
   validate_test_info(test_info)
   terminal_test.terminals:toggle_float_terminal(test_info.name)
   local float_term_state = terminal_test.terminals:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
 
   vim.api.nvim_buf_attach(float_term_state.buf, false, {
-    on_lines = function(_, buf, _, first_line, last_line) return process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state) end,
+    on_lines = function(_, buf, _, first_line, last_line)
+      return process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
+    end,
   })
 end
 

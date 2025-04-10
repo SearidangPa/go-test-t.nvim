@@ -1,19 +1,13 @@
 local util_quickfix = {}
 
-local function add_direct_file_entries(test, qf_entries)
-  assert(test.file, 'File not found for test: ' .. test.name)
-  -- Find the file in the project
-  local cmd = string.format("find . -name '%s' | head -n 1", test.file)
-  local filepath = vim.fn.system(cmd):gsub('\n', '')
-
-  if filepath ~= '' then
-    table.insert(qf_entries, {
-      filename = filepath,
-      lnum = test.fail_at_line,
-      text = string.format('%s', test.name),
-    })
-  end
-
+---@param test_info terminal.testInfo | gotest.TestInfo
+local function add_direct_file_entries(test_info, qf_entries)
+  assert(test_info.file, 'File not found for test: ' .. test_info.name)
+  table.insert(qf_entries, {
+    filename = test_info.file,
+    lnum = test_info.fail_at_line,
+    text = string.format('%s', test_info.name),
+  })
   return qf_entries
 end
 
@@ -68,15 +62,15 @@ util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   local qf_entries = {}
   local tests_to_resolve = {}
 
-  for _, test in pairs(tests_info) do
-    if test.status == 'pass' then
+  for _, test_info in pairs(tests_info) do
+    if test_info.status == 'pass' then
       goto continue
     end
 
-    if test.fail_at_line ~= 0 then
-      qf_entries = add_direct_file_entries(test, qf_entries)
+    if test_info.fail_at_line ~= 0 then
+      qf_entries = add_direct_file_entries(test_info, qf_entries)
     else
-      table.insert(tests_to_resolve, test)
+      table.insert(tests_to_resolve, test_info)
     end
     ::continue::
   end
@@ -116,6 +110,11 @@ util_quickfix.add_fail_test = function(test_info)
     qf_entries = add_direct_file_entries(test_info, qf_entries)
   else
     table.insert(tests_to_resolve, test_info)
+  end
+
+  if #tests_to_resolve == 0 then
+    vim.fn.setqflist(qf_entries, 'a')
+    return
   end
 
   resolve_test_locations(tests_to_resolve, qf_entries, populate_quickfix_list)
