@@ -1,5 +1,6 @@
 local make_notify = require('mini.notify').make_notify {}
 local display = require 'go_test_display'
+local util_quickfix = require 'async_job.util_quickfix'
 local displayer = display.new()
 
 local M = {
@@ -76,6 +77,9 @@ local mark_outcome = function(tests, entry)
     return
   end
   test.status = entry.Action
+  if test.status == 'fail' then
+    util_quickfix.load_non_passing_tests_to_quickfix(M.tests_info)
+  end
 end
 
 M.run_test_all = function(command)
@@ -127,4 +131,5 @@ vim.api.nvim_create_user_command('GoTestAll', function()
   M.run_test_all(command)
 end, {})
 
+vim.api.nvim_create_user_command('GoTestToggleDisplay', function() displayer:toggle_display() end, {})
 return M

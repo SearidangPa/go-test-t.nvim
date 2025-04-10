@@ -195,4 +195,6 @@ terminal_test.view_last_test_teriminal = function()
   terminal_test.terminals:toggle_float_terminal(test_name)
 end
 
+vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() displayer:toggle_display() end, {})
+
 return terminal_test

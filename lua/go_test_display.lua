@@ -1,4 +1,11 @@
--- GoTestDisplay class for displaying Go test results
+---@class GoTestDisplay
+---@field display_win number
+---@field display_buf number
+---@field original_test_win number
+---@field original_test_buf number
+---@field ns number
+---@field close_display fun(self: GoTestDisplay)
+
 local GoTestDisplay = {}
 GoTestDisplay.__index = GoTestDisplay
 
