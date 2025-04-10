@@ -13,19 +13,19 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 ---@field terminalTest.view_last_test_teriminal fun()
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
-  tests_info = {}, ---@type table<string, terminal.testInfo>
+  tests_info = {}, ---@type gotest.TestInfo[]
 }
 
 ---@class terminal.testInfo
 ---@field name string
 ---@field status string
----@field fail_at_line number
+---@field fail_at_line? number
 ---@field test_bufnr number
 ---@field test_line number
 ---@field test_command string
 
 local function validate_test_info(info)
-  assert(info.test_name, 'No test found')
+  assert(info.name, 'No test found')
   assert(info.test_bufnr, 'No test buffer found')
   assert(info.test_line, 'No test line found')
   assert(info.test_command, 'No test command found')
@@ -126,8 +126,18 @@ terminal_test.test_buf_in_terminals = function(test_command_format)
   for test_name, test_line in pairs(all_tests_in_buf) do
     terminal_test.terminals:delete_terminal(test_name)
     local test_command = string.format(test_command_format, test_name)
-    local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-    terminal_test.test_in_terminal(test_info)
+    table.insert(terminal_test.tests_info, {
+      name = test_name,
+      status = 'start',
+      file = vim.fn.expand '%:t',
+    })
+    terminal_test.test_in_terminal {
+      name = test_name,
+      test_line = test_line,
+      test_bufnr = source_bufnr,
+      test_command = test_command,
+      status = 'start',
+    }
   end
 end
 
@@ -142,8 +152,13 @@ terminal_test.test_nearest_in_terminal = function(test_command_format)
   terminal_test.terminals:delete_terminal(test_name)
   assert(test_name, 'No test found')
   local test_command = string.format(test_command_format, test_name)
-  local test_info = { test_name = test_name, test_line = test_line, test_bufnr = source_bufnr, test_command = test_command }
-  terminal_test.test_in_terminal(test_info)
+  terminal_test.test_in_terminal {
+    name = test_name,
+    test_line = test_line,
+    test_bufnr = source_bufnr,
+    test_command = test_command,
+    status = 'start',
+  }
 end
 
 terminal_test.test_tracked_in_terminal = function()
