@@ -58,7 +58,7 @@ end
 
 local function populate_quickfix_list(qf_entries)
   if #qf_entries > 0 then
-    vim.fn.setqflist(qf_entries, 'r')
+    vim.fn.setqflist(qf_entries, 'a')
     make_notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list')
     vim.notify('Loaded ' .. #qf_entries .. ' failing tests to quickfix list', vim.log.levels.INFO)
   else
