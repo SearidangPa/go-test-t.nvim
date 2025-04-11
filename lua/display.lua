@@ -90,7 +90,7 @@ function Test_Display:parse_test_state_to_lines(tests_info)
 
   for _, test in ipairs(tests_table) do
     local status_icon = util_status_icon.get_status_icon(test.status)
-    if test.status == 'fail' and test.filepath ~= '' then
+    if test.status == 'fail' and test.filepath ~= '' and test.fail_at_line then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
       table.insert(buf_lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
     else
@@ -103,6 +103,9 @@ end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
 function Test_Display:update_tracker_buffer(tests_info)
+  if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
+    return
+  end
   local lines = self:parse_test_state_to_lines(tests_info)
   if vim.api.nvim_buf_is_valid(self.display_buf) then
     vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)

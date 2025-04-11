@@ -18,6 +18,7 @@
 ---@field test_line number
 ---@field test_command string
 ---@field filepath string
+---@field set_ext_mark boolean
 
 ---@class Gotest
 ---@field job_id number
