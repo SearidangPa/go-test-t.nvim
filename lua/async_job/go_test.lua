@@ -23,6 +23,8 @@ local action_state = {
   pass = true,
 }
 
+local go_test_results_title = 'Go Test Results'
+
 go_test.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
     fidget.notify('Stopping job', vim.log.levels.INFO)
@@ -72,7 +74,7 @@ local filter_golang_output = function(entry)
     test_info.status = 'fail'
     util_quickfix.add_fail_test(test_info)
     go_test.tests_info[entry.Test] = test_info
-    go_test.test_displayer:update_tracker_buffer(go_test.tests_info)
+    go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title)
   end
 end
 
@@ -121,7 +123,7 @@ go_test.run_test_all = function(command)
 
         if decoded.Action == 'run' then
           add_golang_test(decoded)
-          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info) end)
+          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title) end)
           goto continue
         end
 
@@ -134,7 +136,7 @@ go_test.run_test_all = function(command)
 
         if action_state[decoded.Action] then
           mark_outcome(decoded)
-          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info) end)
+          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title) end)
           goto continue
         end
 
@@ -143,7 +145,7 @@ go_test.run_test_all = function(command)
     end,
 
     on_exit = function()
-      vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info) end)
+      vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title) end)
     end,
   })
 end

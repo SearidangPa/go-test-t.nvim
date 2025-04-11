@@ -5,7 +5,7 @@ local util_status_icon = require 'util_status_icon'
 ---@field display_buf number
 ---@field original_test_win number
 ---@field original_test_buf number
----@field ns number
+---@field ns_id number
 ---@field tests_info gotest.TestInfo[] | terminal.testInfo[]
 ---@field close_display fun(self: TestsDisplay)
 local Test_Display = {}
@@ -18,7 +18,7 @@ function Test_Display.new(tests_info)
   self.display_buf = -1
   self.original_test_win = -1
   self.original_test_buf = -1
-  self.ns = vim.api.nvim_create_namespace 'go_test_display'
+  self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
   self.tests_info = tests_info
   return self
 end
@@ -77,9 +77,12 @@ local function sort_tests_by_status(tests)
 end
 
 ---@param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
-function Test_Display:parse_test_state_to_lines(tests_info)
-  local buf_lines = {}
+---@param buf_title string
+function Test_Display:parse_test_state_to_lines(tests_info, buf_title)
+  assert(tests_info, 'No test info found')
+  assert(buf_title, 'No buffer title found')
   local tests_table = {}
+  local buf_lines = { buf_title }
 
   for _, test in pairs(tests_info) do
     if test.name then
@@ -102,13 +105,20 @@ function Test_Display:parse_test_state_to_lines(tests_info)
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function Test_Display:update_tracker_buffer(tests_info)
+---@param buf_title string
+function Test_Display:update_tracker_buffer(tests_info, buf_title)
   if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
     return
   end
-  local lines = self:parse_test_state_to_lines(tests_info)
+  assert(tests_info, 'No test info found')
+  assert(buf_title, 'No buffer title found')
+  local lines = self:parse_test_state_to_lines(tests_info, buf_title)
   if vim.api.nvim_buf_is_valid(self.display_buf) then
     vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)
+    vim.api.nvim_buf_set_extmark(self.display_buf, self.ns_id, 0, 0, {
+      end_col = #lines[1],
+      hl_group = 'Title',
+    })
   end
 end
 
