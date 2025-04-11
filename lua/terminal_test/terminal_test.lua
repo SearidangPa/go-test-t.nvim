@@ -24,10 +24,13 @@ end
 
 ---@param test_info terminal.testInfo
 local function handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
-  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test.ns_id, test_info.test_line - 1, 0, {
-    virt_text = { { string.format('✅ %s', current_time) } },
-    virt_text_pos = 'eol',
-  })
+  if not test_info.set_ext_mark then
+    vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test.ns_id, test_info.test_line - 1, 0, {
+      virt_text = { { string.format('✅ %s', current_time) } },
+      virt_text_pos = 'eol',
+    })
+    test_info.set_ext_mark = true
+  end
   test_info.status = 'pass'
   float_term_state.status = 'pass'
   terminal_test.tests_info[test_info.name] = test_info
@@ -40,10 +43,12 @@ end
 
 ---@param test_info terminal.testInfo
 local function handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
-  vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test.ns_id, test_info.test_line - 1, 0, {
-    virt_text = { { string.format('❌ %s', current_time) } },
-    virt_text_pos = 'eol',
-  })
+  if not test_info.set_ext_mark then
+    vim.api.nvim_buf_set_extmark(test_info.test_bufnr, terminal_test.ns_id, test_info.test_line - 1, 0, {
+      virt_text = { { string.format('❌ %s', current_time) } },
+      virt_text_pos = 'eol',
+    })
+  end
   test_info.status = 'fail'
   float_term_state.status = 'fail'
   terminal_test.tests_info[test_info.name] = test_info
@@ -96,12 +101,13 @@ local function process_one_line(line, test_info, float_term_state, current_time,
   if string.match(line, '--- FAIL') then
     return handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
   elseif string.match(line, '--- PASS') then
+    print(string.format('line: %s, handle_test_passed: %s', line, test_info.name))
     return handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
   end
   return handle_error_trace(line, test_info, cb_update_tracker)
 end
 
-local function process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
+local function process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
   local found_error = false
@@ -127,7 +133,7 @@ function terminal_test.test_in_terminal(test_info, cb_update_tracker)
 
   vim.api.nvim_buf_attach(float_term_state.buf, false, {
     on_lines = function(_, buf, _, first_line, last_line)
-      return process_buffer_lines(_, buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
+      return process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
     end,
   })
 end
@@ -148,6 +154,7 @@ function terminal_test.test_buf_in_terminals(test_command_format)
       test_command = test_command,
       status = 'start',
       filepath = vim.fn.expand '%:p',
+      set_ext_mark = false,
     }
     terminal_test.tests_info[test_name] = test_info
     terminal_test.test_in_terminal(test_info)
