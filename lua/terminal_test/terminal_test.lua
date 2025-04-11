@@ -48,6 +48,7 @@ local function handle_test_failed(test_info, float_term_state, current_time, cb_
       virt_text = { { string.format('❌ %s', current_time) } },
       virt_text_pos = 'eol',
     })
+    test_info.set_ext_mark = true
   end
   test_info.status = 'fail'
   float_term_state.status = 'fail'
@@ -60,28 +61,22 @@ local function handle_test_failed(test_info, float_term_state, current_time, cb_
   end
 end
 
-local function find_buffer_for_file(file)
-  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
-    local buf_name = vim.api.nvim_buf_get_name(buf_id)
-    if buf_name:match(file .. '$') then
-      return buf_id
-    end
-  end
-  return nil
-end
-
 ---@param test_info terminal.testInfo
 local function handle_error_trace(line, test_info, cb_update_tracker)
-  -- Pattern matches strings like "Error Trace:    /Users/path/file.go:21"
-  local file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
+  local file, line_num
+  if vim.fn.has 'win32' == 1 then
+    file, line_num = string.match(line, 'Error Trace:%s+([%w%p]+):(%d+)')
+  else
+    file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
+  end
+
   if file and line_num then
     local error_line = tonumber(line_num)
-    local error_bufnr = find_buffer_for_file(file)
+    local error_bufnr = vim.fn.bufnr(file)
     if error_bufnr then
-      vim.fn.sign_define('GoTestError', { text = '✗', texthl = 'DiagnosticError' })
+      vim.fn.sign_define('GoTestError', { text = '❌', texthl = 'DiagnosticError' })
       vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = line_num })
     end
-
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
@@ -98,13 +93,13 @@ end
 
 ---@param test_info terminal.testInfo
 local function process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
+  handle_error_trace(line, test_info, cb_update_tracker)
   if string.match(line, '--- FAIL') then
     return handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
   elseif string.match(line, '--- PASS') then
     print(string.format('line: %s, handle_test_passed: %s', line, test_info.name))
     return handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
   end
-  return handle_error_trace(line, test_info, cb_update_tracker)
 end
 
 local function process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
@@ -181,6 +176,7 @@ function terminal_test.test_nearest_in_terminal(test_command_format)
     test_command = test_command,
     status = 'start',
     filepath = vim.fn.expand '%:p',
+    set_ext_mark = false,
   }
 end
 
