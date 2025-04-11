@@ -3,6 +3,7 @@ local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 
 local tests_info_instance = {}
+local go_test_results_title = 'Go Test All Results'
 
 ---@type Gotest
 local go_test = {
@@ -22,8 +23,6 @@ local action_state = {
   fail = true,
   pass = true,
 }
-
-local go_test_results_title = 'Go Test Results'
 
 go_test.clean_up_prev_job = function(job_id)
   if job_id ~= -1 then
