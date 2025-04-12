@@ -79,7 +79,7 @@ local function filter_golang_output(entry)
     test_info.fidget_handle:finish()
   end
   go_test.tests_info[entry.Test] = test_info
-  go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title)
+  go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title)
 end
 
 local function mark_outcome(entry)
@@ -127,7 +127,7 @@ go_test.run_test_all = function(command)
 
         if decoded.Action == 'run' then
           add_golang_test(decoded)
-          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title) end)
+          vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title) end)
           goto continue
         end
 
@@ -140,7 +140,7 @@ go_test.run_test_all = function(command)
 
         if action_state[decoded.Action] then
           mark_outcome(decoded)
-          vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title) end)
+          vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title) end)
           goto continue
         end
 
@@ -149,7 +149,7 @@ go_test.run_test_all = function(command)
     end,
 
     on_exit = function()
-      vim.schedule(function() go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title) end)
+      vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title) end)
     end,
   })
 end

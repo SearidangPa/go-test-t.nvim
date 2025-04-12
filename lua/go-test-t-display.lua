@@ -106,7 +106,7 @@ end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
 ---@param buf_title string
-function Test_Display:update_tracker_buffer(tests_info, buf_title)
+function Test_Display:update_buffer(tests_info, buf_title)
   self.tests_info = tests_info
   if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
     return
