@@ -180,23 +180,6 @@ function TerminalMultiplexer:create_float_window(float_terminal_state, terminal_
       border = 'none',
     })
   end
-
-  local map_opts = { noremap = true, silent = true, buffer = float_terminal_state.buf }
-  local next_term = function() self:navigate_terminal(1) end
-  local prev_term = function() self:navigate_terminal(-1) end
-
-  vim.keymap.set('n', '>', next_term, map_opts)
-  vim.keymap.set('n', '<', prev_term, map_opts)
-
-  local close_term = function()
-    if vim.api.nvim_win_is_valid(float_terminal_state.footer_win) then
-      vim.api.nvim_win_hide(float_terminal_state.footer_win)
-    end
-    if vim.api.nvim_win_is_valid(float_terminal_state.win) then
-      vim.api.nvim_win_hide(float_terminal_state.win)
-    end
-  end
-  vim.keymap.set('n', 'q', close_term, map_opts)
 end
 
 --- === Toggle terminal ===
@@ -237,8 +220,28 @@ function TerminalMultiplexer:toggle_float_terminal(terminal_name, do_not_open_wi
     current_float_term_state.chan = vim.bo.channel
   end
 
+  self:_set_up_buffer_keybind(current_float_term_state)
   self.last_terminal_name = terminal_name
   return self.all_terminals[terminal_name]
+end
+
+function TerminalMultiplexer:_set_up_buffer_keybind(current_float_term_state)
+  local map_opts = { noremap = true, silent = true, buffer = current_float_term_state.buf }
+  local next_term = function() self:navigate_terminal(1) end
+  local prev_term = function() self:navigate_terminal(-1) end
+
+  vim.keymap.set('n', '>', next_term, map_opts)
+  vim.keymap.set('n', '<', prev_term, map_opts)
+
+  local close_term = function()
+    if vim.api.nvim_win_is_valid(current_float_term_state.footer_win) then
+      vim.api.nvim_win_hide(current_float_term_state.footer_win)
+    end
+    if vim.api.nvim_win_is_valid(current_float_term_state.win) then
+      vim.api.nvim_win_hide(current_float_term_state.win)
+    end
+  end
+  vim.keymap.set('n', 'q', close_term, map_opts)
 end
 
 ---Delete a terminal by name
