@@ -102,6 +102,7 @@ local function process_one_line(line, test_info, float_term_state, current_time,
   end
 end
 
+---@param test_info terminal.testInfo
 local function process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
@@ -109,6 +110,7 @@ local function process_buffer_lines(buf, first_line, last_line, test_info, float
   for _, line in ipairs(lines) do
     local detach = process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
     if detach then
+      test_info.fidget_handle:finish()
       return true -- Detach requested by handler
     end
   end
