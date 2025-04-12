@@ -205,6 +205,7 @@ end
 ---@param do_not_open_win boolean|nil If true, prepare but don't display the window
 ---@return Float_Term_State
 function TerminalMultiplexer:toggle_float_terminal(terminal_name, do_not_open_win)
+  print('toggle_float_terminal', terminal_name)
   assert(terminal_name, 'No terminal name provided')
 
   local current_float_term_state = self.all_terminals[terminal_name]

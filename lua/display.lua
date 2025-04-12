@@ -129,15 +129,19 @@ end
 
 local icons = '🔥❌✅🔄⏸️🪵⏺️🏁'
 
-function Test_Display:jump_to_test_location()
-  self:assert_display_buf_win()
+function Test_Display:get_test_name_from_cursor()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
   assert(line, 'No line found in display buffer')
   local test_name = line:match('[' .. icons:gsub('.', '%%%1') .. ']%s+([%w_%-]+)')
   assert(test_name, 'No test name found in line: ' .. line)
+  return test_name
+end
 
+function Test_Display:jump_to_test_location()
+  self:assert_display_buf_win()
+  local test_name = self:get_test_name_from_cursor()
   local test_info = self.tests_info[test_name]
   assert(test_info, 'No test info found for test: ' .. test_name)
   vim.api.nvim_set_current_win(self.original_test_win)
@@ -180,13 +184,23 @@ function Test_Display:setup_keymaps()
   local map_opts = { buffer = self.display_buf, noremap = true, silent = true }
   local map = vim.keymap.set
 
-  map('n', 'q', function()
-    this:close_display() -- Use the captured reference
+  map('n', 'q', function() this:close_display() end, map_opts)
+  map('n', '<CR>', function() this:jump_to_test_location() end, map_opts)
+
+  local lua_command_format = 'require("terminal_test.terminal_test").terminals:toggle_float_terminal("%s")'
+  map('n', 't', function()
+    local test_name = this:get_test_name_from_cursor()
+    assert(test_name, 'No test name found')
+    local lua_command = string.format(lua_command_format, test_name)
+    print('test_name', test_name)
+    print('lua_command', lua_command)
+    vim.cmd([[lua ]] .. string.format(lua_command_format, test_name))
   end, map_opts)
 
-  map('n', '<CR>', function()
-    this:jump_to_test_location() -- Use the captured reference
-  end, map_opts)
+  -- terminal_test.terminals:toggle_float_terminal(test_name)
+  -- set_keymap('n', 't', '<cmd>lua require("terminal_test.tracker").toggle_terminal_under_cursor()<CR>')
+  -- set_keymap('n', 'd', '<cmd>lua require("terminal_test.tracker").delete_test_under_cursor()<CR>')
+  -- set_keymap('n', 'r', '<cmd>lua require("terminal_test.tracker").run_test_under_cursor()<CR>')
 end
 
 function Test_Display:close_display()
