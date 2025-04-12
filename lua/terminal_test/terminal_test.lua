@@ -88,11 +88,10 @@ end
 
 ---@param test_info terminal.testInfo
 local function process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
-  local make_notify = require('mini.notify').make_notify {}
   handle_error_trace(line, test_info, cb_update_tracker)
 
   if string.match(line, '--- FAIL') then
-    make_notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
+    fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
     handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
   elseif string.match(line, '--- PASS') then
