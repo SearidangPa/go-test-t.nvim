@@ -150,30 +150,30 @@ function terminal_test.test_in_terminal_by_name(test_name)
   client:request('workspace/symbol', params, function(err, res)
     if err or not res or #res == 0 then
       vim.notify('No definition found for test: ' .. test_name, vim.log.levels.WARN)
-    else
-      local result = res[1]
-      local filename = vim.uri_to_fname(result.location.uri)
-      local start = result.location.range.start
-      local file_bufnr = vim.fn.bufadd(filename)
-      vim.fn.bufload(file_bufnr)
-
-      local test_info = {
-        name = test_name,
-        test_line = start.line + 1,
-        test_bufnr = file_bufnr,
-        test_command = test_command,
-        status = 'start',
-        filepath = filename,
-        set_ext_mark = false,
-        fidget_handle = fidget.progress.handle.create {
-          lsp_client = {
-            name = test_name,
-          },
-        },
-      }
-      require('fidget').notify('Running test: ' .. test_name, vim.log.levels.INFO)
-      terminal_test.test_in_terminal(test_info)
+      return
     end
+    local result = res[1]
+    local filename = vim.uri_to_fname(result.location.uri)
+    local start = result.location.range.start
+    local file_bufnr = vim.fn.bufadd(filename)
+    vim.fn.bufload(file_bufnr)
+
+    local test_info = {
+      name = test_name,
+      test_line = start.line + 1,
+      test_bufnr = file_bufnr,
+      test_command = test_command,
+      status = 'start',
+      filepath = filename,
+      set_ext_mark = false,
+      fidget_handle = fidget.progress.handle.create {
+        lsp_client = {
+          name = test_name,
+        },
+      },
+    }
+    require('fidget').notify('Running test: ' .. test_name, vim.log.levels.INFO)
+    terminal_test.test_in_terminal(test_info)
   end)
 end
 
