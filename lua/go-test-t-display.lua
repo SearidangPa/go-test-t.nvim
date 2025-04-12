@@ -169,7 +169,7 @@ function Test_Display:jump_to_test_location()
     local start = result.location.range.start
     local file_bufnr = vim.fn.bufadd(filename)
     vim.fn.bufload(file_bufnr)
-    self:_jump_to_test_location(filename, test_name, start.line + 1)
+    self:_jump_to_test_location(filename, test_name, start.line + 1, test_info.fail_at_line)
   end)
 end
 
