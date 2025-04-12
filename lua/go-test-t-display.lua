@@ -187,17 +187,19 @@ function Test_Display:setup_keymaps()
   map('n', 'q', function() this:close_display() end, map_opts)
   map('n', '<CR>', function() this:jump_to_test_location() end, map_opts)
 
-  local lua_command_format = 'require("terminal_test.terminal_test").terminals:toggle_float_terminal("%s")'
+  local lua_toggle_cmd_format = 'require("terminal_test.terminal_test").terminals:toggle_float_terminal("%s")'
   map('n', 't', function()
     local test_name = this:get_test_name_from_cursor()
     assert(test_name, 'No test name found')
-    vim.cmd([[lua ]] .. string.format(lua_command_format, test_name))
+    vim.cmd([[lua ]] .. string.format(lua_toggle_cmd_format, test_name))
   end, map_opts)
 
-  -- terminal_test.terminals:toggle_float_terminal(test_name)
-  -- set_keymap('n', 't', '<cmd>lua require("terminal_test.tracker").toggle_terminal_under_cursor()<CR>')
-  -- set_keymap('n', 'd', '<cmd>lua require("terminal_test.tracker").delete_test_under_cursor()<CR>')
-  -- set_keymap('n', 'r', '<cmd>lua require("terminal_test.tracker").run_test_under_cursor()<CR>')
+  local lua_test_in_term_cmd_format = 'require("terminal_test.terminal_test").test_in_terminal_by_name("%s")'
+  map('n', 'r', function()
+    local test_name = this:get_test_name_from_cursor()
+    assert(test_name, 'No test name found')
+    vim.cmd([[lua ]] .. string.format(lua_test_in_term_cmd_format, test_name))
+  end, map_opts)
 end
 
 function Test_Display:close_display()
