@@ -72,7 +72,6 @@ local function handle_error_trace(line, test_info, cb_update_tracker)
   end
 
   if file and line_num then
-    local error_line = tonumber(line_num)
     local error_bufnr = vim.fn.bufnr(file)
     if error_bufnr then
       vim.fn.sign_define('GoTestError', { text = '❌', texthl = 'DiagnosticError' })
@@ -87,36 +86,36 @@ local function handle_error_trace(line, test_info, cb_update_tracker)
     if cb_update_tracker then
       cb_update_tracker(test_info)
     end
-    return error_line
   end
-  return nil
 end
 
 ---@param test_info terminal.testInfo
 local function process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
-  handle_error_trace(line, test_info, cb_update_tracker)
   if string.match(line, '--- FAIL') then
-    return handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
+    handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
+    return true
   elseif string.match(line, '--- PASS') then
-    return handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
+    handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
+    return true
+  else
+    local has_error_trace = handle_error_trace(line, test_info, cb_update_tracker)
+    if has_error_trace then
+      return true
+    end
+    return false
   end
 end
 
 local function process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
-  local found_error = false
 
   for _, line in ipairs(lines) do
-    local result = process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
-    if result == true then
+    local detach = process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
+    if detach then
       return true -- Detach requested by handler
-    elseif result then
-      found_error = true -- Error line found
     end
   end
-
-  return found_error
 end
 
 ---@param test_info terminal.testInfo
@@ -152,6 +151,11 @@ function terminal_test.test_buf_in_terminals(test_command_format)
       status = 'start',
       filepath = vim.fn.expand '%:p',
       set_ext_mark = false,
+      fidget_handle = fidget.progress.handle.create {
+        lsp_client = {
+          name = test_name,
+        },
+      },
     }
     terminal_test.tests_info[test_name] = test_info
     terminal_test.test_in_terminal(test_info)
@@ -176,6 +180,11 @@ function terminal_test.test_nearest_in_terminal(test_command_format)
     status = 'start',
     filepath = vim.fn.expand '%:p',
     set_ext_mark = false,
+    fidget_handle = fidget.progress.handle.create {
+      lsp_client = {
+        name = test_name,
+      },
+    },
   }
 end
 
@@ -211,7 +220,7 @@ end
 function terminal_test.view_last_test_teriminal()
   local test_name = terminal_test.terminals.last_terminal_name
   if not test_name then
-    vim.notify('No last test found', vim.log.levels.WARN)
+    vim.notify('No last test terminal found', vim.log.levels.WARN)
     return
   end
   terminal_test.terminals:toggle_float_terminal(test_name)

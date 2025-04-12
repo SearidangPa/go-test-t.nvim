@@ -19,6 +19,7 @@
 ---@field test_command string
 ---@field filepath string
 ---@field set_ext_mark boolean
+---@field fidget_handle ProgressHandle
 
 ---@class Gotest
 ---@field job_id number
