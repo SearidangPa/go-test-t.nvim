@@ -98,7 +98,6 @@ local function process_one_line(line, test_info, float_term_state, current_time,
   if string.match(line, '--- FAIL') then
     return handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
   elseif string.match(line, '--- PASS') then
-    print(string.format('line: %s, handle_test_passed: %s', line, test_info.name))
     return handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
   end
 end
