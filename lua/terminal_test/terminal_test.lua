@@ -91,18 +91,14 @@ end
 
 ---@param test_info terminal.testInfo
 local function process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
+  handle_error_trace(line, test_info, cb_update_tracker)
+
   if string.match(line, '--- FAIL') then
     handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
   elseif string.match(line, '--- PASS') then
     handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
-  else
-    local has_error_trace = handle_error_trace(line, test_info, cb_update_tracker)
-    if has_error_trace then
-      return true
-    end
-    return false
   end
 end
 
