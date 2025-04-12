@@ -1,7 +1,7 @@
 local fidget = require 'fidget'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
-local display = require 'display'
+local display = require 'go-test-t-display'
 
 local tests_info_instance = {}
 local test_results_title = 'Terminal Test Results'

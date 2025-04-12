@@ -1,4 +1,4 @@
-local display = require 'display'
+local display = require 'go-test-t-display'
 local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 
