@@ -56,11 +56,11 @@ local function sort_tests_by_status(tests)
       return a.name < b.name
     end
     local priority = {
-      running = 1,
+      fail = 1,
       paused = 2,
       cont = 3,
       start = 4,
-      fail = 5,
+      running = 5,
       pass = 6,
     }
     if not priority[a.status] and priority[b.status] then
@@ -107,6 +107,7 @@ end
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
 ---@param buf_title string
 function Test_Display:update_tracker_buffer(tests_info, buf_title)
+  self.tests_info = tests_info
   if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
     return
   end

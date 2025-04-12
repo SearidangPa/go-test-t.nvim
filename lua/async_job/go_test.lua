@@ -41,7 +41,6 @@ local function add_golang_test(entry)
   local test_info = {
     name = entry.Test,
     status = 'running',
-    fail_at_line = 0,
     filepath = '',
     fidget_handle = fidget.progress.handle.create {
       lsp_client = {
@@ -78,9 +77,9 @@ local function filter_golang_output(entry)
     test_info.status = 'fail'
     util_quickfix.add_fail_test(test_info)
     test_info.fidget_handle:finish()
-    go_test.tests_info[entry.Test] = test_info
-    go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title)
   end
+  go_test.tests_info[entry.Test] = test_info
+  go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title)
 end
 
 local function mark_outcome(entry)

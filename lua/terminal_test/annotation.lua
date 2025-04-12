@@ -32,7 +32,7 @@
 ---@class gotest.TestInfo
 ---@field name string
 ---@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
----@field fail_at_line number
+---@field fail_at_line? number
 ---@field filepath string
 ---@field fidget_handle ProgressHandle
 ---
