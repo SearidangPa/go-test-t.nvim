@@ -121,11 +121,13 @@ function terminal_test.test_in_terminal(test_info, cb_update_tracker)
   local float_term_state = terminal_test.terminals:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
 
-  vim.api.nvim_buf_attach(float_term_state.buf, false, {
-    on_lines = function(_, buf, _, first_line, last_line)
-      return process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
-    end,
-  })
+  vim.schedule(function()
+    vim.api.nvim_buf_attach(float_term_state.buf, false, {
+      on_lines = function(_, buf, _, first_line, last_line)
+        return process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
+      end,
+    })
+  end)
 end
 
 function terminal_test.toggle_test(test_name)
