@@ -192,8 +192,6 @@ function Test_Display:setup_keymaps()
     local test_name = this:get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     local lua_command = string.format(lua_command_format, test_name)
-    print('test_name', test_name)
-    print('lua_command', lua_command)
     vim.cmd([[lua ]] .. string.format(lua_command_format, test_name))
   end, map_opts)
 
