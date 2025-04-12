@@ -14,10 +14,9 @@ local help_items = {
   ' d       ===  Delete from tracker',
 }
 
-local tests_info_instance = {}
 ---@type Tracker
 local tracker = {
-  track_list = tests_info_instance,
+  track_list = {},
   _original_win_id = nil,
   _win_id = nil,
   _buf_id = nil,

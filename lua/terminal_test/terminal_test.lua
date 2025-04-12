@@ -162,19 +162,17 @@ end
 ---@param test_command_format string
 function terminal_test.test_nearest_in_terminal(test_command_format)
   assert(test_command_format, 'No test command format found')
-  local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'Not inside a test function')
   assert(test_line, 'No test line found')
+
   terminal_test.terminals:delete_terminal(test_name)
-  assert(test_name, 'No test found')
-  local test_command = string.format(test_command_format, test_name)
   terminal_test.test_in_terminal {
     name = test_name,
     test_line = test_line,
-    test_bufnr = source_bufnr,
-    test_command = test_command,
+    test_bufnr = vim.api.nvim_get_current_buf(),
+    test_command = string.format(test_command_format, test_name),
     status = 'start',
     filepath = vim.fn.expand '%:p',
     set_ext_mark = false,
