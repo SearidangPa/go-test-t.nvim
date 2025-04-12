@@ -75,9 +75,10 @@ function tracker.jump_to_tracked_test_by_index(index)
 end
 
 function tracker.toggle_tracked_terminal_by_index(index)
-  if index > #tracker.track_list then
-    index = #tracker.track_list
-  end
+  assert(index, 'No index provided')
+  assert(tracker.track_list, 'No test tracked')
+  assert(terminals, 'No terminal found')
+  assert(index <= #tracker.track_list, 'Index out of bounds')
   local target_test = tracker.track_list[index].name
   terminals:toggle_float_terminal(target_test)
 end
