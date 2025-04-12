@@ -143,32 +143,33 @@ function Test_Display:jump_to_test_location()
   self:assert_display_buf_win()
   local test_name = self:get_test_name_from_cursor()
   local test_info = self.tests_info[test_name]
-  if not test_info then
-    local go_clients = vim.lsp.get_clients { name = 'gopls' }
-
-    if #go_clients == 0 then
-      vim.notify('No Go language server found', vim.log.levels.ERROR)
-      return
-    end
-
-    local client = go_clients[1]
-    local params = { query = test_name }
-    client:request('workspace/symbol', params, function(err, res)
-      if err or not res or #res == 0 then
-        vim.notify('No definition found for test: ' .. test_name, vim.log.levels.WARN)
-        return
-      end
-      local result = res[1]
-      local filename = vim.uri_to_fname(result.location.uri)
-      local start = result.location.range.start
-      local file_bufnr = vim.fn.bufadd(filename)
-      vim.fn.bufload(file_bufnr)
-      self:_jump_to_test_location(filename, test_name, start.line + 1)
-    end)
+  assert(test_info, 'No test info found for test: ' .. test_name)
+  if test_info.filepath and test_info.test_line then
+    self:_jump_to_test_location(test_info.filepath, test_name, test_info.test_line, test_info.fail_at_line)
     return
   end
 
-  self:_jump_to_test_location(test_info.filepath, test_name, test_info.test_line, test_info.fail_at_line)
+  local go_clients = vim.lsp.get_clients { name = 'gopls' }
+
+  if #go_clients == 0 then
+    vim.notify('No Go language server found', vim.log.levels.ERROR)
+    return
+  end
+
+  local client = go_clients[1]
+  local params = { query = test_name }
+  client:request('workspace/symbol', params, function(err, res)
+    if err or not res or #res == 0 then
+      vim.notify('No definition found for test: ' .. test_name, vim.log.levels.WARN)
+      return
+    end
+    local result = res[1]
+    local filename = vim.uri_to_fname(result.location.uri)
+    local start = result.location.range.start
+    local file_bufnr = vim.fn.bufadd(filename)
+    vim.fn.bufload(file_bufnr)
+    self:_jump_to_test_location(filename, test_name, start.line + 1)
+  end)
 end
 
 function Test_Display:_jump_to_test_location(filepath, test_name, test_line, fail_at_line)
