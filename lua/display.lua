@@ -177,13 +177,16 @@ end
 
 function Test_Display:setup_keymaps()
   local this = self -- Capture the current 'self' reference
-  vim.keymap.set('n', 'q', function()
-    this:close_display() -- Use the captured reference
-  end, { buffer = this.display_buf, noremap = true, silent = true })
+  local map_opts = { buffer = self.display_buf, noremap = true, silent = true }
+  local map = vim.keymap.set
 
-  vim.keymap.set('n', '<CR>', function()
+  map('n', 'q', function()
+    this:close_display() -- Use the captured reference
+  end, map_opts)
+
+  map('n', '<CR>', function()
     this:jump_to_test_location() -- Use the captured reference
-  end, { buffer = this.display_buf, noremap = true, silent = true })
+  end, map_opts)
 end
 
 function Test_Display:close_display()
