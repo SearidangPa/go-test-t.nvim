@@ -105,13 +105,13 @@ util_quickfix.add_fail_test = function(test_info)
   if already_exist then
     return
   end
-  vim.notify('Adding failed test to quickfix: ' .. test_info.name, vim.log.levels.WARN)
 
   if test_info.fail_at_line ~= 0 then
     qf_entries = add_direct_file_entries(test_info, qf_entries)
   else
     table.insert(tests_to_resolve, test_info)
   end
+  require('fidget').notify('added failed test to quickfix: ' .. test_info.name, vim.log.levels.WARN)
 
   if #tests_to_resolve == 0 then
     vim.fn.setqflist(qf_entries, 'a')
