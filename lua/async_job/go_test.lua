@@ -53,7 +53,7 @@ local function add_golang_test(entry)
   go_test.tests_info[entry.Test] = test_info
 end
 
-local filter_golang_output = function(entry)
+local function filter_golang_output(entry)
   assert(entry, 'No entry provided')
   if not entry.Test then
     return ''
@@ -83,7 +83,7 @@ local filter_golang_output = function(entry)
   end
 end
 
-local mark_outcome = function(entry)
+local function mark_outcome(entry)
   if not entry.Test then
     return ''
   end
