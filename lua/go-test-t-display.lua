@@ -150,30 +150,13 @@ function Test_Display:jump_to_test_location()
     return
   end
 
-  local go_clients = vim.lsp.get_clients { name = 'gopls' }
-
-  if #go_clients == 0 then
-    vim.notify('No Go language server found', vim.log.levels.ERROR)
-    return
-  end
-
-  local client = go_clients[1]
-  local params = { query = test_name }
-  client:request('workspace/symbol', params, function(err, res)
-    if err or not res or #res == 0 then
-      vim.notify('No definition found for test: ' .. test_name, vim.log.levels.WARN)
-      return
-    end
-    local result = res[1]
-    local filename = vim.uri_to_fname(result.location.uri)
-    local start = result.location.range.start
-    local file_bufnr = vim.fn.bufadd(filename)
-    vim.fn.bufload(file_bufnr)
-    self:_jump_to_test_location(filename, test_name, start.line + 1, test_info.fail_at_line)
-  end)
+  require('util_lsp').action_from_test_name(
+    test_name,
+    function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name, test_info.fail_at_line) end
+  )
 end
 
-function Test_Display:_jump_to_test_location(filepath, test_name, test_line, fail_at_line)
+function Test_Display:_jump_to_test_location(filepath, test_line, test_name, fail_at_line)
   assert(test_name, 'No test name found for test')
   assert(filepath, 'No filepath found for test: ' .. test_name)
   assert(test_line, 'No test line found for test: ' .. test_name)

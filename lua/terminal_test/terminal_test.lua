@@ -137,34 +137,14 @@ function terminal_test.test_in_terminal_by_name(test_name)
   local test_command_format = 'go test ./... -v -run %s'
   local test_command = string.format(test_command_format, test_name)
 
-  local go_clients = vim.lsp.get_clients { name = 'gopls' }
-
-  if #go_clients == 0 then
-    vim.notify('No Go language server found', vim.log.levels.ERROR)
-    return
-  end
-
-  local client = go_clients[1]
-  local params = { query = test_name }
-
-  client:request('workspace/symbol', params, function(err, res)
-    if err or not res or #res == 0 then
-      vim.notify('No definition found for test: ' .. test_name, vim.log.levels.WARN)
-      return
-    end
-    local result = res[1]
-    local filename = vim.uri_to_fname(result.location.uri)
-    local start = result.location.range.start
-    local file_bufnr = vim.fn.bufadd(filename)
-    vim.fn.bufload(file_bufnr)
-
+  require('util_lsp').action_from_test_name(test_name, function(lsp_param)
     local test_info = {
+      test_line = lsp_param.test_line,
+      filepath = lsp_param.filepath,
+      test_bufnr = lsp_param.test_bufnr,
       name = test_name,
-      test_line = start.line + 1,
-      test_bufnr = file_bufnr,
       test_command = test_command,
       status = 'start',
-      filepath = filename,
       set_ext_mark = false,
       fidget_handle = fidget.progress.handle.create {
         lsp_client = {
@@ -172,7 +152,6 @@ function terminal_test.test_in_terminal_by_name(test_name)
         },
       },
     }
-    require('fidget').notify('Running test: ' .. test_name, vim.log.levels.INFO)
     terminal_test.test_in_terminal(test_info)
   end)
 end
