@@ -36,13 +36,18 @@ local function add_golang_test(entry)
   if not entry.Test then
     return ''
   end
-  fidget.notify('Adding test: ' .. entry.Test, vim.log.levels.INFO)
 
+  ---@type gotest.TestInfo
   local test_info = {
     name = entry.Test,
     status = 'running',
     fail_at_line = 0,
     filepath = '',
+    fidget_handle = fidget.progress.handle.create {
+      lsp_client = {
+        name = entry.Test,
+      },
+    },
   }
 
   go_test.tests_info[entry.Test] = test_info
@@ -72,12 +77,14 @@ local filter_golang_output = function(entry)
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
     util_quickfix.add_fail_test(test_info)
+    test_info.fidget_handle:finish()
     go_test.tests_info[entry.Test] = test_info
     go_test.test_displayer:update_tracker_buffer(go_test.tests_info, go_test_results_title)
   end
 end
 
 local mark_outcome = function(entry)
+  local make_notify = require('mini.notify').make_notify {}
   if not entry.Test then
     return ''
   end
@@ -91,9 +98,11 @@ local mark_outcome = function(entry)
   go_test.tests_info[key] = test_info
   if entry.Action == 'fail' then
     util_quickfix.add_fail_test(test_info)
-    fidget.notify(string.format('%s failed', test_info.name), vim.log.levels.WARN)
+    test_info.fidget_handle:finish()
+    make_notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
   elseif entry.Action == 'pass' then
-    fidget.notify(string.format('%s passed', test_info.name), vim.log.levels.INFO)
+    test_info.fidget_handle:finish()
+    make_notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
   end
 end
 

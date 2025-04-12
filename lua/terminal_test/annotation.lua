@@ -22,6 +22,7 @@
 ---@field fidget_handle ProgressHandle
 
 ---@class Gotest
+---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
 ---@field test_displayer? TestsDisplay
 ---@field clean_up_prev_job? fun(job_id: number)
@@ -32,6 +33,7 @@
 ---@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
 ---@field fail_at_line number
 ---@field filepath string
+---@field fidget_handle ProgressHandle
 ---
 ---
 ---@class Tracker
