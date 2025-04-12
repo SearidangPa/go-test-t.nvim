@@ -137,7 +137,7 @@ function terminal_test.test_buf_in_terminals(test_command_format)
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
-  terminal_test.displayer:setup()
+  terminal_test.displayer:create_window_and_buf()
 
   for test_name, test_line in pairs(all_tests_in_buf) do
     terminal_test.terminals:delete_terminal(test_name)

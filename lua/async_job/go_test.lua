@@ -98,7 +98,7 @@ local mark_outcome = function(entry)
 end
 
 go_test.run_test_all = function(command)
-  go_test.test_displayer:setup()
+  go_test.test_displayer:create_window_and_buf()
 
   go_test.clean_up_prev_job(go_test.job_id)
   go_test.job_id = vim.fn.jobstart(command, {

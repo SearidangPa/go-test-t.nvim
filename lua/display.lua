@@ -23,7 +23,7 @@ function Test_Display.new(tests_info)
   return self
 end
 
-function Test_Display:setup()
+function Test_Display:create_window_and_buf()
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
@@ -198,7 +198,7 @@ function Test_Display:toggle_display()
     vim.api.nvim_win_close(self.display_win, true)
     self.display_win = -1
   else
-    self:setup()
+    self:create_window_and_buf()
   end
 end
 
