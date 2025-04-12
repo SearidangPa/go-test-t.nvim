@@ -130,11 +130,19 @@ function terminal_test.test_in_terminal(test_info, cb_update_tracker)
   })
 end
 
--- TODO: Make the test_command_format configurable
+function terminal_test.toggle_test(test_name)
+  assert(test_name, 'No test name found')
+  local test_info = terminal_test.tests_info[test_name]
+  if not test_info then
+    terminal_test.test_in_terminal_by_name(test_name)
+  end
+  terminal_test.terminals:toggle_float_terminal(test_name)
+end
+
 ---@param test_name string
 function terminal_test.test_in_terminal_by_name(test_name)
   assert(test_name, 'No test name found')
-  local test_command_format = 'go test ./... -v -run %s'
+  local test_command_format = 'go test ./... -v -run %s' -- TODO: Make the test_command_format configurable
   local test_command = string.format(test_command_format, test_name)
 
   require('util_lsp').action_from_test_name(test_name, function(lsp_param)

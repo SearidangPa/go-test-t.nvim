@@ -182,7 +182,7 @@ function Test_Display:setup_keymaps()
   map('n', 'q', function() this:close_display() end, map_opts)
   map('n', '<CR>', function() this:jump_to_test_location() end, map_opts)
 
-  local lua_toggle_cmd_format = 'require("terminal_test.terminal_test").terminals:toggle_float_terminal("%s")'
+  local lua_toggle_cmd_format = 'require("terminal_test.terminal_test").toggle_test("%s")'
   map('n', 't', function()
     local test_name = this:get_test_name_from_cursor()
     assert(test_name, 'No test name found')
