@@ -137,6 +137,8 @@ function terminal_test.test_buf_in_terminals(test_command_format)
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
+  terminal_test.displayer:setup()
+
   for test_name, test_line in pairs(all_tests_in_buf) do
     terminal_test.terminals:delete_terminal(test_name)
     local test_command = string.format(test_command_format, test_name)
@@ -153,9 +155,8 @@ function terminal_test.test_buf_in_terminals(test_command_format)
     }
     terminal_test.tests_info[test_name] = test_info
     terminal_test.test_in_terminal(test_info)
+    vim.schedule(function() terminal_test.displayer:update_tracker_buffer(terminal_test.tests_info, test_results_title) end)
   end
-
-  terminal_test.displayer:setup()
 end
 
 ---@param test_command_format string
