@@ -84,7 +84,6 @@ local filter_golang_output = function(entry)
 end
 
 local mark_outcome = function(entry)
-  local make_notify = require('mini.notify').make_notify {}
   if not entry.Test then
     return ''
   end
@@ -99,10 +98,8 @@ local mark_outcome = function(entry)
   if entry.Action == 'fail' then
     util_quickfix.add_fail_test(test_info)
     test_info.fidget_handle:finish()
-    make_notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
   elseif entry.Action == 'pass' then
     test_info.fidget_handle:finish()
-    make_notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
   end
 end
 
