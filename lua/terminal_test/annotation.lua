@@ -4,6 +4,7 @@
 ---@field displayer? TestsDisplay
 ---@field ns_id number
 ---@field test_in_terminal? fun(test_info: terminal.testInfo, cb_update_tracker?: function)
+---@field toggle_test? fun(test_name: string)
 ---@field test_in_terminal_by_name? fun(test_name: string)
 ---@field test_buf_in_terminals? fun(test_command_format: string)
 ---@field test_nearest_in_terminal? fun(test_command_format: string)
