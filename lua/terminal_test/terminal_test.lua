@@ -257,6 +257,9 @@ function terminal_test.view_last_test_teriminal()
   terminal_test.terminals:toggle_float_terminal(test_name)
 end
 
+vim.api.nvim_create_user_command('TerminalTestSearch', function() terminal_test.terminals:search_terminal() end, {})
+vim.api.nvim_create_user_command('TerminalTestToggleView', terminal_test.view_enclosing_test, {})
+vim.api.nvim_create_user_command('TerminalTestToggleLast', terminal_test.view_last_test_teriminal, {})
 vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() terminal_test.displayer:toggle_display() end, {})
 vim.api.nvim_create_user_command('TerminalTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(terminal_test.tests_info) end, {})
 
