@@ -1,4 +1,3 @@
-local display = require 'go-test-t-display'
 local util_quickfix = require 'async_job.util_quickfix'
 
 ---@class GoTestT
@@ -8,15 +7,14 @@ Go_test_t.__index = Go_test_t
 function Go_test_t.new(opts)
   opts = opts or {}
   local self = setmetatable({}, Go_test_t)
-  local test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
+  self.job_id = -1
+  self.tests_info = {}
 
+  local test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
   self.term_test = require('terminal_test.terminal_test').new {
     test_command_format = test_command_format,
   }
-
-  self.job_id = -1
-  self.tests_info = {}
-  self.test_displayer = display.new {
+  self.test_displayer = require('go-test-t-display').new {
     display_title = opts.display_title or 'Go Test All Results',
     toggle_term_func = function(test_name) self.term_test:toggle_test_in_term(test_name) end,
     rerun_in_term_func = function(test_name) self.term_test:retest_in_terminal_by_name(test_name) end,
