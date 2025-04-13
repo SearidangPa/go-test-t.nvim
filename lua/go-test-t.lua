@@ -12,13 +12,13 @@ function go_test_t.new(opts)
   self.tests_info = {}
 
   local term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
-  self.term_test = require('terminal_test.terminal_test').new {
+  self.term_tester = require('terminal_test.terminal_test').new {
     term_test_command_format = term_test_command_format,
   }
-  self.test_displayer = require('go-test-display').new {
+  self.test_displayer = require('util_go_test_display').new {
     display_title = opts.display_title or 'Go Test All Results',
-    toggle_term_func = function(test_name) self.term_test:toggle_test_in_term(test_name) end,
-    rerun_in_term_func = function(test_name) self.term_test:retest_in_terminal_by_name(test_name) end,
+    toggle_term_func = function(test_name) self.term_tester:toggle_test_in_term(test_name) end,
+    rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
   }
   return self
 end
@@ -77,7 +77,7 @@ function go_test_t:run_test_all()
 end
 
 function go_test_t:toggle_display() self.test_displayer:toggle_display() end
-function go_test_t:load_stuck_tests() require('util_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
+function go_test_t:load_stuck_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 --- === Private functions ===
 function go_test_t:_clean_up_prev_job()
@@ -130,7 +130,7 @@ function go_test_t:_filter_golang_output(entry)
 
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
-    require('util_quickfix').add_fail_test(test_info)
+    require('util_go_test_quickfix').add_fail_test(test_info)
     test_info.fidget_handle:finish()
   end
   self.tests_info[entry.Test] = test_info
@@ -150,7 +150,7 @@ function go_test_t:_mark_outcome(entry)
   test_info.status = entry.Action
   self.tests_info[key] = test_info
   if entry.Action == 'fail' then
-    require('util_quickfix').add_fail_test(test_info)
+    require('util_go_test_quickfix').add_fail_test(test_info)
     test_info.fidget_handle:finish()
   elseif entry.Action == 'pass' then
     test_info.fidget_handle:finish()

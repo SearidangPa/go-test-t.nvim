@@ -3,7 +3,7 @@
 ---@field job_id number
 ---@field test_displayer GoTestDisplay
 ---@field test_command_format_json string
----@field term_test terminalTest
+---@field term_tester terminalTest
 ---@field run_test_all? fun(command: string[])
 ---@field toggle_display? fun(self: GoTestT)
 ---@field load_stuck_tests? fun(self: GoTestT)

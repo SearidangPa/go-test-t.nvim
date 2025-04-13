@@ -111,7 +111,6 @@ util_quickfix.add_fail_test = function(test_info)
   else
     table.insert(tests_to_resolve, test_info)
   end
-  require('fidget').notify('added failed test to quickfix: ' .. test_info.name, vim.log.levels.WARN)
 
   if #tests_to_resolve == 0 then
     vim.fn.setqflist(qf_entries, 'a')
