@@ -34,7 +34,7 @@ local function handle_test_passed(test_info, float_term_state, current_time, cb_
   test_info.status = 'pass'
   float_term_state.status = 'pass'
   terminal_test.tests_info[test_info.name] = test_info
-  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
+  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   end
@@ -53,7 +53,7 @@ local function handle_test_failed(test_info, float_term_state, current_time, cb_
   float_term_state.status = 'fail'
   terminal_test.tests_info[test_info.name] = test_info
   util_quickfix.add_fail_test(test_info)
-  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
+  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   end
@@ -77,7 +77,7 @@ local function handle_error_trace(line, test_info, cb_update_tracker)
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
-    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
+    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info) end)
     util_quickfix.add_fail_test(test_info)
     if cb_update_tracker then
       cb_update_tracker(test_info)
@@ -194,7 +194,7 @@ function terminal_test.test_buf_in_terminals(test_command_format)
     }
     terminal_test.tests_info[test_name] = test_info
     terminal_test.test_in_terminal(test_info)
-    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
+    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info) end)
   end
 end
 
