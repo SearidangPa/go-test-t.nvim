@@ -12,8 +12,11 @@ function terminal_test_M.new(opts)
   local self = setmetatable({}, terminal_test_M)
   self.terminals = terminal_multiplexer.new()
   self.tests_info = {}
-  self.displayer = display.new { display_title = 'Terminal Test Results' }
-  self.ns_id = vim.api.nvim_create_namespace 'Terminal Test'
+  self.displayer = display.new {
+    display_title = 'Terminal Test Results',
+    toggle_term_func = function(test_name) self.terminals:toggle_float_terminal(test_name) end,
+  }
+  self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
   self.test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
   self:setup_commands()
   return self

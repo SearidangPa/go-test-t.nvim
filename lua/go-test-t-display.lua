@@ -9,17 +9,20 @@ local util_status_icon = require 'util_status_icon'
 ---@field ns_id number
 ---@field tests_info gotest.TestInfo[] | terminal.testInfo[]
 ---@field close_display fun(self: TestsDisplay)
+---@field toggle_term_func fun(test_name: string)
 local Test_Display = {}
 Test_Display.__index = Test_Display
 
 ---@class Test_Display_Options
 ---@field display_title string
 ---@field tests_info? table<string, gotest.TestInfo> | table<string, terminal.testInfo>
+---@field toggle_term_func fun(test_name: string)
 
 ---@param display_opts Test_Display_Options
 function Test_Display.new(display_opts)
   assert(display_opts, 'No display options found')
   assert(display_opts.display_title, 'No display title found')
+  assert(display_opts.toggle_term_func, 'No toggle term function found')
   local self = setmetatable({}, Test_Display)
   self.display_win = -1
   self.display_buf = -1
@@ -28,6 +31,7 @@ function Test_Display.new(display_opts)
   self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
   self.tests_info = display_opts.tests_info or {}
   self.display_title = display_opts.display_title
+  self.toggle_term_func = display_opts.toggle_term_func
   return self
 end
 
@@ -186,11 +190,10 @@ function Test_Display:setup_keymaps()
   map('n', 'q', function() this:close_display() end, map_opts)
   map('n', '<CR>', function() this:jump_to_test_location() end, map_opts)
 
-  local lua_toggle_cmd_format = 'require("terminal_test.terminal_test").toggle_test("%s")'
   map('n', 't', function()
     local test_name = this:get_test_name_from_cursor()
     assert(test_name, 'No test name found')
-    vim.cmd([[lua ]] .. string.format(lua_toggle_cmd_format, test_name))
+    self.toggle_term_func(test_name)
   end, map_opts)
 
   local lua_test_in_term_cmd_format = 'require("terminal_test.terminal_test").test_in_terminal_by_name("%s")'

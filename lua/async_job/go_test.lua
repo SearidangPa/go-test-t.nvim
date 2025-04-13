@@ -2,11 +2,19 @@ local display = require 'go-test-t-display'
 local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 
+local terminal_test = require 'terminal_test.terminal_test'
+local term_test = terminal_test.new {
+  test_command_format = 'go test ./... -v -run %s\r', -- TODO: make this configurable
+}
+
 ---@type Gotest
 local go_test = {
   job_id = -1,
   tests_info = {},
-  test_displayer = display.new { display_title = 'Go Test All Results' },
+  test_displayer = display.new {
+    display_title = 'Go Test All Results',
+    toggle_term_func = function(test_name) term_test.terminals:toggle_float_terminal(test_name) end,
+  },
 }
 
 local ignored_actions = {
