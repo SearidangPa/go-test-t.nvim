@@ -15,7 +15,7 @@ function terminal_test.new(opts)
   self.displayer = display.new { display_title = 'Terminal Test Results' }
   self.ns_id = vim.api.nvim_create_namespace 'Terminal Test'
   self.test_command_format = opts.test_command_format or 'go test ./... -v -run %s'
-
+  self:setup_commands()
   return self
 end
 
@@ -259,9 +259,7 @@ function terminal_test:setup_commands()
   vim.api.nvim_create_user_command('TerminalTestView', function() self_ref:view_enclosing_test_terminal() end, {})
   vim.api.nvim_create_user_command('TerminalTestLast', function() self_ref:view_last_test_terminal() end, {})
   vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command('QuickfixLoadFTest', function() util_quickfix.load_non_passing_tests_to_quickfix(self_ref.tests_info) end, {})
-  vim.api.nvim_create_user_command('TerminalTest', function() self_ref:test_nearest_in_terminal() end, {})
-  vim.api.nvim_create_user_command('TerminalTestBuf', function() self_ref:test_buf_in_terminals() end, {})
+  vim.api.nvim_create_user_command('QuickfixLoadQuackTest', function() util_quickfix.load_non_passing_tests_to_quickfix(self_ref.tests_info) end, {})
 end
 
 return terminal_test
