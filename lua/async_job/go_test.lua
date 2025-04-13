@@ -5,7 +5,6 @@ local terminal_test = require 'terminal_test.terminal_test'
 
 ---@class GoTesties
 local Go_testies_M = {}
-
 Go_testies_M.__index = Go_testies_M
 
 function Go_testies_M.new(opts)
@@ -27,24 +26,12 @@ function Go_testies_M.new(opts)
   return self
 end
 
-local ignored_actions = {
-  skip = true,
-}
-
-local action_state = {
-  pause = true,
-  cont = true,
-  start = true,
-  fail = true,
-  pass = true,
-}
-
-function Go_testies_M:run_test_all(command)
+function Go_testies_M:run_test_all()
   self.test_displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
   local self_ref = self
-  self.job_id = vim.fn.jobstart(command or self.test_command_format, {
+  self.job_id = vim.fn.jobstart(self.test_command_format, {
     stdout_buffered = false,
 
     on_stdout = function(_, data)
@@ -59,7 +46,7 @@ function Go_testies_M:run_test_all(command)
           goto continue
         end
 
-        if ignored_actions[decoded.Action] then
+        if self._ignored_actions[decoded.Action] then
           goto continue
         end
 
@@ -76,7 +63,7 @@ function Go_testies_M:run_test_all(command)
           goto continue
         end
 
-        if action_state[decoded.Action] then
+        if self._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
           vim.schedule(function() self_ref.test_displayer:update_buffer(self_ref.tests_info) end)
           goto continue
@@ -112,7 +99,7 @@ end
 
 function Go_testies_M:_add_golang_test(entry)
   if not entry.Test then
-    return ''
+    return
   end
 
   local test_info = {
@@ -132,7 +119,7 @@ end
 function Go_testies_M:_filter_golang_output(entry)
   assert(entry, 'No entry provided')
   if not entry.Test then
-    return ''
+    return
   end
   local test_info = self.tests_info[entry.Test]
   if not test_info then
@@ -161,7 +148,7 @@ end
 
 function Go_testies_M:_mark_outcome(entry)
   if not entry.Test then
-    return ''
+    return
   end
   local key = entry.Test
   local test_info = self.tests_info[key]
@@ -178,5 +165,17 @@ function Go_testies_M:_mark_outcome(entry)
     test_info.fidget_handle:finish()
   end
 end
+
+Go_testies_M._ignored_actions = {
+  skip = true,
+}
+
+Go_testies_M._action_state = {
+  pause = true,
+  cont = true,
+  start = true,
+  fail = true,
+  pass = true,
+}
 
 return Go_testies_M

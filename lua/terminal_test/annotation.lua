@@ -5,13 +5,13 @@
 ---@field test_command_format string
 ---@field term_test terminalTest
 ---@field run_test_all? fun(command: string[])
----@field toggle_display? fun()
----@field load_stuck_tests? fun()
----@field _clean_up_prev_job? fun()
----@field _add_golang_test? fun(entry: table)
----@field _filter_golang_output? fun(entry: table)
----@field _mark_outcome? fun(entry: table)
----@field _setup_commands? fun()
+---@field toggle_display? fun(self: GoTesties)
+---@field load_stuck_tests? fun(self: GoTesties)
+---@field _clean_up_prev_job? fun(self: GoTesties)
+---@field _add_golang_test? fun(self: GoTesties, entry: table)
+---@field _filter_golang_output? fun(self: GoTesties, entry: table)
+---@field _mark_outcome? fun(self: GoTesties, entry: table)
+---@field _setup_commands? fun(self: GoTesties)
 
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer
