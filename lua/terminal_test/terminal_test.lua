@@ -3,6 +3,7 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go-test-t-display'
 
+---@class terminalTest
 local terminal_test_M = {}
 terminal_test_M.__index = terminal_test_M
 
@@ -121,6 +122,8 @@ function terminal_test_M:process_buffer_lines(buf, first_line, last_line, test_i
   end
 end
 
+---@param self terminalTest
+---@param test_info terminal.testInfo
 function terminal_test_M:test_in_terminal(test_info, cb_update_tracker)
   self:validate_test_info(test_info)
   self.terminals:toggle_float_terminal(test_info.name)
