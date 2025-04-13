@@ -252,7 +252,6 @@ end
 function terminal_test_M:setup_commands()
   local self_ref = self
   vim.api.nvim_create_user_command('TermTestSearch', function() self_ref.terminals:search_terminal() end, {})
-  vim.api.nvim_create_user_command('TermTestView', function() self_ref:view_enclosing_test_terminal() end, {})
   vim.api.nvim_create_user_command('TermTestLast', function() self_ref:view_last_test_terminal() end, {})
   vim.api.nvim_create_user_command('TermTestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command('QuickfixLoadQuackTest', function() util_quickfix.load_non_passing_tests_to_quickfix(self_ref.tests_info) end, {})
