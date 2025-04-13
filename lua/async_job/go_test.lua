@@ -1,5 +1,3 @@
-local util_quickfix = require 'async_job.util_quickfix'
-
 ---@class GoTestT
 local Go_test_t = {}
 Go_test_t.__index = Go_test_t
@@ -76,7 +74,7 @@ function Go_test_t:run_test_all()
 end
 
 function Go_test_t:toggle_display() self.test_displayer:toggle_display() end
-function Go_test_t:load_stuck_tests() util_quickfix.load_non_passing_tests_to_quickfix(self.tests_info) end
+function Go_test_t:load_stuck_tests() require('async_job.util_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 function Go_test_t:_setup_commands()
   local self_ref = self
@@ -135,7 +133,7 @@ function Go_test_t:_filter_golang_output(entry)
 
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
-    util_quickfix.add_fail_test(test_info)
+    require('async_job.util_quickfix').add_fail_test(test_info)
     test_info.fidget_handle:finish()
   end
   self.tests_info[entry.Test] = test_info
@@ -155,7 +153,7 @@ function Go_test_t:_mark_outcome(entry)
   test_info.status = entry.Action
   self.tests_info[key] = test_info
   if entry.Action == 'fail' then
-    util_quickfix.add_fail_test(test_info)
+    require('async_job.util_quickfix').add_fail_test(test_info)
     test_info.fidget_handle:finish()
   elseif entry.Action == 'pass' then
     test_info.fidget_handle:finish()
