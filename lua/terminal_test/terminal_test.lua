@@ -7,10 +7,8 @@ local display = require 'go-test-t-display'
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
   tests_info = {},
-  displayer = display.new {
-    display_title = 'Terminal Test Results',
-  },
-  ns_id = vim.api.nvim_create_namespace 'GoTestError',
+  displayer = display.new { display_title = 'Terminal Test Results' },
+  ns_id = vim.api.nvim_create_namespace 'Terminal Test',
 }
 
 ---@param test_info terminal.testInfo
