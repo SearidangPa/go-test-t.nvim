@@ -2,7 +2,7 @@
 ---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
 ---@field test_displayer TestsDisplay
----@field test_command_format string
+---@field test_command_format_json string
 ---@field term_test terminalTest
 ---@field run_test_all? fun(command: string[])
 ---@field toggle_display? fun(self: GoTestT)
@@ -18,7 +18,7 @@
 ---@field tests_info table<string, terminal.testInfo>
 ---@field displayer? TestsDisplay
 ---@field ns_id number
----@field test_command_format string
+---@field term_test_command_format string
 
 ---@class terminal.testInfo
 ---@field name string

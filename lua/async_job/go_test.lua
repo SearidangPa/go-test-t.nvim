@@ -2,15 +2,23 @@
 local Go_test_t = {}
 Go_test_t.__index = Go_test_t
 
+---@class GoTestT.Options
+---@field test_command_format string
+---@field term_test_command_format string
+---@field display_title string
+
+---@param opts GoTestT.Options
 function Go_test_t.new(opts)
   opts = opts or {}
   local self = setmetatable({}, Go_test_t)
+
+  self.test_command_format_json = opts.test_command_format or 'go test ./... --json -v -run %s\r'
   self.job_id = -1
   self.tests_info = {}
 
-  local test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
+  local term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
   self.term_test = require('terminal_test.terminal_test').new {
-    test_command_format = test_command_format,
+    term_test_command_format = term_test_command_format,
   }
   self.test_displayer = require('go-test-t-display').new {
     display_title = opts.display_title or 'Go Test All Results',
@@ -25,7 +33,7 @@ function Go_test_t:run_test_all()
 
   self:_clean_up_prev_job()
   local self_ref = self
-  self.job_id = vim.fn.jobstart(self.test_command_format, {
+  self.job_id = vim.fn.jobstart(self.test_command_format_json, {
     stdout_buffered = false,
 
     on_stdout = function(_, data)
@@ -75,12 +83,6 @@ end
 
 function Go_test_t:toggle_display() self.test_displayer:toggle_display() end
 function Go_test_t:load_stuck_tests() require('async_job.util_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
-
-function Go_test_t:_setup_commands()
-  local self_ref = self
-  vim.api.nvim_create_user_command('GoTestToggleDisplay', function() self_ref:toggle_display() end, {})
-  vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() self_ref:load_stuck_tests() end, {})
-end
 
 --- === Private functions ===
 function Go_test_t:_clean_up_prev_job()
@@ -171,5 +173,11 @@ Go_test_t._action_state = {
   fail = true,
   pass = true,
 }
+
+function Go_test_t:_setup_commands()
+  local self_ref = self
+  vim.api.nvim_create_user_command('GoTestToggleDisplay', function() self_ref:toggle_display() end, {})
+  vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() self_ref:load_stuck_tests() end, {})
+end
 
 return Go_test_t
