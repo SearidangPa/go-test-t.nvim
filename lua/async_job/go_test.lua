@@ -2,14 +2,11 @@ local display = require 'go-test-t-display'
 local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 
-local tests_info_instance = {}
-local go_test_results_title = 'Go Test All Results'
-
 ---@type Gotest
 local go_test = {
   job_id = -1,
-  tests_info = tests_info_instance,
-  test_displayer = display.new(tests_info_instance),
+  tests_info = {},
+  test_displayer = display.new { display_title = 'Go Test All Results' },
 }
 
 local ignored_actions = {
@@ -79,7 +76,7 @@ local function filter_golang_output(entry)
     test_info.fidget_handle:finish()
   end
   go_test.tests_info[entry.Test] = test_info
-  go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title)
+  go_test.test_displayer:update_buffer(go_test.tests_info)
 end
 
 local function mark_outcome(entry)
@@ -127,7 +124,7 @@ go_test.run_test_all = function(command)
 
         if decoded.Action == 'run' then
           add_golang_test(decoded)
-          vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title) end)
+          vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info) end)
           goto continue
         end
 
@@ -140,7 +137,7 @@ go_test.run_test_all = function(command)
 
         if action_state[decoded.Action] then
           mark_outcome(decoded)
-          vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title) end)
+          vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info) end)
           goto continue
         end
 
@@ -149,7 +146,7 @@ go_test.run_test_all = function(command)
     end,
 
     on_exit = function()
-      vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info, go_test_results_title) end)
+      vim.schedule(function() go_test.test_displayer:update_buffer(go_test.tests_info) end)
     end,
   })
 end

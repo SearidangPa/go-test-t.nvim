@@ -1,6 +1,7 @@
 local util_status_icon = require 'util_status_icon'
 
 ---@class TestsDisplay
+---@field display_title string
 ---@field display_win number
 ---@field display_buf number
 ---@field original_test_win number
@@ -11,15 +12,22 @@ local util_status_icon = require 'util_status_icon'
 local Test_Display = {}
 Test_Display.__index = Test_Display
 
---- @param tests_info gotest.TestInfo[] | terminal.testInfo[]
-function Test_Display.new(tests_info)
+---@class Test_Display_Options
+---@field display_title string
+---@field tests_info? table<string, gotest.TestInfo> | table<string, terminal.testInfo>
+
+---@param display_opts Test_Display_Options
+function Test_Display.new(display_opts)
+  assert(display_opts, 'No display options found')
+  assert(display_opts.display_title, 'No display title found')
   local self = setmetatable({}, Test_Display)
   self.display_win = -1
   self.display_buf = -1
   self.original_test_win = -1
   self.original_test_buf = -1
   self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
-  self.tests_info = tests_info
+  self.tests_info = display_opts.tests_info or {}
+  self.display_title = display_opts.display_title
   return self
 end
 
@@ -77,12 +85,10 @@ local function sort_tests_by_status(tests)
 end
 
 ---@param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
----@param buf_title string
-function Test_Display:parse_test_state_to_lines(tests_info, buf_title)
+function Test_Display:parse_test_state_to_lines(tests_info)
   assert(tests_info, 'No test info found')
-  assert(buf_title, 'No buffer title found')
   local tests_table = {}
-  local buf_lines = { buf_title }
+  local buf_lines = { self.display_title }
 
   for _, test in pairs(tests_info) do
     if test.name then
@@ -105,15 +111,13 @@ function Test_Display:parse_test_state_to_lines(tests_info, buf_title)
 end
 
 ---@param tests_info gotest.TestInfo[] | terminal.testInfo[]
----@param buf_title string
-function Test_Display:update_buffer(tests_info, buf_title)
+function Test_Display:update_buffer(tests_info)
   self.tests_info = tests_info
   if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
     return
   end
   assert(tests_info, 'No test info found')
-  assert(buf_title, 'No buffer title found')
-  local lines = self:parse_test_state_to_lines(tests_info, buf_title)
+  local lines = self:parse_test_state_to_lines(tests_info)
   if vim.api.nvim_buf_is_valid(self.display_buf) then
     vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)
     vim.api.nvim_buf_set_extmark(self.display_buf, self.ns_id, 0, 0, {

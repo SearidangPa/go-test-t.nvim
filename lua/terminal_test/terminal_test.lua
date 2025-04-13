@@ -3,16 +3,13 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go-test-t-display'
 
-local display_title = 'Terminal Test Results'
-
----@type table<string, terminal.testInfo>
-local tests_info_instance = {}
-
 ---@type terminalTest
 local terminal_test = {
   terminals = terminal_multiplexer.new(),
-  tests_info = tests_info_instance,
-  displayer = display.new(tests_info_instance),
+  tests_info = {},
+  displayer = display.new {
+    display_title = 'Terminal Test Results',
+  },
   ns_id = vim.api.nvim_create_namespace 'GoTestError',
 }
 
