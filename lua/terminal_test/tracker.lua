@@ -14,7 +14,7 @@ local help_items = {
   ' d       ===  Delete from tracker',
 }
 
----@type Tracker
+---@type TerminalTestTracker
 local tracker = {
   track_list = {},
   _original_win_id = nil,

@@ -38,7 +38,7 @@
 ---@field fidget_handle ProgressHandle
 ---
 ---
----@class Tracker
+---@class TerminalTestTracker
 ---@field track_list terminal.testInfo[]
 ---@field add_test_to_tracker? fun(test_command_format: string)
 ---@field jump_to_tracked_test_by_index? fun(index: integer)

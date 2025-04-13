@@ -258,9 +258,21 @@ function terminal_test.view_last_test_teriminal()
 end
 
 vim.api.nvim_create_user_command('TerminalTestSearch', function() terminal_test.terminals:search_terminal() end, {})
-vim.api.nvim_create_user_command('TerminalTestToggleView', terminal_test.view_enclosing_test, {})
-vim.api.nvim_create_user_command('TerminalTestToggleLast', terminal_test.view_last_test_teriminal, {})
+vim.api.nvim_create_user_command('TerminalTestView', terminal_test.view_enclosing_test, {})
+vim.api.nvim_create_user_command('TerminalTestLast', terminal_test.view_last_test_teriminal, {})
 vim.api.nvim_create_user_command('TerminalTestToggleDisplay', function() terminal_test.displayer:toggle_display() end, {})
-vim.api.nvim_create_user_command('TerminalTestLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(terminal_test.tests_info) end, {})
+vim.api.nvim_create_user_command('QuickfixLoadStuckTest', function() util_quickfix.load_non_passing_tests_to_quickfix(terminal_test.tests_info) end, {})
+
+vim.api.nvim_create_user_command('TerminalTest', function()
+  local test_command_format = 'go test ./... -v -run %s\r'
+  terminal_test.test_nearest_in_terminal(test_command_format)
+end, {})
+
+vim.api.nvim_create_user_command('TerminalTestBuf', function()
+  local test_command_format = 'go test ./... -v -run %s\r'
+  terminal_test.test_buf_in_terminals(test_command_format)
+end, {})
+
+vim.keymap.set('n', '<leader>G', ':TerminalIntegrationTest<CR>', { desc = '[G]o test in terminal' })
 
 return terminal_test
