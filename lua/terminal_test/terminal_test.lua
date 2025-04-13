@@ -14,7 +14,7 @@ function terminal_test.new(opts)
   self.tests_info = {}
   self.displayer = display.new { display_title = 'Terminal Test Results' }
   self.ns_id = vim.api.nvim_create_namespace 'Terminal Test'
-  self.test_command_format = opts.test_command_format or 'go test ./... -v -run %s'
+  self.test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
   self:setup_commands()
   return self
 end
