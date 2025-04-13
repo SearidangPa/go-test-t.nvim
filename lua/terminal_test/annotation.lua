@@ -1,17 +1,17 @@
----@class GoTesties
+---@class GoTestT
 ---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
 ---@field test_displayer TestsDisplay
 ---@field test_command_format string
 ---@field term_test terminalTest
 ---@field run_test_all? fun(command: string[])
----@field toggle_display? fun(self: GoTesties)
----@field load_stuck_tests? fun(self: GoTesties)
----@field _clean_up_prev_job? fun(self: GoTesties)
----@field _add_golang_test? fun(self: GoTesties, entry: table)
----@field _filter_golang_output? fun(self: GoTesties, entry: table)
----@field _mark_outcome? fun(self: GoTesties, entry: table)
----@field _setup_commands? fun(self: GoTesties)
+---@field toggle_display? fun(self: GoTestT)
+---@field load_stuck_tests? fun(self: GoTestT)
+---@field _clean_up_prev_job? fun(self: GoTestT)
+---@field _add_golang_test? fun(self: GoTestT, entry: table)
+---@field _filter_golang_output? fun(self: GoTestT, entry: table)
+---@field _mark_outcome? fun(self: GoTestT, entry: table)
+---@field _setup_commands? fun(self: GoTestT)
 
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer

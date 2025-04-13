@@ -3,13 +3,13 @@ local util_quickfix = require 'async_job.util_quickfix'
 local fidget = require 'fidget'
 local terminal_test = require 'terminal_test.terminal_test'
 
----@class GoTesties
-local Go_testies_M = {}
-Go_testies_M.__index = Go_testies_M
+---@class GoTestT
+local Go_test_t = {}
+Go_test_t.__index = Go_test_t
 
-function Go_testies_M.new(opts)
+function Go_test_t.new(opts)
   opts = opts or {}
-  local self = setmetatable({}, Go_testies_M)
+  local self = setmetatable({}, Go_test_t)
   local test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
 
   self.term_test = terminal_test.new {
@@ -26,7 +26,7 @@ function Go_testies_M.new(opts)
   return self
 end
 
-function Go_testies_M:run_test_all()
+function Go_test_t:run_test_all()
   self.test_displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
@@ -79,17 +79,17 @@ function Go_testies_M:run_test_all()
   })
 end
 
-function Go_testies_M:toggle_display() self.test_displayer:toggle_display() end
-function Go_testies_M:load_stuck_tests() util_quickfix.load_non_passing_tests_to_quickfix(self.tests_info) end
+function Go_test_t:toggle_display() self.test_displayer:toggle_display() end
+function Go_test_t:load_stuck_tests() util_quickfix.load_non_passing_tests_to_quickfix(self.tests_info) end
 
-function Go_testies_M:_setup_commands()
+function Go_test_t:_setup_commands()
   local self_ref = self
   vim.api.nvim_create_user_command('GoTestToggleDisplay', function() self_ref:toggle_display() end, {})
   vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() self_ref:load_stuck_tests() end, {})
 end
 
 --- === Private functions ===
-function Go_testies_M:_clean_up_prev_job()
+function Go_test_t:_clean_up_prev_job()
   if self.job_id ~= -1 then
     fidget.notify('Stopping job', vim.log.levels.INFO)
     vim.fn.jobstop(self.job_id)
@@ -97,7 +97,7 @@ function Go_testies_M:_clean_up_prev_job()
   end
 end
 
-function Go_testies_M:_add_golang_test(entry)
+function Go_test_t:_add_golang_test(entry)
   if not entry.Test then
     return
   end
@@ -116,7 +116,7 @@ function Go_testies_M:_add_golang_test(entry)
   self.tests_info[entry.Test] = test_info
 end
 
-function Go_testies_M:_filter_golang_output(entry)
+function Go_test_t:_filter_golang_output(entry)
   assert(entry, 'No entry provided')
   if not entry.Test then
     return
@@ -146,7 +146,7 @@ function Go_testies_M:_filter_golang_output(entry)
   self.test_displayer:update_buffer(self.tests_info)
 end
 
-function Go_testies_M:_mark_outcome(entry)
+function Go_test_t:_mark_outcome(entry)
   if not entry.Test then
     return
   end
@@ -166,11 +166,11 @@ function Go_testies_M:_mark_outcome(entry)
   end
 end
 
-Go_testies_M._ignored_actions = {
+Go_test_t._ignored_actions = {
   skip = true,
 }
 
-Go_testies_M._action_state = {
+Go_test_t._action_state = {
   pause = true,
   cont = true,
   start = true,
@@ -178,4 +178,4 @@ Go_testies_M._action_state = {
   pass = true,
 }
 
-return Go_testies_M
+return Go_test_t
