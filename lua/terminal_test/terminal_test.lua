@@ -1,7 +1,7 @@
 local fidget = require 'fidget'
 local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'util_quickfix'
-local display = require 'display'
+local display = require 'go-test-display'
 
 ---@class terminalTest
 local terminal_test = {}
@@ -254,12 +254,13 @@ end
 --- === Setup user Commands ===
 function terminal_test:_setup_user_commands()
   local self_ref = self
-  vim.api.nvim_create_user_command('TermTestSearch', function() self_ref.terminals:search_terminal() end, {})
-  vim.api.nvim_create_user_command('TermTestLast', function() self_ref:view_last_test_terminal() end, {})
-  vim.api.nvim_create_user_command('TermTestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command('QuickfixLoadQuackTest', function() util_quickfix.load_non_passing_tests_to_quickfix(self_ref.tests_info) end, {})
   vim.api.nvim_create_user_command('TermTest', function() self_ref:test_nearest_in_terminal() end, {})
   vim.api.nvim_create_user_command('TermTestBuf', function() self_ref:test_buf_in_terminals() end, {})
+  vim.api.nvim_create_user_command('TermTestView', function() self_ref:view_enclosing_test_terminal() end, {})
+  vim.api.nvim_create_user_command('TermTestSearch', function() self_ref.terminals:search_terminal() end, {})
+  vim.api.nvim_create_user_command('TermTestViewLast', function() self_ref:view_last_test_terminal() end, {})
+  vim.api.nvim_create_user_command('TermTestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command('QuickfixLoadQuackTest', function() util_quickfix.load_non_passing_tests_to_quickfix(self_ref.tests_info) end, {})
 end
 
 return terminal_test

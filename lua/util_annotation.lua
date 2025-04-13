@@ -1,7 +1,7 @@
 ---@class GoTestT
 ---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
----@field test_displayer TestsDisplay
+---@field test_displayer GoTestDisplay
 ---@field test_command_format_json string
 ---@field term_test terminalTest
 ---@field run_test_all? fun(command: string[])
@@ -21,7 +21,7 @@
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer
 ---@field tests_info table<string, terminal.testInfo>
----@field displayer? TestsDisplay
+---@field displayer? GoTestDisplay
 ---@field ns_id number
 ---@field term_test_command_format string
 
@@ -63,3 +63,15 @@
 ---@field _win_id? integer
 ---@field _buf_id? integer
 ---@field _is_open boolean
+---
+---@class GoTestDisplay
+---@field display_title string
+---@field display_win number
+---@field display_buf number
+---@field original_test_win number
+---@field original_test_buf number
+---@field ns_id number
+---@field tests_info gotest.TestInfo[] | terminal.testInfo[]
+---@field close_display fun(self: GoTestDisplay)
+---@field toggle_term_func fun(test_name: string)
+---@field rerun_in_term_func fun(test_name: string)

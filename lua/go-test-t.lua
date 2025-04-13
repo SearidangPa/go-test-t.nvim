@@ -15,7 +15,7 @@ function go_test_t.new(opts)
   self.term_test = require('terminal_test.terminal_test').new {
     term_test_command_format = term_test_command_format,
   }
-  self.test_displayer = require('display').new {
+  self.test_displayer = require('go-test-display').new {
     display_title = opts.display_title or 'Go Test All Results',
     toggle_term_func = function(test_name) self.term_test:toggle_test_in_term(test_name) end,
     rerun_in_term_func = function(test_name) self.term_test:retest_in_terminal_by_name(test_name) end,

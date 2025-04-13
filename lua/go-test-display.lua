@@ -1,16 +1,6 @@
 local util_status_icon = require 'util_status_icon'
 
----@class TestsDisplay
----@field display_title string
----@field display_win number
----@field display_buf number
----@field original_test_win number
----@field original_test_buf number
----@field ns_id number
----@field tests_info gotest.TestInfo[] | terminal.testInfo[]
----@field close_display fun(self: TestsDisplay)
----@field toggle_term_func fun(test_name: string)
----@field rerun_in_term_func fun(test_name: string)
+---@class GoTestDisplay
 local Test_Display = {}
 Test_Display.__index = Test_Display
 
