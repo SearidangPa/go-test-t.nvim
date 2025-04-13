@@ -3,8 +3,10 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go-test-t-display'
 
+local display_title = 'Terminal Test Results'
+
+---@type table<string, terminal.testInfo>
 local tests_info_instance = {}
-local test_results_title = 'Terminal Test Results'
 
 ---@type terminalTest
 local terminal_test = {
@@ -35,7 +37,7 @@ local function handle_test_passed(test_info, float_term_state, current_time, cb_
   test_info.status = 'pass'
   float_term_state.status = 'pass'
   terminal_test.tests_info[test_info.name] = test_info
-  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, test_results_title) end)
+  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   end
@@ -54,7 +56,7 @@ local function handle_test_failed(test_info, float_term_state, current_time, cb_
   float_term_state.status = 'fail'
   terminal_test.tests_info[test_info.name] = test_info
   util_quickfix.add_fail_test(test_info)
-  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, test_results_title) end)
+  vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   end
@@ -78,7 +80,7 @@ local function handle_error_trace(line, test_info, cb_update_tracker)
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
     terminal_test.tests_info[test_info.name] = test_info
-    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, test_results_title) end)
+    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
     util_quickfix.add_fail_test(test_info)
     if cb_update_tracker then
       cb_update_tracker(test_info)
@@ -195,7 +197,7 @@ function terminal_test.test_buf_in_terminals(test_command_format)
     }
     terminal_test.tests_info[test_name] = test_info
     terminal_test.test_in_terminal(test_info)
-    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, test_results_title) end)
+    vim.schedule(function() terminal_test.displayer:update_buffer(terminal_test.tests_info, display_title) end)
   end
 end
 
@@ -261,6 +263,7 @@ function terminal_test.view_last_test_teriminal()
   terminal_test.terminals:toggle_float_terminal(test_name)
 end
 
+--- === user commands ===
 vim.api.nvim_create_user_command('TerminalTestSearch', function() terminal_test.terminals:search_terminal() end, {})
 vim.api.nvim_create_user_command('TerminalTestView', terminal_test.view_enclosing_test, {})
 vim.api.nvim_create_user_command('TerminalTestLast', terminal_test.view_last_test_teriminal, {})
