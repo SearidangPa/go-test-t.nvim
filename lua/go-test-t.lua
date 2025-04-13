@@ -3,6 +3,7 @@ local M = {}
 M.setup = function()
   require 'async_job.go_test'
   require 'terminal_test.tracker'
+  require 'terminal_test.terminal_test'
 
   vim.api.nvim_create_user_command('ReloadTestT', function()
     local modules = {

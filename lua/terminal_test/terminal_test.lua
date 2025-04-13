@@ -273,6 +273,6 @@ vim.api.nvim_create_user_command('TerminalTestBuf', function()
   terminal_test.test_buf_in_terminals(test_command_format)
 end, {})
 
-vim.keymap.set('n', '<leader>G', ':TerminalIntegrationTest<CR>', { desc = '[G]o test in terminal' })
+vim.keymap.set('n', '<leader>T', terminal_test.view_enclosing_test, { desc = 'View test in [T]erminal' })
 
 return terminal_test
