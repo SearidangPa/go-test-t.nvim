@@ -137,7 +137,7 @@ function terminal_test_M:test_in_terminal(test_info, cb_update_tracker)
   end)
 end
 
-function terminal_test_M:toggle_test(test_name)
+function terminal_test_M:toggle_test_in_term(test_name)
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
   if not test_info then

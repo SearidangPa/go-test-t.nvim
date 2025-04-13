@@ -13,7 +13,7 @@ local go_test = {
   tests_info = {},
   test_displayer = display.new {
     display_title = 'Go Test All Results',
-    toggle_term_func = function(test_name) term_test.terminals:toggle_float_terminal(test_name) end,
+    toggle_term_func = function(test_name) term_test:toggle_test_in_term(test_name) end,
     rerun_in_term_func = function(test_name) term_test:retest_in_terminal_by_name(test_name) end,
   },
 }
