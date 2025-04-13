@@ -94,7 +94,7 @@ local function process_one_line(line, test_info, float_term_state, current_time,
     fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
     handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
-  elseif string.match(line, 'FAIL') then
+  elseif string.match(line, 'FAIL') then -- didn't even compile
     fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
     handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
