@@ -3,13 +3,13 @@ local terminal_multiplexer = require 'terminal_test.terminal_multiplexer'
 local util_quickfix = require 'async_job.util_quickfix'
 local display = require 'go-test-t-display'
 
-local terminal_test = {}
-terminal_test.__index = terminal_test
+local terminal_test_M = {}
+terminal_test_M.__index = terminal_test_M
 
-function terminal_test.new(opts)
+function terminal_test_M.new(opts)
   opts = opts or {}
 
-  local self = setmetatable({}, terminal_test)
+  local self = setmetatable({}, terminal_test_M)
   self.terminals = terminal_multiplexer.new()
   self.tests_info = {}
   self.displayer = display.new { display_title = 'Terminal Test Results' }
@@ -19,7 +19,7 @@ function terminal_test.new(opts)
   return self
 end
 
-function terminal_test:validate_test_info(test_info)
+function terminal_test_M:validate_test_info(test_info)
   assert(test_info.name, 'No test found')
   assert(test_info.test_bufnr, 'No test buffer found')
   assert(test_info.test_line, 'No test line found')
@@ -27,7 +27,7 @@ function terminal_test:validate_test_info(test_info)
   assert(vim.api.nvim_buf_is_valid(test_info.test_bufnr), 'Invalid buffer')
 end
 
-function terminal_test:handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
+function terminal_test_M:handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
   if not test_info.set_ext_mark then
     vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
       virt_text = { { string.format('✅ %s', current_time) } },
@@ -44,7 +44,7 @@ function terminal_test:handle_test_passed(test_info, float_term_state, current_t
   end
 end
 
-function terminal_test:handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
+function terminal_test_M:handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
   if not test_info.set_ext_mark then
     vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
       virt_text = { { string.format('❌ %s', current_time) } },
@@ -62,7 +62,7 @@ function terminal_test:handle_test_failed(test_info, float_term_state, current_t
   end
 end
 
-function terminal_test:handle_error_trace(line, test_info, cb_update_tracker)
+function terminal_test_M:handle_error_trace(line, test_info, cb_update_tracker)
   local file, line_num
   if vim.fn.has 'win32' == 1 then
     file, line_num = string.match(line, 'Error Trace:%s+([%w%p]+):(%d+)')
@@ -87,7 +87,7 @@ function terminal_test:handle_error_trace(line, test_info, cb_update_tracker)
   end
 end
 
-function terminal_test:process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
+function terminal_test_M:process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
   self:handle_error_trace(line, test_info, cb_update_tracker)
 
   if string.match(line, '--- FAIL') then
@@ -104,7 +104,7 @@ function terminal_test:process_one_line(line, test_info, float_term_state, curre
   end
 end
 
-function terminal_test:process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
+function terminal_test_M:process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
 
@@ -117,7 +117,7 @@ function terminal_test:process_buffer_lines(buf, first_line, last_line, test_inf
   end
 end
 
-function terminal_test:test_in_terminal(test_info, cb_update_tracker)
+function terminal_test_M:test_in_terminal(test_info, cb_update_tracker)
   self:validate_test_info(test_info)
   self.terminals:toggle_float_terminal(test_info.name)
   local float_term_state = self.terminals:toggle_float_terminal(test_info.name)
@@ -133,7 +133,7 @@ function terminal_test:test_in_terminal(test_info, cb_update_tracker)
   end)
 end
 
-function terminal_test:toggle_test(test_name)
+function terminal_test_M:toggle_test(test_name)
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
   if not test_info then
@@ -142,7 +142,7 @@ function terminal_test:toggle_test(test_name)
   self.terminals:toggle_float_terminal(test_name)
 end
 
-function terminal_test:test_in_terminal_by_name(test_name)
+function terminal_test_M:test_in_terminal_by_name(test_name)
   assert(test_name, 'No test name found')
   local test_command = string.format(self.test_command_format, test_name)
 
@@ -166,7 +166,7 @@ function terminal_test:test_in_terminal_by_name(test_name)
   end)
 end
 
-function terminal_test:test_buf_in_terminals()
+function terminal_test_M:test_buf_in_terminals()
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
@@ -196,7 +196,7 @@ function terminal_test:test_buf_in_terminals()
   end
 end
 
-function terminal_test:test_nearest_in_terminal()
+function terminal_test_M:test_nearest_in_terminal()
   local util_find_test = require 'util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'Not inside a test function')
@@ -219,14 +219,14 @@ function terminal_test:test_nearest_in_terminal()
   }
 end
 
-function terminal_test:test_tracked_in_terminal()
+function terminal_test_M:test_tracked_in_terminal()
   local terminal_tracker = require 'terminals.track_test_terminal'
   for _, test_info in ipairs(terminal_tracker.track_test_list) do
     self:test_in_terminal(test_info)
   end
 end
 
-function terminal_test:view_enclosing_test_terminal()
+function terminal_test_M:view_enclosing_test_terminal()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
@@ -244,7 +244,7 @@ function terminal_test:view_enclosing_test_terminal()
   vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
 end
 
-function terminal_test:view_last_test_terminal()
+function terminal_test_M:view_last_test_terminal()
   local test_name = self.terminals.last_terminal_name
   if not test_name then
     vim.notify('No last test terminal found', vim.log.levels.WARN)
@@ -253,7 +253,7 @@ function terminal_test:view_last_test_terminal()
   self.terminals:toggle_float_terminal(test_name)
 end
 
-function terminal_test:setup_commands()
+function terminal_test_M:setup_commands()
   local self_ref = self
   vim.api.nvim_create_user_command('TermTestSearch', function() self_ref.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command('TermTestView', function() self_ref:view_enclosing_test_terminal() end, {})
@@ -262,4 +262,4 @@ function terminal_test:setup_commands()
   vim.api.nvim_create_user_command('QuickfixLoadQuackTest', function() util_quickfix.load_non_passing_tests_to_quickfix(self_ref.tests_info) end, {})
 end
 
-return terminal_test
+return terminal_test_M
