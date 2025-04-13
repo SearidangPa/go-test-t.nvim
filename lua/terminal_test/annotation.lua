@@ -1,3 +1,18 @@
+---@class GoTesties
+---@field tests_info table<string, gotest.TestInfo>
+---@field job_id number
+---@field test_displayer TestsDisplay
+---@field test_command_format string
+---@field term_test terminalTest
+---@field run_test_all? fun(command: string[])
+---@field toggle_display? fun()
+---@field load_stuck_tests? fun()
+---@field _clean_up_prev_job? fun()
+---@field _add_golang_test? fun(entry: table)
+---@field _filter_golang_output? fun(entry: table)
+---@field _mark_outcome? fun(entry: table)
+---@field _setup_commands? fun()
+
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer
 ---@field tests_info table<string, terminal.testInfo>
@@ -15,13 +30,6 @@
 ---@field filepath string
 ---@field set_ext_mark boolean
 ---@field fidget_handle ProgressHandle
-
----@class Gotest
----@field tests_info table<string, gotest.TestInfo>
----@field job_id number
----@field test_displayer? TestsDisplay
----@field clean_up_prev_job? fun(job_id: number)
----@field run_test_all? fun(command: string[])
 
 ---@class gotest.TestInfo
 ---@field name string
