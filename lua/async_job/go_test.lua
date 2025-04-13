@@ -1,7 +1,5 @@
 local display = require 'go-test-t-display'
 local util_quickfix = require 'async_job.util_quickfix'
-local fidget = require 'fidget'
-local terminal_test = require 'terminal_test.terminal_test'
 
 ---@class GoTestT
 local Go_test_t = {}
@@ -12,7 +10,7 @@ function Go_test_t.new(opts)
   local self = setmetatable({}, Go_test_t)
   local test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
 
-  self.term_test = terminal_test.new {
+  self.term_test = require('terminal_test.terminal_test').new {
     test_command_format = test_command_format,
   }
 
@@ -91,7 +89,7 @@ end
 --- === Private functions ===
 function Go_test_t:_clean_up_prev_job()
   if self.job_id ~= -1 then
-    fidget.notify('Stopping job', vim.log.levels.INFO)
+    require('fidget').notify('Stopping job', vim.log.levels.INFO)
     vim.fn.jobstop(self.job_id)
     vim.diagnostic.reset()
   end
@@ -106,7 +104,7 @@ function Go_test_t:_add_golang_test(entry)
     name = entry.Test,
     status = 'running',
     filepath = '',
-    fidget_handle = fidget.progress.handle.create {
+    fidget_handle = require('fidget').progress.handle.create {
       lsp_client = {
         name = entry.Test,
       },
