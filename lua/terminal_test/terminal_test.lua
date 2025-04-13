@@ -24,7 +24,6 @@ function terminal_test_M.new(opts)
   return self
 end
 
----@param self terminalTest
 ---@param test_info terminal.testInfo
 function terminal_test_M:test_in_terminal(test_info, cb_update_tracker)
   self:_validate_test_info(test_info)
