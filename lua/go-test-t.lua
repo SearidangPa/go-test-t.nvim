@@ -2,11 +2,6 @@
 local go_test_t = {}
 go_test_t.__index = go_test_t
 
----@class GoTestT.Options
----@field test_command_format_json string
----@field term_test_command_format string
----@field display_title? string
-
 ---@param opts GoTestT.Options
 function go_test_t.new(opts)
   opts = opts or {}

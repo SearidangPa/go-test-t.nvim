@@ -12,6 +12,11 @@
 ---@field _filter_golang_output? fun(self: GoTestT, entry: table)
 ---@field _mark_outcome? fun(self: GoTestT, entry: table)
 ---@field _setup_commands? fun(self: GoTestT)
+---
+---@class GoTestT.Options
+---@field test_command_format_json string
+---@field term_test_command_format string
+---@field display_title? string
 
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer
