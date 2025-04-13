@@ -15,6 +15,7 @@ function terminal_test_M.new(opts)
   self.displayer = display.new {
     display_title = 'Terminal Test Results',
     toggle_term_func = function(test_name) self.terminals:toggle_float_terminal(test_name) end,
+    rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
   }
   self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
   self.test_command_format = opts.test_command_format or 'go test ./... -v -run %s\r'
@@ -140,12 +141,12 @@ function terminal_test_M:toggle_test(test_name)
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
   if not test_info then
-    self:test_in_terminal_by_name(test_name)
+    self:retest_in_terminal_by_name(test_name)
   end
   self.terminals:toggle_float_terminal(test_name)
 end
 
-function terminal_test_M:test_in_terminal_by_name(test_name)
+function terminal_test_M:retest_in_terminal_by_name(test_name)
   assert(test_name, 'No test name found')
   local test_command = string.format(self.test_command_format, test_name)
 
