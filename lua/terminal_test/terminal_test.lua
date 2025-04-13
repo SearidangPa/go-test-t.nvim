@@ -237,18 +237,7 @@ function terminal_test_M:view_enclosing_test_terminal()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
-  local float_terminal_state = self.terminals:toggle_float_terminal(test_name)
-  assert(float_terminal_state, 'Failed to create floating terminal')
-
-  local close_term = function()
-    if vim.api.nvim_win_is_valid(float_terminal_state.footer_win) then
-      vim.api.nvim_win_hide(float_terminal_state.footer_win)
-    end
-    if vim.api.nvim_win_is_valid(float_terminal_state.win) then
-      vim.api.nvim_win_hide(float_terminal_state.win)
-    end
-  end
-  vim.keymap.set('n', 'q', close_term, { buffer = float_terminal_state.buf })
+  self:toggle_test_in_term(test_name)
 end
 
 function terminal_test_M:view_last_test_terminal()
