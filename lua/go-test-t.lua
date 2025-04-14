@@ -15,6 +15,9 @@ function go_test.new(opts)
   self.terminal_name = opts.terminal_name or 'test all'
   self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
+  self.pin_tester = require('terminal_test.pin_test').new {
+    term_test_command_format = self.term_test_command_format,
+  }
   self.term_tester = require('terminal_test.terminal_test').new {
     tests_info = self.tests_info,
     term_test_command_format = self.term_test_command_format,
@@ -33,7 +36,7 @@ function go_test:setup_user_command(user_command_prefix)
     function() this.term_tester.terminals:toggle_float_terminal(this.terminal_name) end,
     {}
   )
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() term_tester.term_test_displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() term_tester.displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() this:load_quack_tests() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() term_tester:test_nearest_in_terminal() end, {})
@@ -41,10 +44,14 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermView', function() term_tester:view_enclosing_test_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:view_last_test_terminal() end, {})
+
+  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTestToggleDisplay', function() this.pin_tester.term_tester.displayer:toggle_display() end, {})
+
+  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() this.pin_tester:pin_test() end, {})
 end
 
 function go_test:test_all()
-  self.term_tester.term_test_displayer:create_window_and_buf()
+  self.term_tester.displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
   local self_ref = self
@@ -69,7 +76,7 @@ function go_test:test_all()
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
-          vim.schedule(function() self_ref.term_tester.term_test_displayer:update_buffer(self_ref.tests_info) end)
+          vim.schedule(function() self_ref.term_tester.displayer:update_buffer(self_ref.tests_info) end)
           goto continue
         end
 
@@ -82,7 +89,7 @@ function go_test:test_all()
 
         if self._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
-          vim.schedule(function() self_ref.term_tester.term_test_displayer:update_buffer(self_ref.tests_info) end)
+          vim.schedule(function() self_ref.term_tester.displayer:update_buffer(self_ref.tests_info) end)
           goto continue
         end
 
@@ -94,7 +101,7 @@ function go_test:test_all()
   })
 end
 
-function go_test:toggle_display() self.term_tester.term_test_displayer:toggle_display() end
+function go_test:toggle_display() self.term_tester.displayer:toggle_display() end
 function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 --- === Private functions ===
@@ -146,7 +153,7 @@ function go_test:_filter_golang_output(entry)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
   self.tests_info[entry.Test] = test_info
-  self.term_tester.term_test_displayer:update_buffer(self.tests_info)
+  self.term_tester.displayer:update_buffer(self.tests_info)
 end
 
 function go_test:_mark_outcome(entry)

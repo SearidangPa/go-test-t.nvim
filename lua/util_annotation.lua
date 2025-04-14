@@ -5,7 +5,8 @@
 ---@field test_command_format_json string
 ---@field test_command string
 ---@field terminal_name string
----@field term_tester terminalTest
+---@field term_tester termTester
+---@field pin_tester PinTester
 ---@field user_command_prefix string
 ---@field ns_id number
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
@@ -26,10 +27,10 @@
 ---@field display_title? string
 ---@field user_command_prefix? string
 
----@class terminalTest
+---@class termTester
 ---@field terminals TerminalMultiplexer
 ---@field tests_info table<string, terminal.testInfo>
----@field term_test_displayer? GoTestDisplay
+---@field displayer? GoTestDisplay
 ---@field ns_id number
 ---@field term_test_command_format string
 
@@ -45,8 +46,9 @@
 ---@field set_ext_mark boolean
 ---@field fidget_handle ProgressHandle
 
----@class TestPinner
----@field pin_list terminal.testInfo[]
+---@class PinTester
+---@field pinned_list terminal.testInfo[]
+---@field term_tester termTester
 ---
 ---@class GoTestDisplay
 ---@field display_title string
