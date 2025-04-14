@@ -60,9 +60,6 @@ function Test_Display:update_buffer(tests_info)
   end
   self.current_buffer_lines = new_lines
 
-  local tests_info_print = vim.inspect(tests_info)
-  print(string.format('Tests info: %s', tests_info_print))
-
   vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, new_lines)
   vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
     end_col = #new_lines[1],
