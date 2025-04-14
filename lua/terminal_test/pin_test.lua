@@ -31,7 +31,9 @@ function pin_tester:test_all_pinned()
     self.term_tester.displayer:update_buffer(self.pinned_list)
   end
   if not vim.api.nvim_win_is_valid(self.term_tester.displayer.display_win_id) then
-    self.term_tester.displayer:create_window_and_buf()
+    if #self.pinned_list > 0 then
+      self.term_tester.displayer:create_window_and_buf()
+    end
   end
 end
 
