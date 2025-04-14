@@ -38,7 +38,7 @@ function Test_Display:toggle_display()
   end
 end
 
----@param tests_info  terminal.testInfo[]
+---@param tests_info table<string, terminal.testInfo>
 function Test_Display:update_buffer(tests_info)
   self.tests_info = tests_info
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then

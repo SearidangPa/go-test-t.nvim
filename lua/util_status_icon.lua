@@ -14,9 +14,9 @@ function M.get_status_icon(status)
   elseif status == 'pause' then
     return '🛑'
   elseif status == 'running' then
+    return '🦔'
+  elseif status == 'fired' then
     return '🔥'
-  elseif status == 'tracked' then
-    return '🏁'
   else
     vim.notify('Unknown status: ' .. status, vim.log.levels.WARN)
     return '❓'

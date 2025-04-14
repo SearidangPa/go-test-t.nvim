@@ -47,7 +47,7 @@
 ---@field fidget_handle ProgressHandle
 
 ---@class PinTester
----@field pinned_list terminal.testInfo[]
+---@field pinned_list table<string, terminal.testInfo>
 ---@field term_tester termTester
 ---
 ---@class GoTestDisplay
@@ -57,7 +57,7 @@
 ---@field original_test_win number
 ---@field original_test_buf number
 ---@field ns_id number
----@field tests_info  terminal.testInfo[]
+---@field tests_info  table<string, terminal.testInfo>
 ---@field _close_display fun(self: GoTestDisplay)
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
