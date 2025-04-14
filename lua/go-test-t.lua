@@ -119,11 +119,6 @@ function go_test_t:_add_golang_test(entry)
     name = entry.Test,
     status = 'running',
     filepath = '',
-    fidget_handle = require('fidget').progress.handle.create {
-      lsp_client = {
-        name = entry.Test,
-      },
-    },
   }
 
   self.tests_info[entry.Test] = test_info
@@ -153,7 +148,6 @@ function go_test_t:_filter_golang_output(entry)
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
     require('util_go_test_quickfix').add_fail_test(test_info)
-    test_info.fidget_handle:finish()
   end
   self.tests_info[entry.Test] = test_info
   self.go_test_displayer:update_buffer(self.tests_info)
@@ -173,9 +167,9 @@ function go_test_t:_mark_outcome(entry)
   self.tests_info[key] = test_info
   if entry.Action == 'fail' then
     require('util_go_test_quickfix').add_fail_test(test_info)
-    test_info.fidget_handle:finish()
+    require('fidget').notify('Test failed', vim.log.levels.ERROR)
   elseif entry.Action == 'pass' then
-    test_info.fidget_handle:finish()
+    require('fidget').notify('Test passed', vim.log.levels.INFO)
   end
 end
 
