@@ -1,3 +1,5 @@
+local fidget = require 'fidget'
+
 ---@class GoTestT
 local go_test_t = {}
 go_test_t.__index = go_test_t
@@ -11,11 +13,12 @@ function go_test_t.new(opts)
   self.job_id = -1
   self.tests_info = {}
   self.terminal_name = opts.terminal_name or 'go_test_t'
-  self.terminals = terminal_multiplexer.new()
+  self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.term_tester = require('terminal_test.terminal_test').new {
     term_test_command_format = self.test_command_format,
   }
+
   self.go_test_displayer = require('util_go_test_display').new {
     display_title = opts.display_title or 'Go Test All Results',
     toggle_term_func = function(test_name) self.term_tester:toggle_test_in_term(test_name) end,
@@ -43,8 +46,8 @@ end
 function go_test_t:test_all()
   self.go_test_displayer:create_window_and_buf()
   local all_command = 'go test ./integration_tests/ -v\r'
-  self.terminals:delete_terminal 'all_tests'
-  local float_term_state = self.terminals:toggle_float_terminal 'all_tests'
+  self.term_tester.terminals:delete_terminal(self.terminal_name)
+  local float_term_state = self.term_tester.terminals:toggle_float_terminal(self.terminal_name)
   vim.api.nvim_chan_send(float_term_state.chan, all_command .. '\n')
 
   local self_ref = self
@@ -63,7 +66,7 @@ function go_test_t:toggle_test_in_term(test_name)
   if not test_info then
     self:retest_in_terminal_by_name(test_name)
   end
-  self.terminals:toggle_float_terminal(test_name)
+  self.term_tester.terminals:toggle_float_terminal(test_name)
 end
 
 function go_test_t:retest_in_terminal_by_name(test_name)
@@ -87,8 +90,8 @@ end
 
 function go_test_t:test_in_terminal(test_info)
   self:_validate_test_info(test_info)
-  self.terminals:delete_terminal(test_info.name)
-  local float_term_state = self.terminals:toggle_float_terminal(test_info.name)
+  self.term_tester.terminals:delete_terminal(test_info.name)
+  local float_term_state = self.term_tester.terminals:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
 
   local self_ref = self
@@ -111,7 +114,7 @@ function go_test_t:test_buf_in_terminals()
   self.go_test_displayer:create_window_and_buf()
 
   for test_name, test_line in pairs(all_tests_in_buf) do
-    self.terminals:delete_terminal(test_name)
+    self.term_tester.terminals:delete_terminal(test_name)
     local test_command = string.format(self.test_command_format, test_name)
 
     local test_info = {
@@ -139,7 +142,7 @@ function go_test_t:test_nearest_in_terminal()
   assert(test_name, 'Not inside a test function')
   assert(test_line, 'No test line found')
 
-  self.terminals:delete_terminal(test_name)
+  self.term_tester.terminals:delete_terminal(test_name)
   self:test_in_terminal {
     name = test_name,
     test_line = test_line,
@@ -164,12 +167,12 @@ function go_test_t:view_enclosing_test_terminal()
 end
 
 function go_test_t:view_last_test_terminal()
-  local test_name = self.terminals.last_terminal_name
+  local test_name = self.term_tester.terminals.last_terminal_name
   if not test_name then
     vim.notify('No last test terminal found', vim.log.levels.WARN)
     return
   end
-  self.terminals:toggle_float_terminal(test_name)
+  self.term_tester.terminals:toggle_float_terminal(test_name)
 end
 
 -- Process terminal output for all tests run
@@ -221,7 +224,7 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
           test_info.filepath = error_file
           test_info.status = 'fail'
           self.tests_info[test_name] = test_info
-          util_quickfix.add_fail_test(test_info)
+          require('util_go_test_quickfix').add_fail_test(test_info)
           vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
           break
         end
@@ -299,7 +302,7 @@ function go_test_t:_process_single_test_line(line, test_info, float_term_state, 
       test_info.fail_at_line = tonumber(line_num)
       test_info.filepath = file
       self.tests_info[test_info.name] = test_info
-      util_quickfix.add_fail_test(test_info)
+      require('util_go_test_quickfix').add_fail_test(test_info)
       vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
     end
   end

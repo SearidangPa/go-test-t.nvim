@@ -6,6 +6,7 @@
 ---@field terminal_name string
 ---@field term_tester terminalTest
 ---@field user_command_prefix string
+---@field ns_id number
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
 ---@field test_all? fun(command: string[])
 ---@field toggle_display? fun(self: GoTestT)
