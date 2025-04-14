@@ -4,11 +4,6 @@ local fidget = require 'fidget'
 local terminal_test = {}
 terminal_test.__index = terminal_test
 
----@class termTest.Options
----@field tests_info table<string, terminal.testInfo>
----@field term_test_command_format string
----@field ns_id? number
-
 ---@param opts termTest.Options
 function terminal_test.new(opts)
   opts = opts or {}
@@ -23,6 +18,7 @@ function terminal_test.new(opts)
   }
   self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
   self.term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
+  self.pin_tester = opts.pin_tester
   return self
 end
 

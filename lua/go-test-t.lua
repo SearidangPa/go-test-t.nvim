@@ -21,6 +21,7 @@ function go_test.new(opts)
   self.term_tester = require('terminal_test.terminal_test').new {
     tests_info = self.tests_info,
     term_test_command_format = self.term_test_command_format,
+    pin_tester = self.pin_tester,
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)
