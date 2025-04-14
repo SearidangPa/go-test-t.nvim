@@ -89,9 +89,7 @@ function go_test:test_all()
       end
     end,
 
-    on_exit = function()
-      vim.schedule(function() self_ref.term_tester.term_test_displayer:update_buffer(self_ref.tests_info) end)
-    end,
+    on_exit = function() end,
   })
 end
 
