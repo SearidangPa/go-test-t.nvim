@@ -11,7 +11,7 @@ function M.get_status_icon(status)
     return '🔄'
   elseif status == 'start' then
     return '🚀'
-  elseif status == 'paused' then
+  elseif status == 'pause' then
     return '⏸️'
   elseif status == 'running' then
     return '🔥'
