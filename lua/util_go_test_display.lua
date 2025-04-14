@@ -29,6 +29,11 @@ function Test_Display.new(display_opts)
   return self
 end
 
+function Test_Display:reset(tests_info)
+  self.tests_info = tests_info
+  self:update_buffer(tests_info)
+end
+
 function Test_Display:toggle_display()
   if vim.api.nvim_win_is_valid(self.display_win_id) then
     vim.api.nvim_win_close(self.display_win_id, true)
@@ -47,20 +52,22 @@ function Test_Display:update_buffer(tests_info)
   assert(tests_info, 'No test info found')
   local lines = self:_parse_test_state_to_lines(tests_info)
 
-  if vim.api.nvim_buf_is_valid(self.display_bufnr) then
-    lines = self:_add_display_help_text(lines)
-    vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, lines)
-    vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
-      end_col = #lines[1],
-      hl_group = 'Title',
-    })
-    for i = #lines - #self._help_text_lines, #lines - 1 do
-      if i >= 0 and i < #lines then
-        vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i, 0, {
-          end_col = #lines[i + 1],
-          hl_group = 'Comment',
-        })
-      end
+  if not vim.api.nvim_buf_is_valid(self.display_bufnr) then
+    return
+  end
+  lines = self:_add_display_help_text(lines)
+
+  vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, lines)
+  vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
+    end_col = #lines[1],
+    hl_group = 'Title',
+  })
+  for i = #lines - #self._help_text_lines, #lines - 1 do
+    if i >= 0 and i < #lines then
+      vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i, 0, {
+        end_col = #lines[i + 1],
+        hl_group = 'Comment',
+      })
     end
   end
 end
