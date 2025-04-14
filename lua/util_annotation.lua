@@ -64,6 +64,7 @@
 ---@field display_bufnr number
 ---@field original_test_win number
 ---@field original_test_buf number
+---@field current_buffer_lines string[]
 ---@field ns_id number
 ---@field tests_info  table<string, terminal.testInfo>
 ---@field _close_display fun(self: GoTestDisplay)

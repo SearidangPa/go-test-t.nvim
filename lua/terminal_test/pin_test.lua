@@ -20,8 +20,8 @@ function pin_tester:pin_test(test_info)
   if not vim.api.nvim_win_is_valid(self.term_tester.displayer.display_win_id) then
     self.term_tester.displayer:create_window_and_buf()
   end
-  self.term_tester.displayer:update_buffer(self.pinned_list)
   self.pinned_list[test_info.name] = test_info
+  self.term_tester.displayer:update_buffer(self.pinned_list)
 end
 
 function pin_tester:pin_nearest_test()
@@ -29,8 +29,8 @@ function pin_tester:pin_nearest_test()
   if not vim.api.nvim_win_is_valid(self.term_tester.displayer.display_win_id) then
     self.term_tester.displayer:create_window_and_buf()
   end
-  self.term_tester.displayer:update_buffer(self.pinned_list)
   self.pinned_list = self.term_tester.tests_info
+  self.term_tester.displayer:update_buffer(self.pinned_list)
 end
 
 function pin_tester:test_all_pinned()

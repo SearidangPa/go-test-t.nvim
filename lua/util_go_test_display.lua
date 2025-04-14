@@ -21,6 +21,7 @@ function Test_Display.new(display_opts)
   self.display_bufnr = -1
   self.original_test_win = -1
   self.original_test_buf = -1
+  self.current_buffer_lines = {}
   self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
   self.tests_info = display_opts.tests_info or {}
   self.display_title = display_opts.display_title
@@ -51,17 +52,26 @@ function Test_Display:update_buffer(tests_info)
     return
   end
 
-  local lines = self:_parse_test_state_to_lines(tests_info)
-  lines = self:_add_display_help_text(lines)
-  vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, lines)
+  local new_lines = self:_parse_test_state_to_lines(tests_info)
+  new_lines = self:_add_display_help_text(new_lines)
+
+  if vim.deep_equal(new_lines, self.current_buffer_lines) then
+    return
+  end
+  self.current_buffer_lines = new_lines
+
+  local tests_info_print = vim.inspect(tests_info)
+  print(string.format('Tests info: %s', tests_info_print))
+
+  vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, new_lines)
   vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
-    end_col = #lines[1],
+    end_col = #new_lines[1],
     hl_group = 'Title',
   })
-  for i = #lines - #self._help_text_lines, #lines - 1 do
-    if i >= 0 and i < #lines then
+  for i = #new_lines - #self._help_text_lines, #new_lines - 1 do
+    if i >= 0 and i < #new_lines then
       vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i, 0, {
-        end_col = #lines[i + 1],
+        end_col = #new_lines[i + 1],
         hl_group = 'Comment',
       })
     end

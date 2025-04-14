@@ -160,6 +160,7 @@ function go_test:_filter_golang_output(entry)
 
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
+    self.pin_tester:pin_test(test_info)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
   self.tests_info[entry.Test] = test_info
