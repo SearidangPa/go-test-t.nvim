@@ -76,8 +76,8 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
     if pause_test then
       local test_info = self.tests_info[pause_test] or {
         name = pause_test,
-        status = 'paused',
       }
+      test_info.status = 'paused'
       self.tests_info[pause_test] = test_info
       vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
     end
@@ -86,13 +86,12 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
     if cont_test then
       local test_info = self.tests_info[cont_test] or {
         name = cont_test,
-        status = 'cont',
       }
+      test_info.status = 'running'
       self.tests_info[cont_test] = test_info
       vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
     end
 
-    -- Handle NAME blocks for errors with more details
     local name_test = line:match '=== NAME%s+([^%s]+)'
     if name_test then
       local test_info = self.tests_info[name_test]
@@ -101,7 +100,6 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
       end
     end
 
-    -- Process final test results
     local pass_test = line:match '--- PASS:%s+([^%s]+)'
     if pass_test then
       local test_info = self.tests_info[pass_test] or {
@@ -128,7 +126,6 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
       end)
     end
 
-    -- Track error locations
     local error_test, error_file, error_line = line:match '(.+):%s+([^:]+):(%d+):%s+'
     if error_test and error_file and error_line then
       for test_info_name, test_info in pairs(self.tests_info) do
@@ -144,10 +141,8 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
       end
     end
 
-    -- Extract file and line from Error Trace lines
     local test_file, test_line = line:match 'Error Trace:%s+([^:]+):(%d+)'
     if test_file and test_line then
-      -- Try to find which test this belongs to by looking for previous NAME block
       for test_name, test_info in pairs(self.tests_info) do
         if test_info.has_details and test_info.status ~= 'pass' then
           test_info.fail_at_line = tonumber(test_line)
@@ -159,7 +154,6 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
     end
   end
 end
-
 function go_test:_validate_test_info(test_info)
   assert(test_info.name, 'No test found')
   assert(test_info.test_bufnr, 'No test buffer found')
