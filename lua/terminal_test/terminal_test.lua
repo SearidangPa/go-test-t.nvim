@@ -5,6 +5,7 @@ local terminal_test = {}
 terminal_test.__index = terminal_test
 
 ---@class termTest.Options
+---@field tests_info table<string, terminal.testInfo>
 ---@field term_test_command_format string
 ---@field ns_id? number
 
@@ -14,7 +15,7 @@ function terminal_test.new(opts)
 
   local self = setmetatable({}, terminal_test)
   self.terminals = require('terminal_test.terminal_multiplexer').new()
-  self.tests_info = {}
+  self.tests_info = opts.tests_info or {}
   self.term_test_displayer = require('util_go_test_display').new {
     display_title = 'Go Test Results',
     toggle_term_func = function(test_name) self.terminals:toggle_float_terminal(test_name) end,

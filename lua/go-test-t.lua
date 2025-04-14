@@ -16,6 +16,7 @@ function go_test.new(opts)
   self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.term_tester = require('terminal_test.terminal_test').new {
+    tests_info = self.tests_info,
     term_test_command_format = self.term_test_command_format,
   }
   local user_command_prefix = opts.user_command_prefix or ''
