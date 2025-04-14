@@ -10,7 +10,7 @@ function M.get_status_icon(status)
   elseif status == 'cont' then
     return '🔄'
   elseif status == 'start' then
-    return '🔥'
+    return '🚀'
   elseif status == 'pause' then
     return '⏸️'
   elseif status == 'running' then
