@@ -240,7 +240,7 @@ end
 Test_Display._help_text_lines = {
   ' Help 🧊',
   ' q       ===  Close Tracker Window',
-  ' <Enter> ===  Jump to test code',
+  ' <CR> ===  Jump to test code',
   ' t       ===  Toggle test terminal',
   ' r       ===  Run test in terminal',
   ' d       ===  Delete from tracker',
