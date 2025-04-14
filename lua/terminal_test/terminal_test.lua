@@ -16,7 +16,7 @@ function terminal_test.new(opts)
   self.terminals = require('terminal_test.terminal_multiplexer').new()
   self.tests_info = {}
   self.term_test_displayer = require('util_go_test_display').new {
-    display_title = 'Terminal Test Results',
+    display_title = 'Go Test Results',
     toggle_term_func = function(test_name) self.terminals:toggle_float_terminal(test_name) end,
     rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
   }

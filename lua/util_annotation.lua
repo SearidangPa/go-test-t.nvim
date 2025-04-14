@@ -1,5 +1,5 @@
 ---@class GoTestT
----@field tests_info table<string, gotest.TestInfo>
+---@field tests_info table<string, terminal.testInfo>
 ---@field job_id number
 ---@field term_test_command_format string
 ---@field test_command string
@@ -35,6 +35,7 @@
 ---@field name string
 ---@field status string
 ---@field fail_at_line? number
+---@field has_details? boolean
 ---@field test_bufnr number
 ---@field test_line number
 ---@field test_command string
@@ -42,14 +43,6 @@
 ---@field set_ext_mark boolean
 ---@field fidget_handle ProgressHandle
 
----@class gotest.TestInfo
----@field name string
----@field status string "running"|"pass"|"fail"|"paused"|"cont"|"start"
----@field fail_at_line? number
----@field filepath string
----@field fidget_handle ProgressHandle
----
----
 ---@class TerminalTestTracker
 ---@field track_list terminal.testInfo[]
 ---@field add_test_to_tracker? fun(test_command_format: string)
@@ -77,7 +70,7 @@
 ---@field original_test_win number
 ---@field original_test_buf number
 ---@field ns_id number
----@field tests_info gotest.TestInfo[] | terminal.testInfo[]
+---@field tests_info  terminal.testInfo[]
 ---@field close_display fun(self: GoTestDisplay)
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)

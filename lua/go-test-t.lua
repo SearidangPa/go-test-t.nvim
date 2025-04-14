@@ -62,16 +62,46 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
 
   for _, line in ipairs(lines) do
-    local test_name = line:match '=== RUN%s+([^%s]+)'
-    if test_name then
-      local test_info = self.tests_info[test_name] or {
-        name = test_name,
+    local run_test = line:match '=== RUN%s+([^%s]+)'
+    if run_test then
+      local test_info = self.tests_info[run_test] or {
+        name = run_test,
         status = 'running',
       }
-      self.tests_info[test_name] = test_info
+      self.tests_info[run_test] = test_info
       vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
     end
 
+    local pause_test = line:match '=== PAUSE%s+([^%s]+)'
+    if pause_test then
+      local test_info = self.tests_info[pause_test] or {
+        name = pause_test,
+        status = 'paused',
+      }
+      self.tests_info[pause_test] = test_info
+      vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
+    end
+
+    local cont_test = line:match '=== CONT%s+([^%s]+)'
+    if cont_test then
+      local test_info = self.tests_info[cont_test] or {
+        name = cont_test,
+        status = 'cont',
+      }
+      self.tests_info[cont_test] = test_info
+      vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
+    end
+
+    -- Handle NAME blocks for errors with more details
+    local name_test = line:match '=== NAME%s+([^%s]+)'
+    if name_test then
+      local test_info = self.tests_info[name_test]
+      if test_info then
+        test_info.has_details = true
+      end
+    end
+
+    -- Process final test results
     local pass_test = line:match '--- PASS:%s+([^%s]+)'
     if pass_test then
       local test_info = self.tests_info[pass_test] or {
@@ -98,6 +128,7 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
       end)
     end
 
+    -- Track error locations
     local error_test, error_file, error_line = line:match '(.+):%s+([^:]+):(%d+):%s+'
     if error_test and error_file and error_line then
       for test_info_name, test_info in pairs(self.tests_info) do
@@ -108,6 +139,20 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
           self.tests_info[test_info_name] = test_info
           require('util_go_test_quickfix').add_fail_test(test_info)
           vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
+          break
+        end
+      end
+    end
+
+    -- Extract file and line from Error Trace lines
+    local test_file, test_line = line:match 'Error Trace:%s+([^:]+):(%d+)'
+    if test_file and test_line then
+      -- Try to find which test this belongs to by looking for previous NAME block
+      for test_name, test_info in pairs(self.tests_info) do
+        if test_info.has_details and test_info.status ~= 'pass' then
+          test_info.fail_at_line = tonumber(test_line)
+          test_info.filepath = test_file
+          self.tests_info[test_name] = test_info
           break
         end
       end
