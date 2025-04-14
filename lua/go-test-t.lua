@@ -1,13 +1,13 @@
 local fidget = require 'fidget'
 
 ---@class GoTestT
-local go_test_t = {}
-go_test_t.__index = go_test_t
+local go_test = {}
+go_test.__index = go_test
 
 ---@param opts GoTestT.Options
-function go_test_t.new(opts)
+function go_test.new(opts)
   opts = opts or {}
-  local self = setmetatable({}, go_test_t)
+  local self = setmetatable({}, go_test)
 
   self.test_command_format = opts.test_command_format or 'go test ./... --json -v %s\r'
   self.job_id = -1
@@ -23,7 +23,7 @@ function go_test_t.new(opts)
   return self
 end
 
-function go_test_t:setup_user_command(user_command_prefix)
+function go_test:setup_user_command(user_command_prefix)
   local this = self
   local term_tester = self.term_tester
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all() end, {})
@@ -37,7 +37,7 @@ function go_test_t:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:view_last_test_terminal() end, {})
 end
 
-function go_test_t:test_all()
+function go_test:test_all()
   self.term_tester.term_test_displayer:create_window_and_buf()
   local all_command = 'go test ./integration_tests/ -v\r'
   self.term_tester.terminals:delete_terminal(self.terminal_name)
@@ -55,7 +55,7 @@ end
 --- === Private functions ===
 
 -- Process terminal output for all tests run
-function go_test_t:_process_buffer_lines(buf, first_line, last_line)
+function go_test:_process_buffer_lines(buf, first_line, last_line)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
 
   for _, line in ipairs(lines) do
@@ -112,9 +112,9 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
   end
 end
 
-function go_test_t:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
+function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
-function go_test_t:_validate_test_info(test_info)
+function go_test:_validate_test_info(test_info)
   assert(test_info.name, 'No test found')
   assert(test_info.test_bufnr, 'No test buffer found')
   assert(test_info.test_line, 'No test line found')
