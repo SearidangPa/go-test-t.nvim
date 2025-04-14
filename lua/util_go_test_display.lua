@@ -45,6 +45,7 @@ function Test_Display:create_window_and_buf()
     self.display_win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(self.display_win, self.display_buf)
     vim.api.nvim_win_set_width(self.display_win, math.floor(vim.o.columns / 3))
+    vim.api.nvim_win_set_height(self.display_win, math.floor(vim.o.lines - 2))
     vim.wo[self.display_win].number = false
     vim.wo[self.display_win].relativenumber = false
     vim.wo[self.display_win].wrap = false
