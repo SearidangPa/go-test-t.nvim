@@ -52,6 +52,8 @@ function go_test_t:test_all()
   end)
 end
 
+--- === Private functions ===
+
 -- Process terminal output for all tests run
 function go_test_t:_process_buffer_lines(buf, first_line, last_line)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
@@ -106,81 +108,6 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
           break
         end
       end
-    end
-  end
-end
-
--- Process terminal output for individual test
-function go_test_t:_process_single_test_buffer_lines(buf, first_line, last_line, test_info, float_term_state)
-  local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
-  local current_time = os.date '%H:%M:%S'
-
-  for _, line in ipairs(lines) do
-    local detach = self:_process_single_test_line(line, test_info, float_term_state, current_time)
-    if detach then
-      test_info.fidget_handle:finish()
-      return true
-    end
-  end
-end
-
-function go_test_t:_process_single_test_line(line, test_info, float_term_state, current_time)
-  if string.match(line, '--- PASS:%s+' .. test_info.name) then
-    if not test_info.set_ext_mark then
-      vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
-        virt_text = { { string.format('✅ %s', current_time) } },
-        virt_text_pos = 'eol',
-      })
-      test_info.set_ext_mark = true
-    end
-    test_info.status = 'pass'
-    float_term_state.status = 'pass'
-    self.tests_info[test_info.name] = test_info
-    vim.schedule(function()
-      self.term_tester.term_test_displayer:update_buffer(self.tests_info)
-      fidget.notify(string.format('%s passed', test_info.name), vim.log.levels.INFO)
-    end)
-    return true
-  end
-
-  if string.match(line, '--- FAIL:%s+' .. test_info.name) then
-    if not test_info.set_ext_mark then
-      vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
-        virt_text = { { string.format('❌ %s', current_time) } },
-        virt_text_pos = 'eol',
-      })
-      test_info.set_ext_mark = true
-    end
-    test_info.status = 'fail'
-    float_term_state.status = 'fail'
-    self.tests_info[test_info.name] = test_info
-    vim.schedule(function()
-      self.term_tester.term_test_displayer:update_buffer(self.tests_info)
-      fidget.notify(string.format('%s failed', test_info.name), vim.log.levels.ERROR)
-    end)
-    return true
-  end
-
-  local file, line_num
-  if string.match(line, 'Error Trace:') then
-    if vim.fn.has 'win32' == 1 then
-      file, line_num = string.match(line, 'Error Trace:%s+([%w%p]+):(%d+)')
-    else
-      file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
-    end
-
-    if file and line_num then
-      local error_bufnr = vim.fn.bufnr(file)
-      if error_bufnr ~= -1 then
-        vim.fn.sign_define('GoTestError', { text = '❌', texthl = 'DiagnosticError' })
-        vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = line_num })
-      end
-      test_info.status = 'fail'
-      test_info.fail_at_line = tonumber(line_num)
-      test_info.filepath = file
-      self.tests_info[test_info.name] = test_info
-      require('util_go_test_quickfix').add_fail_test(test_info)
-      vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
     end
   end
 end
