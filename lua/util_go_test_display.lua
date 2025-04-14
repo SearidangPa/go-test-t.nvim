@@ -238,7 +238,7 @@ function Test_Display:_close_display()
 end
 
 Test_Display._help_text_lines = {
-  ' Help',
+  ' Help 🧊',
   ' q       ===  Close Tracker Window',
   ' <Enter> ===  Jump to test code',
   ' t       ===  Toggle test terminal',
