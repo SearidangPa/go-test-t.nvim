@@ -163,9 +163,6 @@ function go_test:_mark_outcome(entry)
   self.tests_info[key] = test_info
   if entry.Action == 'fail' then
     require('util_go_test_quickfix').add_fail_test(test_info)
-    require('fidget').notify(string.format('Test failed: %s', entry.Test), vim.log.levels.ERROR)
-  elseif entry.Action == 'pass' then
-    require('fidget').notify(string.format('Test passed: %s', entry.Test), vim.log.levels.INFO)
   end
 end
 
