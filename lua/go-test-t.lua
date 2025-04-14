@@ -41,6 +41,7 @@ end
 function go_test:test_all()
   self.term_tester.term_test_displayer:create_window_and_buf()
   self.term_tester.terminals:delete_terminal(self.terminal_name)
+  self.term_tester.terminals:toggle_float_terminal(self.terminal_name)
   local float_term_state = self.term_tester.terminals:toggle_float_terminal(self.terminal_name)
   vim.api.nvim_chan_send(float_term_state.chan, self.test_command .. '\n')
 
