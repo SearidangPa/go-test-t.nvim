@@ -51,7 +51,6 @@ function go_test:setup_user_command(user_command_prefix)
     this.pin_tester.term_tester.displayer:toggle_display()
     this.pin_tester.term_tester.displayer:update_buffer(this.pin_tester.pinned_list)
   end, {})
-
   vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() this.pin_tester:pin_nearest_test() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() this.pin_tester:test_all_pinned() end, {})
 end
