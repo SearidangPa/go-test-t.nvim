@@ -28,6 +28,11 @@ function go_test:setup_user_command(user_command_prefix)
   local this = self
   local term_tester = self.term_tester
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all() end, {})
+  vim.api.nvim_create_user_command(
+    user_command_prefix .. 'ViewTermTestAll',
+    function() this.term_tester.terminals:toggle_float_terminal(this.terminal_name) end,
+    {}
+  )
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() term_tester.term_test_displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() this:load_quack_tests() end, {})
 
