@@ -211,6 +211,7 @@ function terminal_test:_handle_error_trace(line, test_info, cb_update_tracker)
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
     self.tests_info[test_info.name] = test_info
+    self.pin_tester.pin_test(test_info)
     vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
     require('util_go_test_quickfix').add_fail_test(test_info)
     if cb_update_tracker then

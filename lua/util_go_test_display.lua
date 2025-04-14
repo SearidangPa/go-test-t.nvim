@@ -45,18 +45,14 @@ end
 
 ---@param tests_info table<string, terminal.testInfo>
 function Test_Display:update_buffer(tests_info)
+  assert(tests_info, 'No test info found')
   self.tests_info = tests_info
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
     return
   end
-  assert(tests_info, 'No test info found')
+
   local lines = self:_parse_test_state_to_lines(tests_info)
-
-  if not vim.api.nvim_buf_is_valid(self.display_bufnr) then
-    return
-  end
   lines = self:_add_display_help_text(lines)
-
   vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, lines)
   vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
     end_col = #lines[1],

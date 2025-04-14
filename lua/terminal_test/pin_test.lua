@@ -10,14 +10,23 @@ function pin_tester.new(opts)
   self.term_tester = require('terminal_test.terminal_test').new {
     tests_info = self.pinned_list,
     term_test_command_format = term_test_command_format,
+    pin_tester = self,
   }
   return self
 end
 
-function pin_tester:pin_test()
-  self.term_tester:test_nearest_in_terminal()
-  self.term_tester.displayer:update_buffer(self.pinned_list)
+function pin_tester:pin_test(test_info)
   if not vim.api.nvim_win_is_valid(self.term_tester.displayer.display_win_id) then
+    self.term_tester.displayer:update_buffer(self.pinned_list)
+    self.term_tester.displayer:create_window_and_buf()
+  end
+  self.pinned_list[test_info.name] = test_info
+end
+
+function pin_tester:pin_nearest_test()
+  self.term_tester:test_nearest_in_terminal()
+  if not vim.api.nvim_win_is_valid(self.term_tester.displayer.display_win_id) then
+    self.term_tester.displayer:update_buffer(self.pinned_list)
     self.term_tester.displayer:create_window_and_buf()
   end
   self.pinned_list = self.term_tester.tests_info

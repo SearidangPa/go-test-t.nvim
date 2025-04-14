@@ -48,7 +48,7 @@ function go_test:setup_user_command(user_command_prefix)
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'PinTestToggleDisplay', function() this.pin_tester.term_tester.displayer:toggle_display() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() this.pin_tester:pin_test() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() this.pin_tester:pin_nearest_test() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() this.pin_tester:test_all_pinned() end, {})
 end
 
@@ -75,6 +75,8 @@ function go_test:test_all()
         if self._ignored_actions[decoded.Action] then
           goto continue
         end
+
+        print(vim.inspect(decoded))
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
