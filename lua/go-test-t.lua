@@ -12,7 +12,7 @@ function go_test_t.new(opts)
   self.test_command_format = opts.test_command_format or 'go test ./... --json -v %s\r'
   self.job_id = -1
   self.tests_info = {}
-  self.terminal_name = opts.terminal_name or 'go_test_t'
+  self.terminal_name = opts.terminal_name or 'test all'
   self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.term_tester = require('terminal_test.terminal_test').new {
@@ -25,16 +25,16 @@ end
 
 function go_test_t:setup_user_command(user_command_prefix)
   local this = self
+  local term_tester = self.term_tester
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() this:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() term_tester.term_test_displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() this:load_quack_tests() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() this.term_tester:test_nearest_in_terminal() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() this.term_tester:test_buf_in_terminals() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermView', function() this.term_tester:view_enclosing_test_terminal() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() this.term_tester.terminals:search_terminal() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() this.term_tester:view_last_test_terminal() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermToggleDisplay', function() this.term_tester.term_test_displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() term_tester:test_nearest_in_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() term_tester:test_buf_in_terminals() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermView', function() term_tester:view_enclosing_test_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminals:search_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:view_last_test_terminal() end, {})
 end
 
 function go_test_t:test_all()
@@ -111,6 +111,8 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
     end
   end
 end
+
+function go_test_t:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 function go_test_t:_validate_test_info(test_info)
   assert(test_info.name, 'No test found')
