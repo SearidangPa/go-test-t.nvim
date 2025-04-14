@@ -2,6 +2,7 @@
 ---@field tests_info table<string, terminal.testInfo>
 ---@field job_id number
 ---@field term_test_command_format string
+---@field test_command_format_json string
 ---@field test_command string
 ---@field terminal_name string
 ---@field term_tester terminalTest
@@ -19,6 +20,7 @@
 ---
 ---@class GoTestT.Options
 ---@field term_test_command_format string
+---@field test_command_format_json string
 ---@field test_command string
 ---@field terminal_name? string
 ---@field display_title? string
