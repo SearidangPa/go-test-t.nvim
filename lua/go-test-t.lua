@@ -77,7 +77,7 @@ function go_test:test_all()
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
-          vim.schedule(function() self_ref.term_tester.displayer:update_buffer(self_ref.tests_info) end)
+          self_ref.term_tester.displayer:update_buffer(self_ref.tests_info)
           goto continue
         end
 
@@ -90,7 +90,7 @@ function go_test:test_all()
 
         if self._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
-          vim.schedule(function() self_ref.term_tester.displayer:update_buffer(self_ref.tests_info) end)
+          self_ref.term_tester.displayer:update_buffer(self_ref.tests_info)
           goto continue
         end
 
