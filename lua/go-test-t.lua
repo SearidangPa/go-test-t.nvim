@@ -15,7 +15,7 @@ function go_test_t.new(opts)
   self.term_tester = require('terminal_test.terminal_test').new {
     term_test_command_format = term_test_command_format,
   }
-  self.test_displayer = require('util_go_test_display').new {
+  self.go_test_displayer = require('util_go_test_display').new {
     display_title = opts.display_title or 'Go Test All Results',
     toggle_term_func = function(test_name) self.term_tester:toggle_test_in_term(test_name) end,
     rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
@@ -24,7 +24,7 @@ function go_test_t.new(opts)
 end
 
 function go_test_t:run_test_all()
-  self.test_displayer:create_window_and_buf()
+  self.go_test_displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
   local self_ref = self
@@ -49,7 +49,7 @@ function go_test_t:run_test_all()
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
-          vim.schedule(function() self_ref.test_displayer:update_buffer(self_ref.tests_info) end)
+          vim.schedule(function() self_ref.go_test_displayer:update_buffer(self_ref.tests_info) end)
           goto continue
         end
 
@@ -62,7 +62,7 @@ function go_test_t:run_test_all()
 
         if self._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
-          vim.schedule(function() self_ref.test_displayer:update_buffer(self_ref.tests_info) end)
+          vim.schedule(function() self_ref.go_test_displayer:update_buffer(self_ref.tests_info) end)
           goto continue
         end
 
@@ -71,13 +71,13 @@ function go_test_t:run_test_all()
     end,
 
     on_exit = function()
-      vim.schedule(function() self_ref.test_displayer:update_buffer(self_ref.tests_info) end)
+      vim.schedule(function() self_ref.go_test_displayer:update_buffer(self_ref.tests_info) end)
     end,
   })
 end
 
-function go_test_t:toggle_display() self.test_displayer:toggle_display() end
-function go_test_t:load_stuck_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
+function go_test_t:toggle_display() self.go_test_displayer:toggle_display() end
+function go_test_t:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 --- === Private functions ===
 function go_test_t:_clean_up_prev_job()
@@ -134,7 +134,7 @@ function go_test_t:_filter_golang_output(entry)
     test_info.fidget_handle:finish()
   end
   self.tests_info[entry.Test] = test_info
-  self.test_displayer:update_buffer(self.tests_info)
+  self.go_test_displayer:update_buffer(self.tests_info)
 end
 
 function go_test_t:_mark_outcome(entry)
@@ -168,11 +168,5 @@ go_test_t._action_state = {
   fail = true,
   pass = true,
 }
-
-function go_test_t:_setup_commands()
-  local self_ref = self
-  vim.api.nvim_create_user_command('GoTestToggleDisplay', function() self_ref:toggle_display() end, {})
-  vim.api.nvim_create_user_command('GoTestLoadStuckTest', function() self_ref:load_stuck_tests() end, {})
-end
 
 return go_test_t

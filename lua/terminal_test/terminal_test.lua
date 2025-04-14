@@ -18,7 +18,7 @@ function terminal_test.new(opts)
   local self = setmetatable({}, terminal_test)
   self.terminals = terminal_multiplexer.new()
   self.tests_info = {}
-  self.displayer = display.new {
+  self.term_test_displayer = display.new {
     display_title = 'Terminal Test Results',
     toggle_term_func = function(test_name) self.terminals:toggle_float_terminal(test_name) end,
     rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
@@ -82,7 +82,7 @@ function terminal_test:test_buf_in_terminals()
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
-  self.displayer:create_window_and_buf()
+  self.term_test_displayer:create_window_and_buf()
 
   for test_name, test_line in pairs(all_tests_in_buf) do
     self.terminals:delete_terminal(test_name)
@@ -104,7 +104,7 @@ function terminal_test:test_buf_in_terminals()
     }
     self.tests_info[test_name] = test_info
     self:test_in_terminal(test_info)
-    vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+    vim.schedule(function() self.term_test_displayer:update_buffer(self.tests_info) end)
   end
 end
 
@@ -174,7 +174,7 @@ function terminal_test:_handle_test_passed(test_info, float_term_state, current_
   test_info.status = 'pass'
   float_term_state.status = 'pass'
   self.tests_info[test_info.name] = test_info
-  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+  vim.schedule(function() self.term_test_displayer:update_buffer(self.tests_info) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   end
@@ -192,7 +192,7 @@ function terminal_test:_handle_test_failed(test_info, float_term_state, current_
   float_term_state.status = 'fail'
   self.tests_info[test_info.name] = test_info
   util_quickfix.add_fail_test(test_info)
-  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+  vim.schedule(function() self.term_test_displayer:update_buffer(self.tests_info) end)
   if cb_update_tracker then
     cb_update_tracker(test_info)
   end
@@ -215,7 +215,7 @@ function terminal_test:_handle_error_trace(line, test_info, cb_update_tracker)
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
     self.tests_info[test_info.name] = test_info
-    vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+    vim.schedule(function() self.term_test_displayer:update_buffer(self.tests_info) end)
     util_quickfix.add_fail_test(test_info)
     if cb_update_tracker then
       cb_update_tracker(test_info)

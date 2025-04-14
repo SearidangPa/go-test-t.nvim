@@ -1,12 +1,12 @@
 ---@class GoTestT
 ---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
----@field test_displayer GoTestDisplay
+---@field go_test_displayer GoTestDisplay
 ---@field test_command_format_json string
 ---@field term_tester terminalTest
 ---@field run_test_all? fun(command: string[])
 ---@field toggle_display? fun(self: GoTestT)
----@field load_stuck_tests? fun(self: GoTestT)
+---@field load_quack_tests? fun(self: GoTestT)
 ---@field _clean_up_prev_job? fun(self: GoTestT)
 ---@field _add_golang_test? fun(self: GoTestT, entry: table)
 ---@field _filter_golang_output? fun(self: GoTestT, entry: table)
@@ -21,7 +21,7 @@
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer
 ---@field tests_info table<string, terminal.testInfo>
----@field displayer? GoTestDisplay
+---@field term_test_displayer? GoTestDisplay
 ---@field ns_id number
 ---@field term_test_command_format string
 
