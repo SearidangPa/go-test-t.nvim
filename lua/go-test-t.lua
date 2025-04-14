@@ -53,6 +53,8 @@ function go_test:test_all()
   end)
 end
 
+function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
+
 --- === Private functions ===
 
 -- Process terminal output for all tests run
@@ -112,8 +114,6 @@ function go_test:_process_buffer_lines(buf, first_line, last_line)
     end
   end
 end
-
-function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 function go_test:_validate_test_info(test_info)
   assert(test_info.name, 'No test found')
