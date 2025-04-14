@@ -60,19 +60,21 @@ function Test_Display:update_buffer(tests_info)
   end
   self.current_buffer_lines = new_lines
 
-  vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, new_lines)
-  vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
-    end_col = #new_lines[1],
-    hl_group = 'Title',
-  })
-  for i = #new_lines - #self._help_text_lines, #new_lines - 1 do
-    if i >= 0 and i < #new_lines then
-      vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i, 0, {
-        end_col = #new_lines[i + 1],
-        hl_group = 'Comment',
-      })
+  vim.schedule(function()
+    vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, new_lines)
+    vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
+      end_col = #new_lines[1],
+      hl_group = 'Title',
+    })
+    for i = #new_lines - #self._help_text_lines, #new_lines - 1 do
+      if i >= 0 and i < #new_lines then
+        vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i, 0, {
+          end_col = #new_lines[i + 1],
+          hl_group = 'Comment',
+        })
+      end
     end
-  end
+  end)
 end
 
 function Test_Display:create_window_and_buf()
