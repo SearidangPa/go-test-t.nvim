@@ -21,7 +21,8 @@ function go_test.new(opts)
   self.term_tester = require('terminal_test.terminal_test').new {
     tests_info = self.tests_info,
     term_test_command_format = self.term_test_command_format,
-    pin_tester = self.pin_tester,
+    pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
+    display_title = 'Go Test Results',
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)
@@ -76,7 +77,7 @@ function go_test:test_all()
           goto continue
         end
 
-        print(vim.inspect(decoded))
+        require('fidget').notify(vim.inspect(decoded), vim.log.levels.INFO)
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
@@ -181,6 +182,9 @@ function go_test:_mark_outcome(entry)
   self.tests_info[key] = test_info
   if entry.Action == 'fail' then
     require('util_go_test_quickfix').add_fail_test(test_info)
+    local make_notify = require('mini.notify').make_notify {}
+    make_notify(string.format('pinning %s', test_info.name), vim.log.levels.ERROR)
+    self.pin_tester:pin_test(test_info)
   end
 end
 

@@ -6,19 +6,21 @@ terminal_test.__index = terminal_test
 
 ---@param opts termTest.Options
 function terminal_test.new(opts)
-  opts = opts or {}
+  assert(opts, 'No options found')
+  assert(opts.pin_test_func, 'No pin test function found')
+  assert(opts.display_title, 'No display title found')
 
   local self = setmetatable({}, terminal_test)
   self.terminals = require('terminal_test.terminal_multiplexer').new()
   self.tests_info = opts.tests_info or {}
   self.displayer = require('util_go_test_display').new {
-    display_title = 'Go Test Results',
+    display_title = opts.display_title,
     toggle_term_func = function(test_name) self.terminals:toggle_float_terminal(test_name) end,
     rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
   }
   self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
   self.term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
-  self.pin_tester = opts.pin_tester
+  self.pin_test_func = opts.pin_test_func
   return self
 end
 
@@ -187,6 +189,7 @@ function terminal_test:_handle_test_failed(test_info, float_term_state, current_
   test_info.status = 'fail'
   float_term_state.status = 'fail'
   self.tests_info[test_info.name] = test_info
+  self.pin_test_func(test_info)
   require('util_go_test_quickfix').add_fail_test(test_info)
   vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   if cb_update_tracker then
@@ -211,7 +214,7 @@ function terminal_test:_handle_error_trace(line, test_info, cb_update_tracker)
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
     self.tests_info[test_info.name] = test_info
-    self.pin_tester.pin_test(test_info)
+    self.pin_test_func(test_info)
     vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
     require('util_go_test_quickfix').add_fail_test(test_info)
     if cb_update_tracker then

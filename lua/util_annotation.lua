@@ -33,13 +33,14 @@
 ---@field displayer? GoTestDisplay
 ---@field ns_id number
 ---@field term_test_command_format string
----@field pin_tester PinTester
+---@field pin_test_func fun(tests_info: terminal.testInfo)
 
 ---@class termTest.Options
 ---@field tests_info table<string, terminal.testInfo>
 ---@field term_test_command_format string
 ---@field ns_id? number
----@field pin_tester PinTester
+---@field pin_test_func fun(tests_info: terminal.testInfo)
+---@field display_title string
 
 ---@class terminal.testInfo
 ---@field name string
