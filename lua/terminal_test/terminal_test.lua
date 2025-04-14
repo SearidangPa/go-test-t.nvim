@@ -94,11 +94,6 @@ function terminal_test:test_buf_in_terminals()
       status = 'start',
       filepath = vim.fn.expand '%:p',
       set_ext_mark = false,
-      fidget_handle = fidget.progress.handle.create {
-        lsp_client = {
-          name = test_name,
-        },
-      },
     }
     self.tests_info[test_name] = test_info
     self:test_in_terminal(test_info)
@@ -227,10 +222,6 @@ function terminal_test:_process_one_line(line, test_info, float_term_state, curr
   self:_handle_error_trace(line, test_info, cb_update_tracker)
 
   if string.match(line, '--- FAIL') then
-    fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
-    self:_handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
-    return true
-  elseif string.match(line, 'FAIL') then
     fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
     self:_handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
