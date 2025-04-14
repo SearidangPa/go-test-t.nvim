@@ -157,7 +157,9 @@ function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_in
   for _, line in ipairs(lines) do
     local detach = self:_process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
     if detach then
-      test_info.fidget_handle:finish()
+      if test_info.fidget_handle then
+        test_info.fidget_handle:finish()
+      end
       return true
     end
   end

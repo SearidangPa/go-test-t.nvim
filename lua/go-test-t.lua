@@ -47,142 +47,274 @@ end
 
 function go_test_t:test_all()
   self.go_test_displayer:create_window_and_buf()
+  local all_command = 'go test ./integration_tests/ -v\r'
 
-  self:_clean_up_prev_job()
+  self.terminals:delete_terminal 'all_tests'
+  local float_term_state = self.terminals:toggle_float_terminal 'all_tests'
+  vim.api.nvim_chan_send(float_term_state.chan, all_command .. '\n')
+
   local self_ref = self
-  self.job_id = vim.fn.jobstart(self.test_command_format_json, {
-    stdout_buffered = false,
-
-    on_stdout = function(_, data)
-      assert(data, 'No data received from job')
-      for _, line in ipairs(data) do
-        if line == '' then
-          goto continue
-        end
-
-        local ok, decoded = pcall(vim.json.decode, line)
-        if not ok or not decoded then
-          goto continue
-        end
-
-        if self._ignored_actions[decoded.Action] then
-          goto continue
-        end
-
-        if decoded.Action == 'run' then
-          self_ref:_add_golang_test(decoded)
-          vim.schedule(function() self_ref.go_test_displayer:update_buffer(self_ref.tests_info) end)
-          goto continue
-        end
-
-        if decoded.Action == 'output' then
-          if decoded.Test or decoded.Package then
-            self_ref:_filter_golang_output(decoded)
-          end
-          goto continue
-        end
-
-        if self._action_state[decoded.Action] then
-          self_ref:_mark_outcome(decoded)
-          vim.schedule(function() self_ref.go_test_displayer:update_buffer(self_ref.tests_info) end)
-          goto continue
-        end
-
-        ::continue::
-      end
-    end,
-
-    on_exit = function()
-      vim.schedule(function() self_ref.go_test_displayer:update_buffer(self_ref.tests_info) end)
-    end,
-  })
+  vim.schedule(function()
+    vim.api.nvim_buf_attach(float_term_state.buf, false, {
+      on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line, last_line) end,
+    })
+  end)
 end
 
 function go_test_t:toggle_display() self.go_test_displayer:toggle_display() end
-function go_test_t:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
---- === Private functions ===
-function go_test_t:_clean_up_prev_job()
-  if self.job_id ~= -1 then
-    require('fidget').notify('Stopping job', vim.log.levels.INFO)
-    vim.fn.jobstop(self.job_id)
-    vim.diagnostic.reset()
+function go_test_t:toggle_test_in_term(test_name)
+  assert(test_name, 'No test name found')
+  local test_info = self.tests_info[test_name]
+  if not test_info then
+    self:retest_in_terminal_by_name(test_name)
+  end
+  self.terminals:toggle_float_terminal(test_name)
+end
+
+function go_test_t:retest_in_terminal_by_name(test_name)
+  assert(test_name, 'No test name found')
+  local test_command = string.format(self.test_command_format, test_name)
+
+  local self_ref = self
+  require('util_lsp').action_from_test_name(test_name, function(lsp_param)
+    local test_info = {
+      test_line = lsp_param.test_line,
+      filepath = lsp_param.filepath,
+      test_bufnr = lsp_param.test_bufnr,
+      name = test_name,
+      test_command = test_command,
+      status = 'start',
+      set_ext_mark = false,
+    }
+    self_ref:test_in_terminal(test_info)
+  end)
+end
+
+function go_test_t:test_in_terminal(test_info)
+  self:_validate_test_info(test_info)
+  self.terminals:delete_terminal(test_info.name)
+  local float_term_state = self.terminals:toggle_float_terminal(test_info.name)
+  vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
+
+  local self_ref = self
+  vim.schedule(function()
+    vim.api.nvim_buf_attach(float_term_state.buf, false, {
+      on_lines = function(_, buf, _, first_line, last_line)
+        return self_ref:_process_single_test_buffer_lines(buf, first_line, last_line, test_info, float_term_state)
+      end,
+    })
+  end)
+
+  self.tests_info[test_info.name] = test_info
+  vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
+end
+
+function go_test_t:test_buf_in_terminals()
+  local source_bufnr = vim.api.nvim_get_current_buf()
+  local util_find_test = require 'util_find_test'
+  local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
+  self.go_test_displayer:create_window_and_buf()
+
+  for test_name, test_line in pairs(all_tests_in_buf) do
+    self.terminals:delete_terminal(test_name)
+    local test_command = string.format(self.test_command_format, test_name)
+
+    local test_info = {
+      name = test_name,
+      test_line = test_line,
+      test_bufnr = source_bufnr,
+      test_command = test_command,
+      status = 'start',
+      filepath = vim.fn.expand '%:p',
+      set_ext_mark = false,
+      fidget_handle = fidget.progress.handle.create {
+        lsp_client = {
+          name = test_name,
+        },
+      },
+    }
+    self.tests_info[test_name] = test_info
+    self:test_in_terminal(test_info)
   end
 end
 
-function go_test_t:_add_golang_test(entry)
-  if not entry.Test then
-    return
-  end
+function go_test_t:test_nearest_in_terminal()
+  local util_find_test = require 'util_find_test'
+  local test_name, test_line = util_find_test.get_enclosing_test()
+  assert(test_name, 'Not inside a test function')
+  assert(test_line, 'No test line found')
 
-  local test_info = {
-    name = entry.Test,
-    status = 'running',
-    filepath = '',
+  self.terminals:delete_terminal(test_name)
+  self:test_in_terminal {
+    name = test_name,
+    test_line = test_line,
+    test_bufnr = vim.api.nvim_get_current_buf(),
+    test_command = string.format(self.test_command_format, test_name),
+    status = 'start',
+    filepath = vim.fn.expand '%:p',
+    set_ext_mark = false,
+    fidget_handle = fidget.progress.handle.create {
+      lsp_client = {
+        name = test_name,
+      },
+    },
   }
-
-  self.tests_info[entry.Test] = test_info
 end
 
-function go_test_t:_filter_golang_output(entry)
-  assert(entry, 'No entry provided')
-  if not entry.Test then
+function go_test_t:view_enclosing_test_terminal()
+  local util_find_test = require 'util_find_test'
+  local test_name, _ = util_find_test.get_enclosing_test()
+  assert(test_name, 'No test found')
+  self:toggle_test_in_term(test_name)
+end
+
+function go_test_t:view_last_test_terminal()
+  local test_name = self.terminals.last_terminal_name
+  if not test_name then
+    vim.notify('No last test terminal found', vim.log.levels.WARN)
     return
   end
-  local test_info = self.tests_info[entry.Test]
-  if not test_info then
-    vim.notify('Filter Output: Test info not found for ' .. entry.Test, vim.log.levels.WARN)
-    return
+  self.terminals:toggle_float_terminal(test_name)
+end
+
+-- Process terminal output for all tests run
+function go_test_t:_process_buffer_lines(buf, first_line, last_line)
+  local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
+
+  for _, line in ipairs(lines) do
+    local test_name = line:match '=== RUN%s+([^%s]+)'
+    if test_name then
+      local test_info = self.tests_info[test_name] or {
+        name = test_name,
+        status = 'running',
+      }
+      self.tests_info[test_name] = test_info
+      vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
+    end
+
+    local pass_test = line:match '--- PASS:%s+([^%s]+)'
+    if pass_test then
+      local test_info = self.tests_info[pass_test] or {
+        name = pass_test,
+      }
+      test_info.status = 'pass'
+      self.tests_info[pass_test] = test_info
+      vim.schedule(function()
+        self.go_test_displayer:update_buffer(self.tests_info)
+        fidget.notify(string.format('%s passed', pass_test), vim.log.levels.INFO)
+      end)
+    end
+
+    local fail_test = line:match '--- FAIL:%s+([^%s]+)'
+    if fail_test then
+      local test_info = self.tests_info[fail_test] or {
+        name = fail_test,
+      }
+      test_info.status = 'fail'
+      self.tests_info[fail_test] = test_info
+      vim.schedule(function()
+        self.go_test_displayer:update_buffer(self.tests_info)
+        fidget.notify(string.format('%s failed', fail_test), vim.log.levels.ERROR)
+      end)
+    end
+
+    local error_test, error_file, error_line = line:match '(.+):%s+([^:]+):(%d+):%s+'
+    if error_test and error_file and error_line then
+      for test_name, test_info in pairs(self.tests_info) do
+        if error_test:find(test_name, 1, true) then
+          test_info.fail_at_line = tonumber(error_line)
+          test_info.filepath = error_file
+          test_info.status = 'fail'
+          self.tests_info[test_name] = test_info
+          util_quickfix.add_fail_test(test_info)
+          vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
+          break
+        end
+      end
+    end
+  end
+end
+
+-- Process terminal output for individual test
+function go_test_t:_process_single_test_buffer_lines(buf, first_line, last_line, test_info, float_term_state)
+  local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
+  local current_time = os.date '%H:%M:%S'
+
+  for _, line in ipairs(lines) do
+    local detach = self:_process_single_test_line(line, test_info, float_term_state, current_time)
+    if detach then
+      test_info.fidget_handle:finish()
+      return true
+    end
+  end
+end
+
+function go_test_t:_process_single_test_line(line, test_info, float_term_state, current_time)
+  if string.match(line, '--- PASS:%s+' .. test_info.name) then
+    if not test_info.set_ext_mark then
+      vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
+        virt_text = { { string.format('✅ %s', current_time) } },
+        virt_text_pos = 'eol',
+      })
+      test_info.set_ext_mark = true
+    end
+    test_info.status = 'pass'
+    float_term_state.status = 'pass'
+    self.tests_info[test_info.name] = test_info
+    vim.schedule(function()
+      self.go_test_displayer:update_buffer(self.tests_info)
+      fidget.notify(string.format('%s passed', test_info.name), vim.log.levels.INFO)
+    end)
+    return true
   end
 
-  local trimmed_output = vim.trim(entry.Output)
-
-  local file, line_num_any = string.match(trimmed_output, 'Error Trace:%s+([^:]+):(%d+)')
-  if file and line_num_any then
-    local line_num = tonumber(line_num_any)
-    assert(line_num, 'Line number must be a number')
-    test_info.fail_at_line = line_num
-    test_info.filepath = file
-  end
-
-  if trimmed_output:match '^--- FAIL:' then
+  if string.match(line, '--- FAIL:%s+' .. test_info.name) then
+    if not test_info.set_ext_mark then
+      vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
+        virt_text = { { string.format('❌ %s', current_time) } },
+        virt_text_pos = 'eol',
+      })
+      test_info.set_ext_mark = true
+    end
     test_info.status = 'fail'
-    require('util_go_test_quickfix').add_fail_test(test_info)
+    float_term_state.status = 'fail'
+    self.tests_info[test_info.name] = test_info
+    vim.schedule(function()
+      self.go_test_displayer:update_buffer(self.tests_info)
+      fidget.notify(string.format('%s failed', test_info.name), vim.log.levels.ERROR)
+    end)
+    return true
   end
-  self.tests_info[entry.Test] = test_info
-  self.go_test_displayer:update_buffer(self.tests_info)
+
+  local file, line_num
+  if string.match(line, 'Error Trace:') then
+    if vim.fn.has 'win32' == 1 then
+      file, line_num = string.match(line, 'Error Trace:%s+([%w%p]+):(%d+)')
+    else
+      file, line_num = string.match(line, 'Error Trace:%s+([^:]+):(%d+)')
+    end
+
+    if file and line_num then
+      local error_bufnr = vim.fn.bufnr(file)
+      if error_bufnr ~= -1 then
+        vim.fn.sign_define('GoTestError', { text = '❌', texthl = 'DiagnosticError' })
+        vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = line_num })
+      end
+      test_info.status = 'fail'
+      test_info.fail_at_line = tonumber(line_num)
+      test_info.filepath = file
+      self.tests_info[test_info.name] = test_info
+      util_quickfix.add_fail_test(test_info)
+      vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
+    end
+  end
 end
 
-function go_test_t:_mark_outcome(entry)
-  if not entry.Test then
-    return
-  end
-  local key = entry.Test
-  local test_info = self.tests_info[key]
-  if not test_info then
-    return
-  end
-
-  test_info.status = entry.Action
-  self.tests_info[key] = test_info
-  if entry.Action == 'fail' then
-    require('util_go_test_quickfix').add_fail_test(test_info)
-    require('fidget').notify('Test failed', vim.log.levels.ERROR)
-  elseif entry.Action == 'pass' then
-    require('fidget').notify('Test passed', vim.log.levels.INFO)
-  end
+function go_test_t:_validate_test_info(test_info)
+  assert(test_info.name, 'No test found')
+  assert(test_info.test_bufnr, 'No test buffer found')
+  assert(test_info.test_line, 'No test line found')
+  assert(test_info.test_command, 'No test command found')
+  assert(vim.api.nvim_buf_is_valid(test_info.test_bufnr), 'Invalid buffer')
 end
-
-go_test_t._ignored_actions = {
-  skip = true,
-}
-
-go_test_t._action_state = {
-  pause = true,
-  cont = true,
-  start = true,
-  fail = true,
-  pass = true,
-}
-
-return go_test_t
