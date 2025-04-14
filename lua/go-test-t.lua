@@ -7,7 +7,7 @@ function go_test_t.new(opts)
   opts = opts or {}
   local self = setmetatable({}, go_test_t)
 
-  self.test_command_format_json = opts.test_command_format_json or 'go test ./... --json -v -run %s\r'
+  self.test_command_format_json = opts.test_command_format_json or 'go test ./... --json -v %s\r'
   self.job_id = -1
   self.tests_info = {}
 
