@@ -77,8 +77,6 @@ function go_test:test_all()
           goto continue
         end
 
-        require('fidget').notify(vim.inspect(decoded), vim.log.levels.INFO)
-
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
           self_ref.term_tester.displayer:update_buffer(self_ref.tests_info)
