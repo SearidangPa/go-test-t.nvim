@@ -47,7 +47,10 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:view_last_test_terminal() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTestToggleDisplay', function() this.pin_tester.term_tester.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTestToggleDisplay', function()
+    this.pin_tester.term_tester.displayer:toggle_display()
+    this.pin_tester.term_tester.displayer:update_buffer(this.pin_tester.pinned_list)
+  end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() this.pin_tester:pin_nearest_test() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() this.pin_tester:test_all_pinned() end, {})
