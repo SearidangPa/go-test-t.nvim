@@ -235,6 +235,13 @@ function Test_Display:_setup_keymaps()
     assert(test_name, 'No test name found')
     self.rerun_in_term_func(test_name)
   end, map_opts)
+
+  map('n', 'K', function()
+    local test_name = this:_get_test_name_from_cursor()
+    assert(test_name, 'No test name found')
+    local status = self.tests_info[test_name].status
+    print('Status of ' .. test_name .. ': ' .. status)
+  end, map_opts)
 end
 
 function Test_Display:_close_display()
