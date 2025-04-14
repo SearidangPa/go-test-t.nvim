@@ -6,7 +6,7 @@ Test_Display.__index = Test_Display
 
 ---@class Test_Display_Options
 ---@field display_title string
----@field tests_info? table<string, gotest.TestInfo> | table<string, terminal.testInfo>
+---@field tests_info?  table<string, terminal.testInfo>
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
 
@@ -82,7 +82,7 @@ local function sort_tests_by_status(tests)
   end)
 end
 
----@param tests_info table<string, gotest.TestInfo> | table<string, terminal.testInfo>
+---@param tests_info  table<string, terminal.testInfo>
 function Test_Display:parse_test_state_to_lines(tests_info)
   assert(tests_info, 'No test info found')
   local tests_table = {}
@@ -108,7 +108,7 @@ function Test_Display:parse_test_state_to_lines(tests_info)
   return buf_lines
 end
 
----@param tests_info gotest.TestInfo[] | terminal.testInfo[]
+---@param tests_info  terminal.testInfo[]
 function Test_Display:update_buffer(tests_info)
   self.tests_info = tests_info
   if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
