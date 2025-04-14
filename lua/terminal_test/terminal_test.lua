@@ -64,7 +64,7 @@ function terminal_test:retest_in_terminal_by_name(test_name)
       test_bufnr = lsp_param.test_bufnr,
       name = test_name,
       test_command = test_command,
-      status = 'start',
+      status = 'fired',
       set_ext_mark = false,
       fidget_handle = fidget.progress.handle.create {
         lsp_client = {
@@ -91,7 +91,7 @@ function terminal_test:test_buf_in_terminals()
       test_line = test_line,
       test_bufnr = source_bufnr,
       test_command = test_command,
-      status = 'start',
+      status = 'fired',
       filepath = vim.fn.expand '%:p',
       set_ext_mark = false,
     }
@@ -115,7 +115,7 @@ function terminal_test:test_nearest_in_terminal()
     test_line = test_line,
     test_bufnr = vim.api.nvim_get_current_buf(),
     test_command = string.format(self.term_test_command_format, test_name),
-    status = 'start',
+    status = 'fired',
     filepath = vim.fn.expand '%:p',
     set_ext_mark = false,
     fidget_handle = fidget.progress.handle.create {
