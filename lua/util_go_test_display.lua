@@ -149,7 +149,7 @@ function Test_Display:jump_to_test_location()
   local test_info = self.tests_info[test_name]
   assert(test_info, 'No test info found for test: ' .. test_name)
   if test_info.filepath and test_info.test_line then
-    self:_jump_to_test_location(test_info.filepath, test_name, test_info.test_line, test_info.fail_at_line)
+    self:_jump_to_test_location(test_info.filepath, test_info.test_line, test_name, test_info.fail_at_line)
     return
   end
 
@@ -171,7 +171,8 @@ function Test_Display:_jump_to_test_location(filepath, test_line, test_name, fai
     vim.api.nvim_win_set_cursor(0, { tonumber(fail_at_line), 0 })
     vim.cmd 'normal! zz'
   elseif test_line then
-    local pos = { tonumber(test_line), 0 }
+    print('Jumping to test line: ' .. test_line)
+    local pos = { test_line, 0 }
     vim.api.nvim_win_set_cursor(0, pos)
     vim.cmd 'normal! zz'
   else
