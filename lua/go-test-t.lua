@@ -7,13 +7,14 @@ function go_test_t.new(opts)
   opts = opts or {}
   local self = setmetatable({}, go_test_t)
 
-  self.test_command_format_json = opts.test_command_format_json or 'go test ./... --json -v %s\r'
+  self.test_command_format = opts.test_command_format or 'go test ./... --json -v %s\r'
   self.job_id = -1
   self.tests_info = {}
+  self.terminal_name = opts.terminal_name or 'go_test_t'
+  self.terminals = terminal_multiplexer.new()
 
-  local term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
   self.term_tester = require('terminal_test.terminal_test').new {
-    term_test_command_format = term_test_command_format,
+    term_test_command_format = self.test_command_format,
   }
   self.go_test_displayer = require('util_go_test_display').new {
     display_title = opts.display_title or 'Go Test All Results',
@@ -37,18 +38,11 @@ function go_test_t:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() this.term_tester.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() this.term_tester:view_last_test_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermToggleDisplay', function() this.term_tester.term_test_displayer:toggle_display() end, {})
-
-  -- ---@type TerminalTestTracker
-  -- local tracker = require 'terminal_test.tracker'
-  -- local map = vim.keymap.set
-  -- map('n', '<leader>tr', tracker.toggle_tracker_window, { desc = '[A]dd [T]est to tracker' })
-  -- map('n', '<leader>at', function() tracker.add_test_to_tracker 'go test ./... -v -run %s' end, { desc = '[A]dd [T]est to tracker' })
 end
 
 function go_test_t:test_all()
   self.go_test_displayer:create_window_and_buf()
   local all_command = 'go test ./integration_tests/ -v\r'
-
   self.terminals:delete_terminal 'all_tests'
   local float_term_state = self.terminals:toggle_float_terminal 'all_tests'
   vim.api.nvim_chan_send(float_term_state.chan, all_command .. '\n')

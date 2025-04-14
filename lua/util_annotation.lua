@@ -2,7 +2,8 @@
 ---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
 ---@field go_test_displayer GoTestDisplay
----@field test_command_format_json string
+---@field test_command_format string
+---@field terminal_name string
 ---@field term_tester terminalTest
 ---@field user_command_prefix string
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
@@ -16,8 +17,9 @@
 ---@field _setup_commands? fun(self: GoTestT)
 ---
 ---@class GoTestT.Options
----@field test_command_format_json string
+---@field test_command_format string
 ---@field term_test_command_format string
+---@field terminal_name? string
 ---@field display_title? string
 ---@field user_command_prefix? string
 
