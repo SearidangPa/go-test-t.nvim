@@ -223,13 +223,15 @@ function terminal_test:_process_one_line(line, test_info, float_term_state, curr
 
   if string.match(line, '--- FAIL') then
     if test_info.fidget_handle then
-      fidget.notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
+      local make_notify = require('mini.notify').make_notify {}
+      make_notify(string.format('%s fail', test_info.name), vim.log.levels.INFO)
     end
     self:_handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
   elseif string.match(line, '--- PASS') then
     if test_info.fidget_handle then
-      fidget.notify(string.format('%s pass', test_info.name), vim.log.levels.ERROR)
+      local make_notify = require('mini.notify').make_notify {}
+      make_notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
     end
     self:_handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
     return true
