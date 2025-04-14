@@ -4,7 +4,9 @@
 ---@field go_test_displayer GoTestDisplay
 ---@field test_command_format_json string
 ---@field term_tester terminalTest
----@field run_test_all? fun(command: string[])
+---@field user_command_prefix string
+---@field set_up fun(self: GoTestT, user_command_prefix: string)
+---@field test_all? fun(command: string[])
 ---@field toggle_display? fun(self: GoTestT)
 ---@field load_quack_tests? fun(self: GoTestT)
 ---@field _clean_up_prev_job? fun(self: GoTestT)
@@ -17,6 +19,7 @@
 ---@field test_command_format_json string
 ---@field term_test_command_format string
 ---@field display_title? string
+---@field user_command_prefix? string
 
 ---@class terminalTest
 ---@field terminals TerminalMultiplexer

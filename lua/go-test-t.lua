@@ -20,10 +20,32 @@ function go_test_t.new(opts)
     toggle_term_func = function(test_name) self.term_tester:toggle_test_in_term(test_name) end,
     rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
   }
+  local user_command_prefix = opts.user_command_prefix or 'Go'
+  self:setup_user_command(user_command_prefix)
   return self
 end
 
-function go_test_t:run_test_all()
+function go_test_t:setup_user_command(user_command_prefix)
+  local this = self
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() this:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() this:load_quack_tests() end, {})
+
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() this.term_tester:test_nearest_in_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() this.term_tester:test_buf_in_terminals() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermView', function() this.term_tester:view_enclosing_test_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() this.term_tester.terminals:search_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() this.term_tester:view_last_test_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermToggleDisplay', function() this.term_tester.term_test_displayer:toggle_display() end, {})
+
+  -- ---@type TerminalTestTracker
+  -- local tracker = require 'terminal_test.tracker'
+  -- local map = vim.keymap.set
+  -- map('n', '<leader>tr', tracker.toggle_tracker_window, { desc = '[A]dd [T]est to tracker' })
+  -- map('n', '<leader>at', function() tracker.add_test_to_tracker 'go test ./... -v -run %s' end, { desc = '[A]dd [T]est to tracker' })
+end
+
+function go_test_t:test_all()
   self.go_test_displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
