@@ -218,12 +218,12 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
 
     local error_test, error_file, error_line = line:match '(.+):%s+([^:]+):(%d+):%s+'
     if error_test and error_file and error_line then
-      for test_name, test_info in pairs(self.tests_info) do
-        if error_test:find(test_name, 1, true) then
+      for test_info_name, test_info in pairs(self.tests_info) do
+        if error_test:find(test_info_name, 1, true) then
           test_info.fail_at_line = tonumber(error_line)
           test_info.filepath = error_file
           test_info.status = 'fail'
-          self.tests_info[test_name] = test_info
+          self.tests_info[test_info_name] = test_info
           require('util_go_test_quickfix').add_fail_test(test_info)
           vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
           break
