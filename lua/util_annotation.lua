@@ -50,12 +50,12 @@
 ---
 ---@class GoTestDisplay
 ---@field display_title string
----@field display_win number
----@field display_buf number
+---@field display_win_id number
+---@field display_bufnr number
 ---@field original_test_win number
 ---@field original_test_buf number
 ---@field ns_id number
 ---@field tests_info  terminal.testInfo[]
----@field close_display fun(self: GoTestDisplay)
+---@field _close_display fun(self: GoTestDisplay)
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)

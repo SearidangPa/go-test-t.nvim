@@ -17,8 +17,8 @@ function Test_Display.new(display_opts)
   assert(display_opts.toggle_term_func, 'No toggle term function found')
   assert(display_opts.rerun_in_term_func, 'No rerun in term function found')
   local self = setmetatable({}, Test_Display)
-  self.display_win = -1
-  self.display_buf = -1
+  self.display_win_id = -1
+  self.display_bufnr = -1
   self.original_test_win = -1
   self.original_test_buf = -1
   self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
@@ -29,35 +29,63 @@ function Test_Display.new(display_opts)
   return self
 end
 
+function Test_Display:toggle_display()
+  if vim.api.nvim_win_is_valid(self.display_win_id) then
+    vim.api.nvim_win_close(self.display_win_id, true)
+    self.display_win_id = -1
+  else
+    self:create_window_and_buf()
+  end
+end
+
+---@param tests_info  terminal.testInfo[]
+function Test_Display:update_buffer(tests_info)
+  self.tests_info = tests_info
+  if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
+    return
+  end
+  assert(tests_info, 'No test info found')
+  local lines = self:_parse_test_state_to_lines(tests_info)
+  if vim.api.nvim_buf_is_valid(self.display_bufnr) then
+    vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, 0, 0, {
+      end_col = #lines[1],
+      hl_group = 'Title',
+    })
+  end
+end
+
 function Test_Display:create_window_and_buf()
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
-  if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
-    self.display_buf = vim.api.nvim_create_buf(false, true)
-    vim.bo[self.display_buf].bufhidden = 'hide'
-    vim.bo[self.display_buf].buftype = 'nofile'
-    vim.bo[self.display_buf].swapfile = false
+  if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
+    self.display_bufnr = vim.api.nvim_create_buf(false, true)
+    vim.bo[self.display_bufnr].bufhidden = 'hide'
+    vim.bo[self.display_bufnr].buftype = 'nofile'
+    vim.bo[self.display_bufnr].swapfile = false
   end
 
-  if not self.display_win or not vim.api.nvim_win_is_valid(self.display_win) then
+  if not self.display_win_id or not vim.api.nvim_win_is_valid(self.display_win_id) then
     vim.cmd 'vsplit'
-    self.display_win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(self.display_win, self.display_buf)
-    vim.api.nvim_win_set_width(self.display_win, math.floor(vim.o.columns / 3))
-    vim.api.nvim_win_set_height(self.display_win, math.floor(vim.o.lines - 2))
-    vim.wo[self.display_win].number = false
-    vim.wo[self.display_win].relativenumber = false
-    vim.wo[self.display_win].wrap = false
-    vim.wo[self.display_win].signcolumn = 'no'
-    vim.wo[self.display_win].foldenable = false
+    self.display_win_id = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(self.display_win_id, self.display_bufnr)
+    vim.api.nvim_win_set_width(self.display_win_id, math.floor(vim.o.columns / 3))
+    vim.api.nvim_win_set_height(self.display_win_id, math.floor(vim.o.lines - 2))
+    vim.wo[self.display_win_id].number = false
+    vim.wo[self.display_win_id].relativenumber = false
+    vim.wo[self.display_win_id].wrap = false
+    vim.wo[self.display_win_id].signcolumn = 'no'
+    vim.wo[self.display_win_id].foldenable = false
   end
 
   vim.api.nvim_set_current_win(self.original_test_win)
-  self:setup_keymaps()
+  self:_setup_keymaps()
 end
 
-local function sort_tests_by_status(tests)
+--- === Private Functions ===
+
+local function _sort_tests_by_status(tests)
   table.sort(tests, function(a, b)
     if a.status == b.status then
       return a.name < b.name
@@ -84,7 +112,7 @@ local function sort_tests_by_status(tests)
 end
 
 ---@param tests_info  table<string, terminal.testInfo>
-function Test_Display:parse_test_state_to_lines(tests_info)
+function Test_Display:_parse_test_state_to_lines(tests_info)
   assert(tests_info, 'No test info found')
   local tests_table = {}
   local buf_lines = { self.display_title }
@@ -94,7 +122,7 @@ function Test_Display:parse_test_state_to_lines(tests_info)
       table.insert(tests_table, test)
     end
   end
-  sort_tests_by_status(tests_table)
+  _sort_tests_by_status(tests_table)
 
   for _, test in ipairs(tests_table) do
     local status_icon = util_status_icon.get_status_icon(test.status)
@@ -106,46 +134,35 @@ function Test_Display:parse_test_state_to_lines(tests_info)
     end
   end
 
+  local window_width = vim.api.nvim_win_get_width(self.display_win_id)
+  table.insert(buf_lines, string.rep('─', window_width - 2))
+  for _, item in ipairs(self._help_text_lines) do
+    table.insert(buf_lines, ' ' .. item)
+  end
+
   return buf_lines
 end
 
----@param tests_info  terminal.testInfo[]
-function Test_Display:update_buffer(tests_info)
-  self.tests_info = tests_info
-  if not self.display_buf or not vim.api.nvim_buf_is_valid(self.display_buf) then
-    return
-  end
-  assert(tests_info, 'No test info found')
-  local lines = self:parse_test_state_to_lines(tests_info)
-  if vim.api.nvim_buf_is_valid(self.display_buf) then
-    vim.api.nvim_buf_set_lines(self.display_buf, 0, -1, false, lines)
-    vim.api.nvim_buf_set_extmark(self.display_buf, self.ns_id, 0, 0, {
-      end_col = #lines[1],
-      hl_group = 'Title',
-    })
-  end
-end
-
-function Test_Display:assert_display_buf_win()
-  assert(self.display_buf, 'display_buf is nil in jump_to_test_location')
-  assert(self.display_win, 'display_win is nil in jump_to_test_location')
+function Test_Display:_assert_display_buf_win()
+  assert(self.display_bufnr, 'display_buf is nil in jump_to_test_location')
+  assert(self.display_win_id, 'display_win is nil in jump_to_test_location')
 end
 
 local icons = '🔥❌✅🔄⏸️🪵⏺️🏁'
 
-function Test_Display:get_test_name_from_cursor()
+function Test_Display:_get_test_name_from_cursor()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
-  local line = vim.api.nvim_buf_get_lines(self.display_buf, line_nr - 1, line_nr, false)[1]
+  local line = vim.api.nvim_buf_get_lines(self.display_bufnr, line_nr - 1, line_nr, false)[1]
   assert(line, 'No line found in display buffer')
   local test_name = line:match('[' .. icons:gsub('.', '%%%1') .. ']%s+([%w_%-]+)')
   assert(test_name, 'No test name found in line: ' .. line)
   return test_name
 end
 
-function Test_Display:jump_to_test_location()
-  self:assert_display_buf_win()
-  local test_name = self:get_test_name_from_cursor()
+function Test_Display:_jump_to_test_location_from_cursor()
+  self:_assert_display_buf_win()
+  local test_name = self:_get_test_name_from_cursor()
   local test_info = self.tests_info[test_name]
   assert(test_info, 'No test info found for test: ' .. test_name)
   if test_info.filepath and test_info.test_line then
@@ -178,47 +195,41 @@ function Test_Display:_jump_to_test_location(filepath, test_line, test_name, fai
   end
 end
 
-function Test_Display:setup_keymaps()
+function Test_Display:_setup_keymaps()
   local this = self -- Capture the current 'self' reference
-  local map_opts = { buffer = self.display_buf, noremap = true, silent = true }
+  local map_opts = { buffer = self.display_bufnr, noremap = true, silent = true }
   local map = vim.keymap.set
 
-  map('n', 'q', function() this:close_display() end, map_opts)
-  map('n', '<CR>', function() this:jump_to_test_location() end, map_opts)
+  map('n', 'q', function() this:_close_display() end, map_opts)
+  map('n', '<CR>', function() this:_jump_to_test_location_from_cursor() end, map_opts)
 
   map('n', 't', function()
-    local test_name = this:get_test_name_from_cursor()
+    local test_name = this:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     self.toggle_term_func(test_name)
   end, map_opts)
 
   map('n', 'r', function()
-    local test_name = this:get_test_name_from_cursor()
+    local test_name = this:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     self.rerun_in_term_func(test_name)
   end, map_opts)
 end
 
-function Test_Display:close_display()
-  if vim.api.nvim_win_is_valid(self.display_win) then
-    vim.api.nvim_win_close(self.display_win, true)
-    self.display_win = -1
+function Test_Display:_close_display()
+  if vim.api.nvim_win_is_valid(self.display_win_id) then
+    vim.api.nvim_win_close(self.display_win_id, true)
+    self.display_win_id = -1
   end
 end
 
-function Test_Display:toggle_display()
-  if vim.api.nvim_win_is_valid(self.display_win) then
-    vim.api.nvim_win_close(self.display_win, true)
-    self.display_win = -1
-  else
-    self:create_window_and_buf()
-  end
-end
-
--- Create a user command for each instance
-function Test_Display:register_command(command_name)
-  local tracker = self
-  vim.api.nvim_create_user_command(command_name, function() tracker:toggle_display() end, {})
-end
+Test_Display._help_text_lines = {
+  ' Help',
+  ' q       ===  Close Tracker Window',
+  ' <Enter> ===  Jump to test code',
+  ' t       ===  Toggle test terminal',
+  ' r       ===  Run test in terminal',
+  ' d       ===  Delete from tracker',
+}
 
 return Test_Display
