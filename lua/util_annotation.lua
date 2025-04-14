@@ -1,7 +1,6 @@
 ---@class GoTestT
 ---@field tests_info table<string, gotest.TestInfo>
 ---@field job_id number
----@field go_test_displayer GoTestDisplay
 ---@field test_command_format string
 ---@field terminal_name string
 ---@field term_tester terminalTest

@@ -18,12 +18,6 @@ function go_test_t.new(opts)
   self.term_tester = require('terminal_test.terminal_test').new {
     term_test_command_format = self.test_command_format,
   }
-
-  self.go_test_displayer = require('util_go_test_display').new {
-    display_title = opts.display_title or 'Go Test All Results',
-    toggle_term_func = function(test_name) self.term_tester:toggle_test_in_term(test_name) end,
-    rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
-  }
   local user_command_prefix = opts.user_command_prefix or 'Go'
   self:setup_user_command(user_command_prefix)
   return self
@@ -44,7 +38,7 @@ function go_test_t:setup_user_command(user_command_prefix)
 end
 
 function go_test_t:test_all()
-  self.go_test_displayer:create_window_and_buf()
+  self.term_tester.term_test_displayer:create_window_and_buf()
   local all_command = 'go test ./integration_tests/ -v\r'
   self.term_tester.terminals:delete_terminal(self.terminal_name)
   local float_term_state = self.term_tester.terminals:toggle_float_terminal(self.terminal_name)
@@ -56,123 +50,6 @@ function go_test_t:test_all()
       on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line, last_line) end,
     })
   end)
-end
-
-function go_test_t:toggle_display() self.go_test_displayer:toggle_display() end
-
-function go_test_t:toggle_test_in_term(test_name)
-  assert(test_name, 'No test name found')
-  local test_info = self.tests_info[test_name]
-  if not test_info then
-    self:retest_in_terminal_by_name(test_name)
-  end
-  self.term_tester.terminals:toggle_float_terminal(test_name)
-end
-
-function go_test_t:retest_in_terminal_by_name(test_name)
-  assert(test_name, 'No test name found')
-  local test_command = string.format(self.test_command_format, test_name)
-
-  local self_ref = self
-  require('util_lsp').action_from_test_name(test_name, function(lsp_param)
-    local test_info = {
-      test_line = lsp_param.test_line,
-      filepath = lsp_param.filepath,
-      test_bufnr = lsp_param.test_bufnr,
-      name = test_name,
-      test_command = test_command,
-      status = 'start',
-      set_ext_mark = false,
-    }
-    self_ref:test_in_terminal(test_info)
-  end)
-end
-
-function go_test_t:test_in_terminal(test_info)
-  self:_validate_test_info(test_info)
-  self.term_tester.terminals:delete_terminal(test_info.name)
-  local float_term_state = self.term_tester.terminals:toggle_float_terminal(test_info.name)
-  vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
-
-  local self_ref = self
-  vim.schedule(function()
-    vim.api.nvim_buf_attach(float_term_state.buf, false, {
-      on_lines = function(_, buf, _, first_line, last_line)
-        return self_ref:_process_single_test_buffer_lines(buf, first_line, last_line, test_info, float_term_state)
-      end,
-    })
-  end)
-
-  self.tests_info[test_info.name] = test_info
-  vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
-end
-
-function go_test_t:test_buf_in_terminals()
-  local source_bufnr = vim.api.nvim_get_current_buf()
-  local util_find_test = require 'util_find_test'
-  local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
-  self.go_test_displayer:create_window_and_buf()
-
-  for test_name, test_line in pairs(all_tests_in_buf) do
-    self.term_tester.terminals:delete_terminal(test_name)
-    local test_command = string.format(self.test_command_format, test_name)
-
-    local test_info = {
-      name = test_name,
-      test_line = test_line,
-      test_bufnr = source_bufnr,
-      test_command = test_command,
-      status = 'start',
-      filepath = vim.fn.expand '%:p',
-      set_ext_mark = false,
-      fidget_handle = fidget.progress.handle.create {
-        lsp_client = {
-          name = test_name,
-        },
-      },
-    }
-    self.tests_info[test_name] = test_info
-    self:test_in_terminal(test_info)
-  end
-end
-
-function go_test_t:test_nearest_in_terminal()
-  local util_find_test = require 'util_find_test'
-  local test_name, test_line = util_find_test.get_enclosing_test()
-  assert(test_name, 'Not inside a test function')
-  assert(test_line, 'No test line found')
-
-  self.term_tester.terminals:delete_terminal(test_name)
-  self:test_in_terminal {
-    name = test_name,
-    test_line = test_line,
-    test_bufnr = vim.api.nvim_get_current_buf(),
-    test_command = string.format(self.test_command_format, test_name),
-    status = 'start',
-    filepath = vim.fn.expand '%:p',
-    set_ext_mark = false,
-    fidget_handle = fidget.progress.handle.create {
-      lsp_client = {
-        name = test_name,
-      },
-    },
-  }
-end
-
-function go_test_t:view_enclosing_test_terminal()
-  local util_find_test = require 'util_find_test'
-  local test_name, _ = util_find_test.get_enclosing_test()
-  assert(test_name, 'No test found')
-  self:toggle_test_in_term(test_name)
-end
-
-function go_test_t:view_last_test_terminal()
-  local test_name = self.term_tester.terminals.last_terminal_name
-  if not test_name then
-    vim.notify('No last test terminal found', vim.log.levels.WARN)
-    return
-  end
-  self.term_tester.terminals:toggle_float_terminal(test_name)
 end
 
 -- Process terminal output for all tests run
@@ -187,7 +64,7 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
         status = 'running',
       }
       self.tests_info[test_name] = test_info
-      vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
+      vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
     end
 
     local pass_test = line:match '--- PASS:%s+([^%s]+)'
@@ -198,7 +75,7 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
       test_info.status = 'pass'
       self.tests_info[pass_test] = test_info
       vim.schedule(function()
-        self.go_test_displayer:update_buffer(self.tests_info)
+        self.term_tester.term_test_displayer:update_buffer(self.tests_info)
         fidget.notify(string.format('%s passed', pass_test), vim.log.levels.INFO)
       end)
     end
@@ -211,7 +88,7 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
       test_info.status = 'fail'
       self.tests_info[fail_test] = test_info
       vim.schedule(function()
-        self.go_test_displayer:update_buffer(self.tests_info)
+        self.term_tester.term_test_displayer:update_buffer(self.tests_info)
         fidget.notify(string.format('%s failed', fail_test), vim.log.levels.ERROR)
       end)
     end
@@ -225,7 +102,7 @@ function go_test_t:_process_buffer_lines(buf, first_line, last_line)
           test_info.status = 'fail'
           self.tests_info[test_info_name] = test_info
           require('util_go_test_quickfix').add_fail_test(test_info)
-          vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
+          vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
           break
         end
       end
@@ -260,7 +137,7 @@ function go_test_t:_process_single_test_line(line, test_info, float_term_state, 
     float_term_state.status = 'pass'
     self.tests_info[test_info.name] = test_info
     vim.schedule(function()
-      self.go_test_displayer:update_buffer(self.tests_info)
+      self.term_tester.term_test_displayer:update_buffer(self.tests_info)
       fidget.notify(string.format('%s passed', test_info.name), vim.log.levels.INFO)
     end)
     return true
@@ -278,7 +155,7 @@ function go_test_t:_process_single_test_line(line, test_info, float_term_state, 
     float_term_state.status = 'fail'
     self.tests_info[test_info.name] = test_info
     vim.schedule(function()
-      self.go_test_displayer:update_buffer(self.tests_info)
+      self.term_tester.term_test_displayer:update_buffer(self.tests_info)
       fidget.notify(string.format('%s failed', test_info.name), vim.log.levels.ERROR)
     end)
     return true
@@ -303,7 +180,7 @@ function go_test_t:_process_single_test_line(line, test_info, float_term_state, 
       test_info.filepath = file
       self.tests_info[test_info.name] = test_info
       require('util_go_test_quickfix').add_fail_test(test_info)
-      vim.schedule(function() self.go_test_displayer:update_buffer(self.tests_info) end)
+      vim.schedule(function() self.term_tester.term_test_displayer:update_buffer(self.tests_info) end)
     end
   end
 end
