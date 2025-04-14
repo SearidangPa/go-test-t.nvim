@@ -9,16 +9,17 @@ function go_test.new(opts)
   opts = opts or {}
   local self = setmetatable({}, go_test)
 
-  self.test_command_format = opts.test_command_format or 'go test ./... --json -v %s\r'
+  self.test_command = opts.test_command or 'go test ./... -v %s\r'
+  self.term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
   self.job_id = -1
   self.tests_info = {}
   self.terminal_name = opts.terminal_name or 'test all'
   self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.term_tester = require('terminal_test.terminal_test').new {
-    term_test_command_format = self.test_command_format,
+    term_test_command_format = self.term_test_command_format,
   }
-  local user_command_prefix = opts.user_command_prefix or 'Go'
+  local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)
   return self
 end
@@ -39,10 +40,9 @@ end
 
 function go_test:test_all()
   self.term_tester.term_test_displayer:create_window_and_buf()
-  local all_command = 'go test ./integration_tests/ -v\r'
   self.term_tester.terminals:delete_terminal(self.terminal_name)
   local float_term_state = self.term_tester.terminals:toggle_float_terminal(self.terminal_name)
-  vim.api.nvim_chan_send(float_term_state.chan, all_command .. '\n')
+  vim.api.nvim_chan_send(float_term_state.chan, self.test_command .. '\n')
 
   local self_ref = self
   vim.schedule(function()
@@ -121,3 +121,5 @@ function go_test:_validate_test_info(test_info)
   assert(test_info.test_command, 'No test command found')
   assert(vim.api.nvim_buf_is_valid(test_info.test_bufnr), 'Invalid buffer')
 end
+
+return go_test
