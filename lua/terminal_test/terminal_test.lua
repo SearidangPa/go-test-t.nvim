@@ -270,6 +270,7 @@ end
 
 --- === Validate Test Info ===
 
+---@param test_info terminal.testInfo
 function terminal_test:_validate_test_info(test_info)
   assert(test_info.name, 'No test found')
   assert(test_info.test_bufnr, 'No test buffer found')
