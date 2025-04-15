@@ -50,17 +50,12 @@ function TerminalMultiplexer:search_terminal()
     prompt = 'Select terminal:',
     format_item = function(item) return item end,
   }
-  --- @type string[]
-  local all_terminal_names = {}
-  for test_name, terminal_info in pairs(self.all_terminals) do
-    if terminal_info.status == 'failed' then
-      table.insert(all_terminal_names, '\t' .. '❌' .. '  ' .. test_name)
-    elseif terminal_info.status == 'passed' then
-      table.insert(all_terminal_names, '\t' .. '✅' .. '  ' .. test_name)
-    else
-      table.insert(all_terminal_names, '\t' .. '🔵' .. '  ' .. test_name)
-    end
+
+  local all_terminal_names = {} --- @type string[]
+  for test_name, _ in pairs(self.all_terminals) do
+    table.insert(all_terminal_names, test_name)
   end
+
   local handle_choice = function(choice)
     if not choice then
       return
