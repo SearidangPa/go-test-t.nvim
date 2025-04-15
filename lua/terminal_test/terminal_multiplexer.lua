@@ -1,8 +1,3 @@
--- terminal_multiplexer.lua
-local TerminalMultiplexer = {}
-TerminalMultiplexer.__index = TerminalMultiplexer
-vim.cmd [[highlight TerminalNameUnderline gui=underline]]
-
 ---@class TerminalMultiplexer
 ---@field all_terminals table<string, Float_Term_State> Dictionary of all terminals by name
 ---@field terminal_order string[] Order of terminal creation
@@ -15,6 +10,9 @@ vim.cmd [[highlight TerminalNameUnderline gui=underline]]
 ---@field list fun(self: TerminalMultiplexer): string[] List of all terminal names
 ---@field delete_terminal fun(self: TerminalMultiplexer, terminal_name: string): nil
 ---@field select_delete_terminal fun(self: TerminalMultiplexer): nil
+local TerminalMultiplexer = {}
+TerminalMultiplexer.__index = TerminalMultiplexer
+vim.cmd [[highlight TerminalNameUnderline gui=underline]]
 
 ---@class Float_Term_State
 ---@field buf number Buffer ID
