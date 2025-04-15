@@ -104,7 +104,6 @@ function terminal_test:test_nearest_in_terminal()
   local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'Not inside a test function')
   assert(test_line, 'No test line found')
-
   self.terminals:delete_terminal(test_name)
 
   ---@type terminal.testInfo
@@ -124,6 +123,7 @@ function terminal_test:test_nearest_in_terminal()
   }
 
   self:test_in_terminal(test_info)
+  self:_setup_test_line_tracking(test_info)
   return test_info
 end
 
@@ -144,6 +144,26 @@ function terminal_test:view_last_test_terminal()
 end
 
 --- === Private ===
+function terminal_test:_setup_test_line_tracking(test_info)
+  local augroup = vim.api.nvim_create_augroup('TestLineTracker_' .. test_info.name, { clear = true })
+  local util_lsp = require 'util_lsp'
+
+  vim.api.nvim_create_autocmd('BufWritePost', {
+    group = augroup,
+    buffer = test_info.test_bufnr,
+    callback = function()
+      util_lsp.action_from_test_name(test_info.name, function(new_info)
+        if new_info.test_line ~= test_info.test_line then
+          test_info.test_line = new_info.test_line
+          test_info.test_bufnr = new_info.test_bufnr
+          test_info.filepath = new_info.filepath
+        end
+      end)
+    end,
+  })
+
+  return augroup
+end
 
 --- === Process Buffer Lines ===
 function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
