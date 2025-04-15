@@ -69,7 +69,6 @@ end
 
 --- Navigate between terminals
 ---@param direction number 1 for next, -1 for previous
----@return nil
 function TerminalMultiplexer:navigate_terminal(direction)
   if #self.terminal_order == 0 then
     vim.notify('No terminals available', vim.log.levels.INFO)
@@ -130,7 +129,6 @@ end
 ---@param float_terminal_state Float_Term_State State of the terminal to create window for
 ---@param terminal_name string Name of the terminal
 ---@param do_not_open_win boolean|nil If true, don't actually open the window
----@return nil
 function TerminalMultiplexer:create_float_window(float_terminal_state, terminal_name, do_not_open_win)
   local width = math.floor(vim.o.columns)
   local height = math.floor(vim.o.lines)
@@ -238,7 +236,6 @@ end
 
 ---Delete a terminal by name
 ---@param terminal_name string Name of the terminal to delete
----@return nil
 function TerminalMultiplexer:delete_terminal(terminal_name)
   local float_terminal = self.all_terminals[terminal_name]
   if not float_terminal then
