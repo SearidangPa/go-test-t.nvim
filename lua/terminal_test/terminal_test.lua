@@ -87,6 +87,7 @@ function terminal_test:test_buf_in_terminals()
     self.terminals:delete_terminal(test_name)
     local test_command = string.format(self.term_test_command_format, test_name)
 
+    ---@type terminal.testInfo
     local test_info = {
       name = test_name,
       test_line = test_line,

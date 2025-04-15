@@ -52,7 +52,7 @@
 ---@field test_command string
 ---@field filepath string
 ---@field set_ext_mark boolean
----@field fidget_handle ProgressHandle
+---@field fidget_handle? ProgressHandle
 
 ---@class PinTester
 ---@field pinned_list table<string, terminal.testInfo>
