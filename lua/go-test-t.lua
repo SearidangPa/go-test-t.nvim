@@ -115,13 +115,13 @@ end
 function go_test:toggle_display() self.term_tester.displayer:toggle_display() end
 function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
---- === Private functions ===
-
 function go_test:reset()
   self.job_id = -1
   self.tests_info = {}
   self.term_tester.displayer:reset()
 end
+
+--- === Private functions ===
 
 function go_test:_clean_up_prev_job()
   if self.job_id ~= -1 then
