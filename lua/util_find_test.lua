@@ -1,7 +1,7 @@
 local M = {}
 
 ---@return  string? , number?
-M.get_enclosing_test = function()
+function M.get_enclosing_test ()
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
   while node do
