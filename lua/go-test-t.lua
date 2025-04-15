@@ -32,6 +32,11 @@ end
 function go_test:setup_user_command(user_command_prefix)
   local this = self
   local term_tester = self.term_tester
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function()
+    term_tester:reset()
+    self:reset()
+  end, {})
+
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all() end, {})
   vim.api.nvim_create_user_command(
     user_command_prefix .. 'TestAllView',
@@ -56,6 +61,7 @@ function go_test:setup_user_command(user_command_prefix)
 end
 
 function go_test:test_all()
+  self:reset()
   self.term_tester.displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
@@ -111,7 +117,7 @@ function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_pa
 
 --- === Private functions ===
 
-function go_test:_reset()
+function go_test:reset()
   self.job_id = -1
   self.tests_info = {}
   self.term_tester.displayer:reset(self.tests_info)

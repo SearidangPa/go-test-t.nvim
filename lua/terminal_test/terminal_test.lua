@@ -24,6 +24,11 @@ function terminal_test.new(opts)
   return self
 end
 
+function terminal_test:reset(tests_info)
+  self.tests_info = tests_info
+  self.displayer:reset(tests_info)
+end
+
 ---@param test_info terminal.testInfo
 function terminal_test:test_in_terminal(test_info, cb_update_tracker)
   self:_validate_test_info(test_info)
