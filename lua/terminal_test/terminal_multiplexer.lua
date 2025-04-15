@@ -5,7 +5,7 @@
 ---@field augroup number Vim autogroup ID
 ---@field toggle_float_terminal fun(self: TerminalMultiplexer, terminal_name: string, do_not_open_win: boolean?): Float_Term_State
 ---@field create_float_window fun(self: TerminalMultiplexer, float_terminal_state: Float_Term_State, terminal_name: string, do_not_open_win: boolean|nil): nil
----@field navigate_terminal fun(self: TerminalMultiplexer, direction: number): nil
+---@field _navigate_terminal fun(self: TerminalMultiplexer, direction: number): nil
 ---@field search_terminal fun(self: TerminalMultiplexer): nil
 ---@field list fun(self: TerminalMultiplexer): string[] List of all terminal names
 ---@field delete_terminal fun(self: TerminalMultiplexer, terminal_name: string): nil
@@ -69,7 +69,7 @@ end
 
 --- Navigate between terminals
 ---@param direction number 1 for next, -1 for previous
-function TerminalMultiplexer:navigate_terminal(direction)
+function TerminalMultiplexer:_navigate_terminal(direction)
   if #self.terminal_order == 0 then
     vim.notify('No terminals available', vim.log.levels.INFO)
     return
@@ -217,8 +217,8 @@ end
 
 function TerminalMultiplexer:_set_up_buffer_keybind(current_float_term_state)
   local map_opts = { noremap = true, silent = true, buffer = current_float_term_state.buf }
-  local next_term = function() self:navigate_terminal(1) end
-  local prev_term = function() self:navigate_terminal(-1) end
+  local next_term = function() self:_navigate_terminal(1) end
+  local prev_term = function() self:_navigate_terminal(-1) end
 
   vim.keymap.set('n', '>', next_term, map_opts)
   vim.keymap.set('n', '<', prev_term, map_opts)
