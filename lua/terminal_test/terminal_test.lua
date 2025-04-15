@@ -94,6 +94,7 @@ function terminal_test:test_buf_in_terminals()
       set_ext_mark = false,
     }
     self.tests_info[test_name] = test_info
+    self:_setup_test_line_tracking(test_info)
     self:test_in_terminal(test_info)
     vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   end
