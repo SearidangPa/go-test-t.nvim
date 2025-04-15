@@ -172,7 +172,7 @@ function terminal_test:_setup_test_line_tracking(test_info)
 end
 
 --- === Process Buffer Lines ===
----
+
 ---@param buf number
 ---@param first_line number
 ---@param last_line number
@@ -222,6 +222,8 @@ function terminal_test:_handle_test_failed(test_info, current_time)
   vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
 end
 
+---@param line string
+---@param test_info terminal.testInfo
 function terminal_test:_handle_error_trace(line, test_info)
   local file, line_num
   if vim.fn.has 'win32' == 1 then
