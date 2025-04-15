@@ -70,3 +70,4 @@
 ---@field _close_display fun(self: GoTestDisplay)
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
+---

@@ -192,17 +192,14 @@ function Test_Display:_jump_to_test_location_from_cursor()
   local test_info = self.tests_info[test_name]
   assert(test_info, 'No test info found for test: ' .. test_name)
   if test_info.filepath and test_info.test_line then
-    self:_jump_to_test_location(test_info.filepath, test_info.test_line, test_name, test_info.fail_at_line)
+    self:_jump_to_test_location(test_info.filepath, test_info.test_line, test_name)
     return
   end
 
-  require('util_lsp').action_from_test_name(
-    test_name,
-    function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name, test_info.fail_at_line) end
-  )
+  require('util_lsp').action_from_test_name(test_name, function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name) end)
 end
 
-function Test_Display:_jump_to_test_location(filepath, test_line, test_name, fail_at_line)
+function Test_Display:_jump_to_test_location(filepath, test_line, test_name)
   assert(test_name, 'No test name found for test')
   assert(filepath, 'No filepath found for test: ' .. test_name)
   assert(test_line, 'No test line found for test: ' .. test_name)
@@ -210,14 +207,10 @@ function Test_Display:_jump_to_test_location(filepath, test_line, test_name, fai
   vim.api.nvim_set_current_win(self.original_test_win)
   vim.cmd('edit ' .. filepath)
 
-  if fail_at_line then
-    vim.api.nvim_win_set_cursor(0, { tonumber(fail_at_line), 0 })
-    vim.cmd 'normal! zz'
-  elseif test_line then
+  if test_line then
     local pos = { test_line, 0 }
     vim.api.nvim_win_set_cursor(0, pos)
     vim.cmd 'normal! zz'
-  else
   end
 end
 
