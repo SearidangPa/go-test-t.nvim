@@ -24,9 +24,9 @@ function terminal_test.new(opts)
   return self
 end
 
-function terminal_test:reset(tests_info)
-  self.tests_info = tests_info
-  self.displayer:reset(tests_info)
+function terminal_test:reset()
+  self.tests_info = {}
+  self.displayer:reset()
 end
 
 ---@param test_info terminal.testInfo

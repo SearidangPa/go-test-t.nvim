@@ -30,9 +30,9 @@ function Test_Display.new(display_opts)
   return self
 end
 
-function Test_Display:reset(tests_info)
-  self.tests_info = tests_info
-  self:update_buffer(tests_info)
+function Test_Display:reset()
+  self.tests_info = {}
+  self:update_buffer {}
 end
 
 function Test_Display:toggle_display()

@@ -120,7 +120,7 @@ function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_pa
 function go_test:reset()
   self.job_id = -1
   self.tests_info = {}
-  self.term_tester.displayer:reset(self.tests_info)
+  self.term_tester.displayer:reset()
 end
 
 function go_test:_clean_up_prev_job()
