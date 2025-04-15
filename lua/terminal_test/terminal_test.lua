@@ -39,9 +39,7 @@ function terminal_test:test_in_terminal(test_info, cb_update_tracker)
   local self_ref = self
   vim.schedule(function()
     vim.api.nvim_buf_attach(float_term_state.buf, false, {
-      on_lines = function(_, buf, _, first_line, last_line)
-        return self_ref:_process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
-      end,
+      on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line, last_line, test_info, cb_update_tracker) end,
     })
   end)
 end
@@ -150,6 +148,8 @@ function terminal_test:view_last_test_terminal()
 end
 
 --- === Private ===
+
+---@param test_info terminal.testInfo
 function terminal_test:_setup_test_line_tracking(test_info)
   local augroup = vim.api.nvim_create_augroup('TestLineTracker_' .. test_info.name, { clear = true })
   local util_lsp = require 'util_lsp'
@@ -172,12 +172,18 @@ function terminal_test:_setup_test_line_tracking(test_info)
 end
 
 --- === Process Buffer Lines ===
-function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_info, float_term_state, cb_update_tracker)
+---
+---@param buf number
+---@param first_line number
+---@param last_line number
+---@param test_info terminal.testInfo
+---@param cb_update_tracker fun(test_info: terminal.testInfo)
+function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_info, cb_update_tracker)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
 
   for _, line in ipairs(lines) do
-    local detach = self:_process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
+    local detach = self:_process_one_line(line, test_info, current_time, cb_update_tracker)
     if detach then
       if test_info.fidget_handle then
         test_info.fidget_handle:finish()
@@ -187,7 +193,11 @@ function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_in
   end
 end
 
-function terminal_test:_handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
+---@param test_info terminal.testInfo
+---@param current_time string
+---@param cb_update_tracker fun(test_info: terminal.testInfo)
+---@private
+function terminal_test:_handle_test_passed(test_info, current_time, cb_update_tracker)
   if not test_info.set_ext_mark then
     vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
       virt_text = { { string.format('✅ %s', current_time) } },
@@ -196,7 +206,6 @@ function terminal_test:_handle_test_passed(test_info, float_term_state, current_
     test_info.set_ext_mark = true
   end
   test_info.status = 'pass'
-  float_term_state.status = 'pass'
   self.tests_info[test_info.name] = test_info
   vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   if cb_update_tracker then
@@ -204,7 +213,7 @@ function terminal_test:_handle_test_passed(test_info, float_term_state, current_
   end
 end
 
-function terminal_test:_handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
+function terminal_test:_handle_test_failed(test_info, current_time, cb_update_tracker)
   if not test_info.set_ext_mark then
     vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
       virt_text = { { string.format('❌ %s', current_time) } },
@@ -213,7 +222,6 @@ function terminal_test:_handle_test_failed(test_info, float_term_state, current_
     test_info.set_ext_mark = true
   end
   test_info.status = 'fail'
-  float_term_state.status = 'fail'
   self.tests_info[test_info.name] = test_info
   self.pin_test_func(test_info)
   require('util_go_test_quickfix').add_fail_test(test_info)
@@ -249,7 +257,7 @@ function terminal_test:_handle_error_trace(line, test_info, cb_update_tracker)
   end
 end
 
-function terminal_test:_process_one_line(line, test_info, float_term_state, current_time, cb_update_tracker)
+function terminal_test:_process_one_line(line, test_info, current_time, cb_update_tracker)
   self:_handle_error_trace(line, test_info, cb_update_tracker)
 
   if string.match(line, '--- FAIL') then
@@ -257,14 +265,14 @@ function terminal_test:_process_one_line(line, test_info, float_term_state, curr
       local make_notify = require('mini.notify').make_notify {}
       make_notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
     end
-    self:_handle_test_failed(test_info, float_term_state, current_time, cb_update_tracker)
+    self:_handle_test_failed(test_info, current_time, cb_update_tracker)
     return true
   elseif string.match(line, '--- PASS') then
     if test_info.fidget_handle then
       local make_notify = require('mini.notify').make_notify {}
       make_notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
     end
-    self:_handle_test_passed(test_info, float_term_state, current_time, cb_update_tracker)
+    self:_handle_test_passed(test_info, current_time, cb_update_tracker)
     return true
   end
 end

@@ -22,7 +22,6 @@ vim.cmd [[highlight TerminalNameUnderline gui=underline]]
 ---@field footer_buf number Footer buffer ID
 ---@field footer_win number Footer window ID
 ---@field chan number Terminal channel ID
----@field status string Status of the terminal (e.g., 'running', 'passed', 'failed')
 
 --- === Create, Search, Delete, Navigate between terminals ===
 

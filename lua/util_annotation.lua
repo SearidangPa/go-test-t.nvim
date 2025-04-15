@@ -58,6 +58,9 @@
 ---@field pinned_list table<string, terminal.testInfo>
 ---@field term_tester termTester
 ---
+---@class PinTesterOptions
+---@field term_test_command_format string
+---
 ---@class GoTestDisplay
 ---@field display_title string
 ---@field display_win_id number

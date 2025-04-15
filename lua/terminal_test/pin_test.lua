@@ -2,6 +2,7 @@
 local pin_tester = {}
 pin_tester.__index = pin_tester
 
+---@param opts PinTesterOptions
 function pin_tester.new(opts)
   opts = opts or {}
   local self = setmetatable({}, pin_tester)
@@ -16,6 +17,7 @@ function pin_tester.new(opts)
   return self
 end
 
+---@param test_info terminal.testInfo
 function pin_tester:pin_test(test_info)
   self.pinned_list[test_info.name] = test_info
   self.term_tester.displayer:update_buffer(self.pinned_list)
