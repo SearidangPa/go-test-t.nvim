@@ -4,10 +4,9 @@
 ---@field last_terminal_name string|nil Name of the last accessed terminal
 ---@field augroup number Vim autogroup ID
 ---@field toggle_float_terminal fun(self: TerminalMultiplexer, terminal_name: string, do_not_open_win: boolean?): Float_Term_State
----@field create_float_window fun(self: TerminalMultiplexer, float_terminal_state: Float_Term_State, terminal_name: string, do_not_open_win: boolean|nil): nil
+---@field _create_float_window fun(self: TerminalMultiplexer, float_terminal_state: Float_Term_State, terminal_name: string, do_not_open_win: boolean|nil): nil
 ---@field _navigate_terminal fun(self: TerminalMultiplexer, direction: number): nil
 ---@field search_terminal fun(self: TerminalMultiplexer): nil
----@field list fun(self: TerminalMultiplexer): string[] List of all terminal names
 ---@field delete_terminal fun(self: TerminalMultiplexer, terminal_name: string): nil
 local TerminalMultiplexer = {}
 TerminalMultiplexer.__index = TerminalMultiplexer
@@ -33,17 +32,6 @@ function TerminalMultiplexer.new()
   return self
 end
 
----Lists all terminal names
----@return string[] list of all terminal names
-function TerminalMultiplexer:list()
-  local terminal_names = {}
-  for terminal_name, _ in pairs(self.all_terminals) do
-    table.insert(terminal_names, terminal_name)
-  end
-  return terminal_names
-end
-
----@return nil
 function TerminalMultiplexer:search_terminal()
   local opts = {
     prompt = 'Select terminal:',
@@ -66,7 +54,88 @@ function TerminalMultiplexer:search_terminal()
   vim.ui.select(all_terminal_names, opts, function(choice) handle_choice(choice) end)
 end
 
---- Navigate between terminals
+---@param terminal_name string
+---@param do_not_open_win? boolean If true, prepare but don't display the window
+---@return Float_Term_State
+function TerminalMultiplexer:toggle_float_terminal(terminal_name, do_not_open_win)
+  assert(terminal_name, 'No terminal name provided')
+
+  local current_float_term_state = self.all_terminals[terminal_name]
+  if not current_float_term_state then
+    current_float_term_state = {
+      buf = -1,
+      win = -1,
+      chan = 0,
+      footer_buf = -1,
+      footer_win = -1,
+    }
+    self.all_terminals[terminal_name] = current_float_term_state
+  end
+
+  if not vim.tbl_contains(self.terminal_order, terminal_name) then
+    table.insert(self.terminal_order, terminal_name)
+  end
+
+  local is_visible = vim.api.nvim_win_is_valid(current_float_term_state.win)
+
+  if is_visible then
+    vim.api.nvim_win_hide(current_float_term_state.win)
+    vim.api.nvim_win_hide(current_float_term_state.footer_win)
+    return self.all_terminals[terminal_name]
+  end
+
+  self:_create_float_window(current_float_term_state, terminal_name, do_not_open_win)
+  if vim.bo[current_float_term_state.buf].buftype ~= 'terminal' then
+    vim.cmd.term()
+    current_float_term_state.chan = vim.bo.channel
+  end
+
+  self:_set_up_buffer_keybind(current_float_term_state)
+  self.last_terminal_name = terminal_name
+  return self.all_terminals[terminal_name]
+end
+
+---@param terminal_name string Name of the terminal to delete
+function TerminalMultiplexer:delete_terminal(terminal_name)
+  local float_terminal = self.all_terminals[terminal_name]
+  if not float_terminal then
+    return
+  end
+
+  vim.api.nvim_buf_delete(float_terminal.buf, { force = true })
+  vim.api.nvim_buf_delete(float_terminal.footer_buf, { force = true })
+  self.all_terminals[terminal_name] = nil
+
+  for i, name in ipairs(self.terminal_order) do
+    if name == terminal_name then
+      table.remove(self.terminal_order, i)
+      break
+    end
+  end
+end
+
+--- === Private functions ===
+
+---@param current_float_term_state Float_Term_State
+function TerminalMultiplexer:_set_up_buffer_keybind(current_float_term_state)
+  local map_opts = { noremap = true, silent = true, buffer = current_float_term_state.buf }
+  local next_term = function() self:_navigate_terminal(1) end
+  local prev_term = function() self:_navigate_terminal(-1) end
+
+  vim.keymap.set('n', '>', next_term, map_opts)
+  vim.keymap.set('n', '<', prev_term, map_opts)
+
+  local close_term = function()
+    if vim.api.nvim_win_is_valid(current_float_term_state.footer_win) then
+      vim.api.nvim_win_hide(current_float_term_state.footer_win)
+    end
+    if vim.api.nvim_win_is_valid(current_float_term_state.win) then
+      vim.api.nvim_win_hide(current_float_term_state.win)
+    end
+  end
+  vim.keymap.set('n', 'q', close_term, map_opts)
+end
+
 ---@param direction number 1 for next, -1 for previous
 function TerminalMultiplexer:_navigate_terminal(direction)
   if #self.terminal_order == 0 then
@@ -124,11 +193,10 @@ function TerminalMultiplexer:_navigate_terminal(direction)
   end, 100)
 end
 
----Create the floating window for a terminal
 ---@param float_terminal_state Float_Term_State State of the terminal to create window for
 ---@param terminal_name string Name of the terminal
 ---@param do_not_open_win boolean|nil If true, don't actually open the window
-function TerminalMultiplexer:create_float_window(float_terminal_state, terminal_name, do_not_open_win)
+function TerminalMultiplexer:_create_float_window(float_terminal_state, terminal_name, do_not_open_win)
   local width = math.floor(vim.o.columns)
   local height = math.floor(vim.o.lines)
   local row = math.floor((vim.o.columns - width))
@@ -168,88 +236,6 @@ function TerminalMultiplexer:create_float_window(float_terminal_state, terminal_
       style = 'minimal',
       border = 'none',
     })
-  end
-end
-
---- === Toggle terminal ===
-
----@param terminal_name string
----@param do_not_open_win? boolean If true, prepare but don't display the window
----@return Float_Term_State
-function TerminalMultiplexer:toggle_float_terminal(terminal_name, do_not_open_win)
-  assert(terminal_name, 'No terminal name provided')
-
-  local current_float_term_state = self.all_terminals[terminal_name]
-  if not current_float_term_state then
-    current_float_term_state = {
-      buf = -1,
-      win = -1,
-      chan = 0,
-      footer_buf = -1,
-      footer_win = -1,
-    }
-    self.all_terminals[terminal_name] = current_float_term_state
-  end
-
-  if not vim.tbl_contains(self.terminal_order, terminal_name) then
-    table.insert(self.terminal_order, terminal_name)
-  end
-
-  local is_visible = vim.api.nvim_win_is_valid(current_float_term_state.win)
-
-  if is_visible then
-    vim.api.nvim_win_hide(current_float_term_state.win)
-    vim.api.nvim_win_hide(current_float_term_state.footer_win)
-    return self.all_terminals[terminal_name]
-  end
-
-  self:create_float_window(current_float_term_state, terminal_name, do_not_open_win)
-  if vim.bo[current_float_term_state.buf].buftype ~= 'terminal' then
-    vim.cmd.term()
-    current_float_term_state.chan = vim.bo.channel
-  end
-
-  self:_set_up_buffer_keybind(current_float_term_state)
-  self.last_terminal_name = terminal_name
-  return self.all_terminals[terminal_name]
-end
-
-function TerminalMultiplexer:_set_up_buffer_keybind(current_float_term_state)
-  local map_opts = { noremap = true, silent = true, buffer = current_float_term_state.buf }
-  local next_term = function() self:_navigate_terminal(1) end
-  local prev_term = function() self:_navigate_terminal(-1) end
-
-  vim.keymap.set('n', '>', next_term, map_opts)
-  vim.keymap.set('n', '<', prev_term, map_opts)
-
-  local close_term = function()
-    if vim.api.nvim_win_is_valid(current_float_term_state.footer_win) then
-      vim.api.nvim_win_hide(current_float_term_state.footer_win)
-    end
-    if vim.api.nvim_win_is_valid(current_float_term_state.win) then
-      vim.api.nvim_win_hide(current_float_term_state.win)
-    end
-  end
-  vim.keymap.set('n', 'q', close_term, map_opts)
-end
-
----Delete a terminal by name
----@param terminal_name string Name of the terminal to delete
-function TerminalMultiplexer:delete_terminal(terminal_name)
-  local float_terminal = self.all_terminals[terminal_name]
-  if not float_terminal then
-    return
-  end
-
-  vim.api.nvim_buf_delete(float_terminal.buf, { force = true })
-  vim.api.nvim_buf_delete(float_terminal.footer_buf, { force = true })
-  self.all_terminals[terminal_name] = nil
-
-  for i, name in ipairs(self.terminal_order) do
-    if name == terminal_name then
-      table.remove(self.terminal_order, i)
-      break
-    end
   end
 end
 
