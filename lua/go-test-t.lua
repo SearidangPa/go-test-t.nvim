@@ -185,6 +185,7 @@ function go_test:_mark_outcome(entry)
     return
   end
 
+  require('fidget').notify(string.format('Marking %s as %s', test_info.name, entry.Action), vim.log.levels.INFO)
   test_info.status = entry.Action
   self.tests_info[key] = test_info
   if entry.Action == 'fail' then
