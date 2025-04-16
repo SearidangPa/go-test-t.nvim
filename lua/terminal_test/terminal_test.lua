@@ -11,7 +11,7 @@ function terminal_test.new(opts)
   assert(opts.display_title, 'No display title found')
 
   local self = setmetatable({}, terminal_test)
-  self.terminals = require('terminal_test.terminal_multiplexer').new()
+  self.terminals = require('terminal-multiplexer').new {}
   self.tests_info = opts.tests_info or {}
   self.displayer = require('util_go_test_display').new {
     display_title = opts.display_title,
