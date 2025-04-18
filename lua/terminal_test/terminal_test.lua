@@ -32,9 +32,10 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:test_in_terminal(test_info)
   self:_validate_test_info(test_info)
+
+  self.tests_info[test_info.name] = test_info
   self:_auto_update_test_line(test_info)
   vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
-
   self.terminals:toggle_float_terminal(test_info.name)
   local float_term_state = self.terminals:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
