@@ -98,7 +98,7 @@ function terminal_test:test_buf_in_terminals()
       set_ext_mark = false,
     }
     self.tests_info[test_name] = test_info
-    self:_setup_test_line_tracking(test_info)
+    self:_auto_update_test_line(test_info)
     self:test_in_terminal(test_info)
     vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   end
@@ -128,7 +128,7 @@ function terminal_test:test_nearest_in_terminal()
   }
 
   self:test_in_terminal(test_info)
-  self:_setup_test_line_tracking(test_info)
+  self:_auto_update_test_line(test_info)
   return test_info
 end
 
@@ -151,7 +151,7 @@ end
 --- === Private ===
 
 ---@param test_info terminal.testInfo
-function terminal_test:_setup_test_line_tracking(test_info)
+function terminal_test:_auto_update_test_line(test_info)
   local augroup = vim.api.nvim_create_augroup('TestLineTracker_' .. test_info.name, { clear = true })
   local util_lsp = require 'util_lsp'
 
