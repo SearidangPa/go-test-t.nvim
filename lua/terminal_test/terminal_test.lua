@@ -32,6 +32,9 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:test_in_terminal(test_info)
   self:_validate_test_info(test_info)
+  self:_auto_update_test_line(test_info)
+  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+
   self.terminals:toggle_float_terminal(test_info.name)
   local float_term_state = self.terminals:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
@@ -44,13 +47,31 @@ function terminal_test:test_in_terminal(test_info)
   end)
 end
 
-function terminal_test:toggle_test_in_term(test_name)
-  assert(test_name, 'No test name found')
-  local test_info = self.tests_info[test_name]
-  if not test_info then
-    self:retest_in_terminal_by_name(test_name)
-  end
-  self.terminals:toggle_float_terminal(test_name)
+function terminal_test:test_nearest_in_terminal()
+  local util_find_test = require 'util_find_test'
+  local test_name, test_line = util_find_test.get_enclosing_test()
+  assert(test_name, 'Not inside a test function')
+  assert(test_line, 'No test line found')
+  self.terminals:delete_terminal(test_name)
+
+  ---@type terminal.testInfo
+  local test_info = {
+    name = test_name,
+    test_line = test_line,
+    test_bufnr = vim.api.nvim_get_current_buf(),
+    test_command = string.format(self.term_test_command_format, test_name),
+    status = 'fired',
+    filepath = vim.fn.expand '%:p',
+    set_ext_mark = false,
+    fidget_handle = fidget.progress.handle.create {
+      lsp_client = {
+        name = test_name,
+      },
+    },
+  }
+
+  self:test_in_terminal(test_info)
+  return test_info
 end
 
 function terminal_test:retest_in_terminal_by_name(test_name)
@@ -98,46 +119,22 @@ function terminal_test:test_buf_in_terminals()
       set_ext_mark = false,
     }
     self.tests_info[test_name] = test_info
+    vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
     self:_auto_update_test_line(test_info)
     self:test_in_terminal(test_info)
-    vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   end
 end
 
-function terminal_test:test_nearest_in_terminal()
-  local util_find_test = require 'util_find_test'
-  local test_name, test_line = util_find_test.get_enclosing_test()
-  assert(test_name, 'Not inside a test function')
-  assert(test_line, 'No test line found')
-  self.terminals:delete_terminal(test_name)
-
-  ---@type terminal.testInfo
-  local test_info = {
-    name = test_name,
-    test_line = test_line,
-    test_bufnr = vim.api.nvim_get_current_buf(),
-    test_command = string.format(self.term_test_command_format, test_name),
-    status = 'fired',
-    filepath = vim.fn.expand '%:p',
-    set_ext_mark = false,
-    fidget_handle = fidget.progress.handle.create {
-      lsp_client = {
-        name = test_name,
-      },
-    },
-  }
-
-  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
-  self:test_in_terminal(test_info)
-  self:_auto_update_test_line(test_info)
-  return test_info
-end
-
-function terminal_test:view_enclosing_test_terminal()
+function terminal_test:test_nearest_with_view_term()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test found')
-  self:toggle_test_in_term(test_name)
+  assert(test_name, 'No test name found')
+  local test_info = self.tests_info[test_name]
+  if not test_info then
+    self:test_nearest_in_terminal()
+  end
+  self.terminals:toggle_float_terminal(test_name)
 end
 
 function terminal_test:view_last_test_terminal()
