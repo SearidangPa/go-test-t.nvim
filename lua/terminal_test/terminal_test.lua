@@ -15,13 +15,22 @@ function terminal_test.new(opts)
   self.tests_info = opts.tests_info or {}
   self.displayer = require('util_go_test_display').new {
     display_title = opts.display_title,
-    toggle_term_func = function(test_name) self.terminals:toggle_float_terminal(test_name) end,
+    toggle_term_func = function(test_name) self:toggle_term_func(test_name) end,
     rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
   }
   self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
   self.term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
   self.pin_test_func = opts.pin_test_func
   return self
+end
+
+function terminal_test:toggle_term_func(test_name)
+  local test_info = self.tests_info[test_name]
+  if not test_info then
+    self:retest_in_terminal_by_name(test_name)
+  else
+    self.terminals:toggle_float_terminal(test_name)
+  end
 end
 
 function terminal_test:reset()
