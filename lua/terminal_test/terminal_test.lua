@@ -127,9 +127,9 @@ function terminal_test:test_nearest_in_terminal()
     },
   }
 
+  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   self:test_in_terminal(test_info)
   self:_auto_update_test_line(test_info)
-  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   return test_info
 end
 
