@@ -41,6 +41,7 @@ function Test_Display:toggle_display()
     self.display_win_id = -1
   else
     self:create_window_and_buf()
+    self:update_buffer(self.tests_info)
   end
 end
 
