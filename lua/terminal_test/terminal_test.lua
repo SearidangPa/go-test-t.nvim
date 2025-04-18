@@ -36,6 +36,9 @@ end
 function terminal_test:reset()
   self.tests_info = {}
   self.displayer:reset()
+  for test_name, _ in pairs(self.terminals.all_terminals) do
+    self.terminals:delete_terminal(test_name)
+  end
 end
 
 ---@param test_info terminal.testInfo
