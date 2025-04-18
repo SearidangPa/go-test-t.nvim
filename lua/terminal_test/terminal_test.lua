@@ -25,7 +25,7 @@ function terminal_test.new(opts)
 end
 
 function terminal_test:toggle_term_func(test_name)
-  local test_info = self.tests_info[test_name]
+  local test_info = self.terminals.all_terminals[test_name]
   if not test_info then
     self:retest_in_terminal_by_name(test_name)
   else
