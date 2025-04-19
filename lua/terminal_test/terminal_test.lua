@@ -9,8 +9,10 @@ function terminal_test.new(opts)
   assert(opts, 'No options found')
   assert(opts.pin_test_func, 'No pin test function found')
   assert(opts.display_title, 'No display title found')
+  assert(opts.go_test_prefix, 'No go test prefix found')
 
   local self = setmetatable({}, terminal_test)
+  self.go_test_prefix = opts.go_test_prefix
   self.terminals = require('terminal-multiplexer').new {}
   self.tests_info = opts.tests_info or {}
   self.displayer = require('util_go_test_display').new {

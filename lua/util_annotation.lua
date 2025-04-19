@@ -1,4 +1,5 @@
 ---@class GoTestT
+---@field go_test_prefix string
 ---@field tests_info table<string, terminal.testInfo>
 ---@field job_id number
 ---@field term_test_command_format string
@@ -20,6 +21,7 @@
 ---@field _setup_commands? fun(self: GoTestT)
 ---
 ---@class GoTestT.Options
+---@field go_test_prefix string
 ---@field term_test_command_format string
 ---@field test_command_format_json string
 ---@field test_command string
@@ -28,6 +30,7 @@
 ---@field user_command_prefix? string
 
 ---@class termTester
+---@field go_test_prefix string
 ---@field terminals TerminalMultiplexer
 ---@field tests_info table<string, terminal.testInfo>
 ---@field displayer? GoTestDisplay
@@ -36,6 +39,7 @@
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 
 ---@class termTest.Options
+---@field go_test_prefix string
 ---@field tests_info table<string, terminal.testInfo>
 ---@field term_test_command_format string
 ---@field ns_id? number
