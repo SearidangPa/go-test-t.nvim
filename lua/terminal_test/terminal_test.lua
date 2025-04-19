@@ -138,6 +138,41 @@ function terminal_test:test_buf_in_terminals()
   end
 end
 
+local function get_intermediate_path()
+  local cwd = vim.fn.getcwd()
+  local filepath = vim.fn.expand '%:p'
+  local path_sep = package.config:sub(1, 1) -- Gets OS path separator
+
+  -- Normalize paths to use consistent separators
+  cwd = cwd:gsub('/', path_sep):gsub('\\', path_sep)
+  filepath = filepath:gsub('/', path_sep):gsub('\\', path_sep)
+
+  -- Ensure cwd ends with separator
+  if cwd:sub(-1) ~= path_sep then
+    cwd = cwd .. path_sep
+  end
+
+  -- Check if filepath starts with cwd
+  if filepath:sub(1, #cwd) ~= cwd then
+    return '' -- File is not in current working directory
+  end
+
+  -- Get relative path
+  local relative_path = filepath:sub(#cwd + 1)
+
+  -- Find the first directory separator
+  local first_dir_end = relative_path:find(path_sep)
+
+  -- Build intermediate path with proper prefix
+  local intermediate_path = ''
+  if first_dir_end then
+    local first_dir = relative_path:sub(1, first_dir_end - 1)
+    intermediate_path = '.' .. path_sep .. first_dir
+  end
+
+  return intermediate_path
+end
+
 function terminal_test:test_nearest_with_view_term()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
@@ -145,10 +180,8 @@ function terminal_test:test_nearest_with_view_term()
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
 
-  local cwd = vim.fn.getcwd()
-  print('cwd', cwd)
-  local filepath = vim.fn.expand '%:p'
-  print('filepath', filepath)
+  local intermediate_path = get_intermediate_path()
+  print('intermediate_path', intermediate_path)
 
   if not test_info then
     self:test_nearest_in_terminal()
