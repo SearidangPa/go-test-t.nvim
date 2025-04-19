@@ -6,6 +6,7 @@ go_test.__index = go_test
 function go_test.new(opts)
   opts = opts or {}
   local self = setmetatable({}, go_test)
+  self.go_test_prefix = opts.go_test_prefix or 'go test'
 
   self.test_command = opts.test_command or 'go test ./... -v %s\r'
   self.term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
