@@ -54,7 +54,7 @@ function terminal_test:test_in_terminal(test_info)
 
   local self_ref = self
   vim.schedule(function()
-    vim.api.nvim_buf_attach(float_term_state.buf, false, {
+    vim.api.nvim_buf_attach(float_term_state.bufnr, false, {
       on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line, last_line, test_info) end,
     })
   end)
