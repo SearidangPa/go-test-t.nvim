@@ -144,13 +144,17 @@ function terminal_test:test_nearest_with_view_term()
   assert(test_name, 'No test found')
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
+
+  local cwd = vim.fn.getcwd()
+  print('cwd', cwd)
+
   if not test_info then
     self:test_nearest_in_terminal()
   end
   self.terminals:toggle_float_terminal(test_name)
 end
 
-function terminal_test:view_last_test_terminal()
+function terminal_test:toggle_last_test_terminal()
   local test_name = self.terminals.last_terminal_name
   if not test_name then
     vim.notify('No last test terminal found', vim.log.levels.WARN)
