@@ -176,7 +176,6 @@ end
 function terminal_test:test_nearest_with_view_term()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
-  assert(test_name, 'No test found')
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
 
