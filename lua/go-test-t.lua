@@ -17,9 +17,11 @@ function go_test.new(opts)
   self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.pin_tester = require('terminal_test.pin_test').new {
+    go_test_prefix = self.go_test_prefix,
     term_test_command_format = self.term_test_command_format,
   }
   self.term_tester = require('terminal_test.terminal_test').new {
+    go_test_prefix = self.go_test_prefix,
     tests_info = self.tests_info,
     term_test_command_format = self.term_test_command_format,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,

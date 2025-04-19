@@ -5,10 +5,12 @@ pin_tester.__index = pin_tester
 ---@param opts PinTesterOptions
 function pin_tester.new(opts)
   opts = opts or {}
+  assert(opts.go_test_prefix, 'go_test_prefix is required')
   local self = setmetatable({}, pin_tester)
   self.pinned_list = {}
   local term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
   self.term_tester = require('terminal_test.terminal_test').new {
+    go_test_prefix = opts.go_test_prefix,
     tests_info = self.pinned_list,
     term_test_command_format = term_test_command_format,
     pin_test_func = function(test_info) self:pin_test(test_info) end,

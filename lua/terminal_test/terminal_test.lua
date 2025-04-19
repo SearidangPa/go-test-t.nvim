@@ -69,12 +69,15 @@ function terminal_test:test_nearest_in_terminal()
   assert(test_line, 'No test line found')
   self.terminals:delete_terminal(test_name)
 
+  local intermediate_path = self._get_intermediate_path()
+  local test_command = self.go_test_prefix .. ' -v -run ' .. test_name
+
   ---@type terminal.testInfo
   local test_info = {
     name = test_name,
     test_line = test_line,
     test_bufnr = vim.api.nvim_get_current_buf(),
-    test_command = string.format(self.term_test_command_format, test_name),
+    test_command = test_command,
     status = 'fired',
     filepath = vim.fn.expand '%:p',
     set_ext_mark = false,
@@ -140,49 +143,11 @@ function terminal_test:test_buf_in_terminals()
   end
 end
 
-local function get_intermediate_path()
-  local cwd = vim.fn.getcwd()
-  local filepath = vim.fn.expand '%:p'
-  local path_sep = package.config:sub(1, 1) -- Gets OS path separator
-
-  -- Normalize paths to use consistent separators
-  cwd = cwd:gsub('/', path_sep):gsub('\\', path_sep)
-  filepath = filepath:gsub('/', path_sep):gsub('\\', path_sep)
-
-  -- Ensure cwd ends with separator
-  if cwd:sub(-1) ~= path_sep then
-    cwd = cwd .. path_sep
-  end
-
-  -- Check if filepath starts with cwd
-  if filepath:sub(1, #cwd) ~= cwd then
-    return '' -- File is not in current working directory
-  end
-
-  -- Get relative path
-  local relative_path = filepath:sub(#cwd + 1)
-
-  -- Find the first directory separator
-  local first_dir_end = relative_path:find(path_sep)
-
-  -- Build intermediate path with proper prefix
-  local intermediate_path = ''
-  if first_dir_end then
-    local first_dir = relative_path:sub(1, first_dir_end - 1)
-    intermediate_path = '.' .. path_sep .. first_dir
-  end
-
-  return intermediate_path
-end
-
 function terminal_test:test_nearest_with_view_term()
   local util_find_test = require 'util_find_test'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
-
-  local intermediate_path = get_intermediate_path()
-  print('intermediate_path', intermediate_path)
 
   if not test_info then
     self:test_nearest_in_terminal()
@@ -320,6 +285,41 @@ function terminal_test:_process_one_line(line, test_info, current_time)
     self:_handle_test_passed(test_info, current_time)
     return true
   end
+end
+
+function terminal_test._get_intermediate_path()
+  local cwd = vim.fn.getcwd()
+  local filepath = vim.fn.expand '%:p'
+  local path_sep = package.config:sub(1, 1) -- Gets OS path separator
+
+  -- Normalize paths to use consistent separators
+  cwd = cwd:gsub('/', path_sep):gsub('\\', path_sep)
+  filepath = filepath:gsub('/', path_sep):gsub('\\', path_sep)
+
+  -- Ensure cwd ends with separator
+  if cwd:sub(-1) ~= path_sep then
+    cwd = cwd .. path_sep
+  end
+
+  -- Check if filepath starts with cwd
+  if filepath:sub(1, #cwd) ~= cwd then
+    return '' -- File is not in current working directory
+  end
+
+  -- Get relative path
+  local relative_path = filepath:sub(#cwd + 1)
+
+  -- Find the first directory separator
+  local first_dir_end = relative_path:find(path_sep)
+
+  -- Build intermediate path with proper prefix
+  local intermediate_path = ''
+  if first_dir_end then
+    local first_dir = relative_path:sub(1, first_dir_end - 1)
+    intermediate_path = '.' .. path_sep .. first_dir
+  end
+
+  return intermediate_path
 end
 
 --- === Validate Test Info ===

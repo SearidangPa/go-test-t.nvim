@@ -63,6 +63,7 @@
 ---@field term_tester termTester
 ---
 ---@class PinTesterOptions
+---@field go_test_prefix string
 ---@field term_test_command_format string
 ---
 ---@class GoTestDisplay
