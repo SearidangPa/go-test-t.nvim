@@ -9,3 +9,7 @@ WIP:
 * Design a good config options that is user-friendly
 * Write a better ReadMe
 
+## Demo
+https://github.com/user-attachments/assets/55d6e270-8501-49d8-bca2-a2467fc37994
+
+
