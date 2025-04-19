@@ -147,6 +147,8 @@ function terminal_test:test_nearest_with_view_term()
 
   local cwd = vim.fn.getcwd()
   print('cwd', cwd)
+  local filepath = vim.fn.expand '%:p'
+  print('filepath', filepath)
 
   if not test_info then
     self:test_nearest_in_terminal()
@@ -250,7 +252,7 @@ function terminal_test:_handle_error_trace(line, test_info)
 
   if file and line_num then
     local error_bufnr = vim.fn.bufnr(file)
-    if error_bufnr then
+    if error_bufnr and vim.api.nvim_buf_is_valid(error_bufnr) then
       vim.fn.sign_define('GoTestError', { text = '❌', texthl = 'DiagnosticError' })
       vim.fn.sign_place(0, 'GoTestErrorGroup', 'GoTestError', error_bufnr, { lnum = line_num })
     end
