@@ -70,7 +70,7 @@ function terminal_test:test_nearest_in_terminal()
   self.terminals:delete_terminal(test_name)
 
   local intermediate_path = self._get_intermediate_path()
-  local test_command = self.go_test_prefix .. ' -v -run ' .. test_name
+  local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
 
   ---@type terminal.testInfo
   local test_info = {
