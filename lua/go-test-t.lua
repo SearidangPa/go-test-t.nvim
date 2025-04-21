@@ -63,7 +63,8 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() this.pin_tester:test_all_pinned() end, {})
 end
 
-function go_test:test_all()
+function go_test:test_all(opts)
+  opts = opts or {}
   self:reset()
   self.term_tester.displayer:create_window_and_buf()
 

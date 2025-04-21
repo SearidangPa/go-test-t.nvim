@@ -63,13 +63,14 @@ function terminal_test:test_in_terminal(test_info)
 end
 
 function terminal_test:test_nearest_in_terminal()
-  local util_find_test = require 'util_find_test'
+  local util_find_test = require 'util_find_test_func'
   local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'Not inside a test function')
   assert(test_line, 'No test line found')
   self.terminals:delete_terminal(test_name)
 
-  local intermediate_path = self._get_intermediate_path()
+  local util_path = require 'util_path'
+  local intermediate_path = util_path.get_intermediate_path()
   local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
 
   ---@type terminal.testInfo
@@ -118,7 +119,7 @@ end
 
 function terminal_test:test_buf_in_terminals()
   local source_bufnr = vim.api.nvim_get_current_buf()
-  local util_find_test = require 'util_find_test'
+  local util_find_test = require 'util_find_test_func'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
   self.displayer:create_window_and_buf()
 
@@ -144,7 +145,7 @@ function terminal_test:test_buf_in_terminals()
 end
 
 function terminal_test:test_nearest_with_view_term()
-  local util_find_test = require 'util_find_test'
+  local util_find_test = require 'util_find_test_func'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test name found')
   local test_info = self.tests_info[test_name]
@@ -285,41 +286,6 @@ function terminal_test:_process_one_line(line, test_info, current_time)
     self:_handle_test_passed(test_info, current_time)
     return true
   end
-end
-
-function terminal_test._get_intermediate_path()
-  local cwd = vim.fn.getcwd()
-  local filepath = vim.fn.expand '%:p'
-  local path_sep = package.config:sub(1, 1) -- Gets OS path separator
-
-  -- Normalize paths to use consistent separators
-  cwd = cwd:gsub('/', path_sep):gsub('\\', path_sep)
-  filepath = filepath:gsub('/', path_sep):gsub('\\', path_sep)
-
-  -- Ensure cwd ends with separator
-  if cwd:sub(-1) ~= path_sep then
-    cwd = cwd .. path_sep
-  end
-
-  -- Check if filepath starts with cwd
-  if filepath:sub(1, #cwd) ~= cwd then
-    return '' -- File is not in current working directory
-  end
-
-  -- Get relative path
-  local relative_path = filepath:sub(#cwd + 1)
-
-  -- Find the first directory separator
-  local first_dir_end = relative_path:find(path_sep)
-
-  -- Build intermediate path with proper prefix
-  local intermediate_path = ''
-  if first_dir_end then
-    local first_dir = relative_path:sub(1, first_dir_end - 1)
-    intermediate_path = '.' .. path_sep .. first_dir
-  end
-
-  return intermediate_path
 end
 
 --- === Validate Test Info ===
