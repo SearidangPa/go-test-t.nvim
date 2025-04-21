@@ -40,7 +40,8 @@ function go_test:setup_user_command(user_command_prefix)
     self:reset()
   end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all(false) end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() this:test_all(true) end, {})
   vim.api.nvim_create_user_command(
     user_command_prefix .. 'TestAllView',
     function() this.term_tester.terminals:toggle_float_terminal(this.terminal_name) end,
@@ -63,14 +64,23 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() this.pin_tester:test_all_pinned() end, {})
 end
 
-function go_test:test_all(opts)
-  opts = opts or {}
+function go_test:test_all(test_in_pkg_only)
+  test_in_pkg_only = test_in_pkg_only or false
+  local test_command
+  if test_in_pkg_only then
+    local util_path = require 'util_path'
+    local intermediate_path = util_path.get_intermediate_path()
+    test_command = string.format('%s %s -v', self.go_test_prefix, intermediate_path)
+  else
+    test_command = string.format('%s ./... -v', self.go_test_prefix)
+  end
+
   self:reset()
   self.term_tester.displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
   local self_ref = self
-  self.job_id = vim.fn.jobstart(self.test_command_format_json, {
+  self.job_id = vim.fn.jobstart(test_command, {
     stdout_buffered = false,
 
     on_stdout = function(_, data)

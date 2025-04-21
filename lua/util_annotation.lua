@@ -11,7 +11,7 @@
 ---@field user_command_prefix string
 ---@field ns_id number
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
----@field test_all? fun(command: string[])
+---@field test_all? fun(self: GoTestT, test_in_pkg_only: boolean)
 ---@field toggle_display? fun(self: GoTestT)
 ---@field load_quack_tests? fun(self: GoTestT)
 ---@field _clean_up_prev_job? fun(self: GoTestT)
