@@ -29,9 +29,8 @@ function terminal_test:toggle_term_func(test_name)
   local test_info = self.terminals.all_terminals[test_name]
   if not test_info then
     self:retest_in_terminal_by_name(test_name)
-  else
-    self.terminals:toggle_float_terminal(test_name)
   end
+  self.terminals:toggle_float_terminal(test_name)
 end
 
 function terminal_test:reset()
