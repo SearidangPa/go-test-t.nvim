@@ -21,7 +21,6 @@ function terminal_test.new(opts)
     rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
   }
   self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
-  self.term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
   self.pin_test_func = opts.pin_test_func
   return self
 end
@@ -95,10 +94,14 @@ end
 
 function terminal_test:retest_in_terminal_by_name(test_name)
   assert(test_name, 'No test name found')
-  local test_command = string.format(self.term_test_command_format, test_name)
 
   local self_ref = self
   require('util_lsp').action_from_test_name(test_name, function(lsp_param)
+    local util_path = require 'util_path'
+    local intermediate_path = util_path.get_intermediate_path(lsp_param.filepath)
+    assert(intermediate_path, 'No intermediate path found')
+    local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
+
     local test_info = {
       test_line = lsp_param.test_line,
       filepath = lsp_param.filepath,
@@ -125,7 +128,10 @@ function terminal_test:test_buf_in_terminals()
 
   for test_name, test_line in pairs(all_tests_in_buf) do
     self.terminals:delete_terminal(test_name)
-    local test_command = string.format(self.term_test_command_format, test_name)
+    local util_path = require 'util_path'
+    local intermediate_path = util_path.get_intermediate_path()
+    assert(intermediate_path, 'No intermediate path found')
+    local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
 
     ---@type terminal.testInfo
     local test_info = {

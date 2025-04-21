@@ -1,8 +1,9 @@
 local M = {}
 
-function M.get_intermediate_path()
+---@return string?
+function M.get_intermediate_path(filepath)
   local cwd = vim.fn.getcwd()
-  local filepath = vim.fn.expand '%:p'
+  filepath = filepath or vim.fn.expand '%:p'
   local path_sep = package.config:sub(1, 1) -- Gets OS path separator
 
   -- Normalize paths to use consistent separators
@@ -16,7 +17,7 @@ function M.get_intermediate_path()
 
   -- Check if filepath starts with cwd
   if filepath:sub(1, #cwd) ~= cwd then
-    return '' -- File is not in current working directory
+    return nil -- File is not in current working directory
   end
 
   -- Get relative path

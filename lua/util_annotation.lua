@@ -2,9 +2,6 @@
 ---@field go_test_prefix string
 ---@field tests_info table<string, terminal.testInfo>
 ---@field job_id number
----@field term_test_command_format string
----@field test_command_format_json string
----@field test_command string
 ---@field terminal_name string
 ---@field term_tester termTester
 ---@field pin_tester PinTester
@@ -22,8 +19,6 @@
 ---
 ---@class GoTestT.Options
 ---@field go_test_prefix string
----@field term_test_command_format string
----@field test_command_format_json string
 ---@field test_command string
 ---@field terminal_name? string
 ---@field display_title? string
@@ -35,13 +30,11 @@
 ---@field tests_info table<string, terminal.testInfo>
 ---@field displayer? GoTestDisplay
 ---@field ns_id number
----@field term_test_command_format string
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 
 ---@class termTest.Options
 ---@field go_test_prefix string
 ---@field tests_info table<string, terminal.testInfo>
----@field term_test_command_format string
 ---@field ns_id? number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field display_title string
@@ -64,7 +57,6 @@
 ---
 ---@class PinTesterOptions
 ---@field go_test_prefix string
----@field term_test_command_format string
 ---
 ---@class GoTestDisplay
 ---@field display_title string

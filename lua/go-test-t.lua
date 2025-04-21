@@ -8,9 +8,6 @@ function go_test.new(opts)
   local self = setmetatable({}, go_test)
   self.go_test_prefix = opts.go_test_prefix or 'go test'
 
-  self.test_command = opts.test_command or 'go test ./... -v %s\r'
-  self.term_test_command_format = opts.term_test_command_format or 'go test ./... -v -run %s\r'
-  self.test_command_format_json = opts.test_command_format_json or 'go test ./... --json -v %s\r'
   self.job_id = -1
   self.tests_info = {}
   self.terminal_name = opts.terminal_name or 'test all'
@@ -18,12 +15,10 @@ function go_test.new(opts)
 
   self.pin_tester = require('terminal_test.pin_test').new {
     go_test_prefix = self.go_test_prefix,
-    term_test_command_format = self.term_test_command_format,
   }
   self.term_tester = require('terminal_test.terminal_test').new {
     go_test_prefix = self.go_test_prefix,
     tests_info = self.tests_info,
-    term_test_command_format = self.term_test_command_format,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
     display_title = 'Go Test Results',
   }
