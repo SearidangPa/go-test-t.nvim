@@ -70,9 +70,9 @@ function go_test:test_all(test_in_pkg_only)
   if test_in_pkg_only then
     local util_path = require 'util_path'
     local intermediate_path = util_path.get_intermediate_path()
-    test_command = string.format('%s %s -v', self.go_test_prefix, intermediate_path)
+    test_command = string.format('%s %s -v --json', self.go_test_prefix, intermediate_path)
   else
-    test_command = string.format('%s ./... -v', self.go_test_prefix)
+    test_command = string.format('%s ./... -v --json', self.go_test_prefix)
   end
 
   self:reset()
