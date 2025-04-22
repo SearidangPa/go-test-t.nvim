@@ -58,7 +58,6 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self_ref:test_all(false) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self_ref:test_all(true) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() self_ref:load_quack_tests() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() term_tester:test_nearest_in_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() term_tester:test_buf_in_terminals() end, {})
@@ -66,8 +65,10 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self_ref.pin_tester:pin_nearest_test() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPinned', function() self_ref.pin_tester:test_all_pinned() end, {})
+
+  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self_ref.pin_tester:pin_nearest_test() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'LoadQuackTestQuickfix', function() self_ref:load_quack_tests() end, {})
 end
 
 function go_test:reset()
