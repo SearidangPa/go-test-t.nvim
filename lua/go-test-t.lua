@@ -27,6 +27,11 @@ function go_test.new(opts)
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
     display_title = 'Go Test Results',
     is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
+    get_test_info_func = function(test_name) return self.tests_info[test_name] end,
+    add_test_info_func = function(test_info)
+      self.tests_info[test_info.name] = test_info
+      vim.schedule(function() self.term_tester.displayer:update_buffer(self.tests_info) end)
+    end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)

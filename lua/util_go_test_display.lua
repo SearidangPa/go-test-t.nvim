@@ -23,6 +23,7 @@ function Test_Display.new(display_opts)
   self.rerun_in_term_func = display_opts.rerun_in_term_func
   self.pin_test_func = display_opts.pin_test_func
   self.is_test_pinned_func = display_opts.is_test_pinned_func
+  self.get_test_info_func = display_opts.get_test_info_func
 
   vim.api.nvim_set_hl(0, 'GoTestPinned', { fg = '#5097A4', bold = true })
   return self
@@ -46,7 +47,7 @@ end
 ---@param tests_info table<string, terminal.testInfo>
 function Test_Display:update_buffer(tests_info)
   assert(tests_info, 'No test info found')
-  self.tests_info = vim.tbl_deep_extend('force', tests_info, self.tests_info)
+  self.tests_info = vim.list_extend(self.tests_info, tests_info)
 
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
     return

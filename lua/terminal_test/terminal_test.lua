@@ -14,14 +14,18 @@ function terminal_test.new(opts)
   local self = setmetatable({}, terminal_test)
   self.go_test_prefix = opts.go_test_prefix
   self.terminals = require('terminal-multiplexer').new {}
-  self.tests_info = opts.tests_info or {}
   self.displayer = require('util_go_test_display').new {
     display_title = opts.display_title,
     toggle_term_func = function(test_name) self:toggle_term_func(test_name) end,
     rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
     pin_test_func = opts.pin_test_func,
     is_test_pinned_func = opts.is_test_pinned_func,
+    get_test_info_func = opts.get_test_info_func,
   }
+
+  self.get_test_info_func = opts.get_test_info_func
+  self.add_test_info_func = opts.add_test_info_func
+
   self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
   self.pin_test_func = opts.pin_test_func
   return self
@@ -36,7 +40,6 @@ function terminal_test:toggle_term_func(test_name)
 end
 
 function terminal_test:reset()
-  self.tests_info = {}
   self.displayer:reset()
   for test_name, _ in pairs(self.terminals.all_terminals) do
     self.terminals:delete_terminal(test_name)
@@ -47,10 +50,9 @@ end
 function terminal_test:test_in_terminal(test_info)
   self:_validate_test_info(test_info)
   self.terminals:delete_terminal(test_info.name)
+  self.add_test_info_func(test_info)
 
-  self.tests_info[test_info.name] = test_info
   self:_auto_update_test_line(test_info)
-  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
   self.terminals:toggle_float_terminal(test_info.name)
   local float_term_state = self.terminals:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
@@ -143,8 +145,7 @@ function terminal_test:test_buf_in_terminals()
       filepath = vim.fn.expand '%:p',
       set_ext_mark = false,
     }
-    self.tests_info[test_name] = test_info
-    vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+    self.add_test_info_func(test_info)
     self:_auto_update_test_line(test_info)
     self:test_in_terminal(test_info)
   end
@@ -154,7 +155,7 @@ function terminal_test:test_nearest_with_view_term()
   local util_find_test = require 'util_find_test_func'
   local test_name, _ = util_find_test.get_enclosing_test()
   assert(test_name, 'No test name found')
-  local test_info = self.tests_info[test_name]
+  local test_info = self.get_test_info_func(test_name)
 
   if not test_info then
     self:test_nearest_in_terminal()
@@ -227,8 +228,7 @@ function terminal_test:_handle_test_passed(test_info, current_time)
     test_info.set_ext_mark = true
   end
   test_info.status = 'pass'
-  self.tests_info[test_info.name] = test_info
-  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+  self.add_test_info_func(test_info)
 end
 
 function terminal_test:_handle_test_failed(test_info, current_time)
@@ -240,10 +240,10 @@ function terminal_test:_handle_test_failed(test_info, current_time)
     test_info.set_ext_mark = true
   end
   test_info.status = 'fail'
-  self.tests_info[test_info.name] = test_info
   self.pin_test_func(test_info)
   require('util_go_test_quickfix').add_fail_test(test_info)
-  vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+
+  self.add_test_info_func(test_info)
 end
 
 ---@param line string
@@ -264,9 +264,8 @@ function terminal_test:_handle_error_trace(line, test_info)
     end
     test_info.status = 'fail'
     test_info.fail_at_line = line_num
-    self.tests_info[test_info.name] = test_info
     self.pin_test_func(test_info)
-    vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
+    self.add_test_info_func(test_info)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
 end
