@@ -73,6 +73,13 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() self.pin_tester:test_all_pinned() end, {})
 end
 
+function go_test:reset()
+  self.job_id = -1
+  self.tests_info = {}
+  self.term_tester:reset()
+  self.displayer:reset()
+end
+
 function go_test:test_all(test_in_pkg_only)
   test_in_pkg_only = test_in_pkg_only or false
   local test_command
@@ -137,13 +144,6 @@ end
 
 function go_test:toggle_display() self.displayer:toggle_display() end
 function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
-
-function go_test:reset()
-  self.job_id = -1
-  self.tests_info = {}
-  self.term_tester:reset()
-  self.displayer:reset()
-end
 
 --- === Private functions ===
 
