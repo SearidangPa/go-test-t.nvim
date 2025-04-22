@@ -44,11 +44,14 @@ function Test_Display:toggle_display(do_not_close)
   end
 end
 
----@param tests_info table<string, terminal.testInfo>
+---@param tests_info? table<string, terminal.testInfo>
 ---@param self GoTestDisplay
 function Test_Display:update_buffer(tests_info)
-  assert(tests_info, 'No test info found')
-  tests_info = vim.tbl_extend('force', self.get_tests_info_func(), tests_info)
+  if not tests_info then
+    tests_info = self.get_tests_info_func()
+  else
+    tests_info = vim.tbl_extend('force', self.get_tests_info_func(), tests_info)
+  end
 
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
     return
@@ -164,6 +167,8 @@ function Test_Display:_parse_test_state_to_lines(tests_info)
   local buf_lines = { self.display_title }
 
   for _, test in pairs(tests_info) do
+    assert(test, 'No test info found')
+    assert(test.name, 'No test name found')
     if test.name then
       table.insert(tests_table, test)
     end

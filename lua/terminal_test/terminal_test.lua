@@ -223,6 +223,7 @@ function terminal_test:_handle_test_passed(test_info, current_time)
   end
   test_info.status = 'pass'
   self.add_test_info_func(test_info)
+  self.update_buffer_func(test_info)
 end
 
 function terminal_test:_handle_test_failed(test_info, current_time)
@@ -238,6 +239,7 @@ function terminal_test:_handle_test_failed(test_info, current_time)
   require('util_go_test_quickfix').add_fail_test(test_info)
 
   self.add_test_info_func(test_info)
+  self.update_buffer_func(test_info)
 end
 
 ---@param line string
@@ -260,6 +262,7 @@ function terminal_test:_handle_error_trace(line, test_info)
     test_info.fail_at_line = line_num
     self.pin_test_func(test_info)
     self.add_test_info_func(test_info)
+    self.update_buffer_func(test_info)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
 end

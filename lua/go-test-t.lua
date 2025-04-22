@@ -112,7 +112,7 @@ function go_test:test_all(test_in_pkg_only)
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
-          self_ref.displayer:update_buffer(self_ref.tests_info)
+          self_ref.displayer:update_buffer()
           goto continue
         end
 
@@ -125,7 +125,7 @@ function go_test:test_all(test_in_pkg_only)
 
         if self._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
-          self_ref.displayer:update_buffer(self_ref.tests_info)
+          self_ref.displayer:update_buffer()
           goto continue
         end
 
@@ -162,7 +162,7 @@ function go_test:_add_golang_test(entry)
   }
 
   self.tests_info[entry.Test] = test_info
-  self.displayer:update_buffer(self.tests_info)
+  vim.schedule(function() self.displayer:update_buffer() end)
 end
 
 function go_test:_filter_golang_output(entry)
@@ -192,7 +192,7 @@ function go_test:_filter_golang_output(entry)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
   self.tests_info[entry.Test] = test_info
-  self.displayer:update_buffer(self.tests_info)
+  self.displayer:update_buffer()
 end
 
 function go_test:_mark_outcome(entry)
