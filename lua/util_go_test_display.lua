@@ -30,8 +30,12 @@ end
 
 function Test_Display:reset() self:update_buffer {} end
 
-function Test_Display:toggle_display()
+function Test_Display:toggle_display(do_not_close)
+  do_not_close = do_not_close or false
   if vim.api.nvim_win_is_valid(self.display_win_id) then
+    if do_not_close then
+      return
+    end
     vim.api.nvim_win_close(self.display_win_id, true)
     self.display_win_id = -1
   else
@@ -44,6 +48,7 @@ end
 ---@param self GoTestDisplay
 function Test_Display:update_buffer(tests_info)
   assert(tests_info, 'No test info found')
+  tests_info = vim.tbl_extend('force', self.get_tests_info_func(), tests_info)
 
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
     return
@@ -262,6 +267,7 @@ function Test_Display:_setup_keymaps()
     local test_info = tests_info[test_name]
     assert(test_info, 'No test info found for test: ' .. test_name)
     self.pin_test_func(test_info)
+    vim.schedule(function() self:update_buffer(tests_info) end)
   end, map_opts)
 end
 

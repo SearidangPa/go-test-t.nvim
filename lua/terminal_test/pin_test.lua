@@ -12,6 +12,7 @@ function pin_tester.new(opts)
   self.toggle_display_func = opts.toggle_display_func
   self.test_in_terminal_func = opts.test_in_terminal_func
   self.test_nearest_in_terminal_func = opts.test_nearest_in_terminal_func
+  self.add_test_info_func = opts.add_test_info_func
   return self
 end
 
@@ -20,22 +21,25 @@ function pin_tester:is_test_pinned(test_name) return self.pinned_list[test_name]
 ---@param test_info terminal.testInfo
 function pin_tester:pin_test(test_info)
   self.pinned_list[test_info.name] = test_info
-  self.update_display_buffer_func(self.pinned_list)
+  vim.schedule(function() self.update_display_buffer_func(self.pinned_list) end)
 end
 
 function pin_tester:pin_nearest_test()
   local test_info = self.test_nearest_in_terminal_func()
   self.pinned_list[test_info.name] = test_info
-  self.toggle_display_func()
+  self.add_test_info_func(test_info)
+  self.toggle_display_func(true)
   self.update_display_buffer_func(self.pinned_list)
 end
 
 function pin_tester:test_all_pinned()
   for _, test_info in pairs(self.pinned_list) do
     self.pinned_list[test_info.name].status = 'fired'
+    test_info.status = 'fired'
+    self.add_test_info_func(test_info)
     self.test_in_terminal_func(test_info)
   end
-  self.toggle_display_func()
+  self.toggle_display_func(true)
   self.update_display_buffer_func(self.pinned_list)
 end
 
