@@ -18,7 +18,7 @@ function go_test.new(opts)
     update_buffer_func = function(tests_info) self.term_tester.displayer:update_buffer(tests_info) end,
     toggle_display_func = function() self.term_tester.displayer:toggle_display() end,
     test_in_terminal_func = function(test_info) self.term_tester:test_in_terminal(test_info) end,
-    test_nearest_in_terminal_func = function() self.term_tester:test_nearest_in_terminal() end,
+    test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
   }
 
   self.term_tester = require('terminal_test.terminal_test').new {
