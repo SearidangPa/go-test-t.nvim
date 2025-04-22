@@ -28,6 +28,11 @@ function M.get_intermediate_path(filepath)
     return '.' .. path_sep
   end
 
+  -- [^' .. path_sep .. ']+ means "match one or more characters that are NOT the path separator character."
+  -- For example, if path_only is "foo/bar/baz" on a Unix system:
+  -- First iteration: segment becomes "foo"
+  -- Second iteration: segment becomes "bar"
+  -- Third iteration: segment becomes "baz"
   for segment in path_only:gmatch('[^' .. path_sep .. ']+') do
     table.insert(segments, segment)
   end
