@@ -14,14 +14,6 @@ function terminal_test.new(opts)
   local self = setmetatable({}, terminal_test)
   self.go_test_prefix = opts.go_test_prefix
   self.terminals = require('terminal-multiplexer').new {}
-  self.displayer = require('util_go_test_display').new {
-    display_title = opts.display_title,
-    toggle_term_func = function(test_name) self:toggle_term_func(test_name) end,
-    rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
-    pin_test_func = opts.pin_test_func,
-    is_test_pinned_func = opts.is_test_pinned_func,
-    get_test_info_func = opts.get_test_info_func,
-  }
 
   self.get_test_info_func = opts.get_test_info_func
   self.add_test_info_func = opts.add_test_info_func
@@ -40,7 +32,6 @@ function terminal_test:toggle_term_func(test_name)
 end
 
 function terminal_test:reset()
-  self.displayer:reset()
   for test_name, _ in pairs(self.terminals.all_terminals) do
     self.terminals:delete_terminal(test_name)
   end

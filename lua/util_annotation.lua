@@ -5,6 +5,7 @@
 ---@field terminal_name string
 ---@field term_tester termTester
 ---@field pin_tester PinTester
+---@field displayer GoTestDisplay
 ---@field user_command_prefix string
 ---@field ns_id number
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
@@ -28,7 +29,6 @@
 ---@field go_test_prefix string
 ---@field terminals TerminalMultiplexer
 ---@field tests_info table<string, terminal.testInfo>
----@field displayer? GoTestDisplay
 ---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
@@ -39,7 +39,6 @@
 ---@field ns_id? number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field is_test_pinned_func fun(test_name: string): boolean
----@field display_title string
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 

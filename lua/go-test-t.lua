@@ -15,22 +15,30 @@ function go_test.new(opts)
 
   self.pin_tester = require('terminal_test.pin_test').new {
     go_test_prefix = self.go_test_prefix,
-    update_buffer_func = function(tests_info) self.term_tester.displayer:update_buffer(tests_info) end,
-    toggle_display_func = function() self.term_tester.displayer:toggle_display() end,
+    update_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
+    toggle_display_func = function() self.displayer:toggle_display() end,
     test_in_terminal_func = function(test_info) self.term_tester:test_in_terminal(test_info) end,
     test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
+  }
+
+  self.displayer = require('util_go_test_display').new {
+    display_title = 'Go Test Results',
+    toggle_term_func = function(test_name) self.term_tester:toggle_term_func(test_name) end,
+    rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
+    pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
+    is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
+    get_test_info_func = function(test_name) return self.tests_info[test_name] end,
   }
 
   self.term_tester = require('terminal_test.terminal_test').new {
     go_test_prefix = self.go_test_prefix,
     tests_info = self.tests_info,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
-    display_title = 'Go Test Results',
     is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
     get_test_info_func = function(test_name) return self.tests_info[test_name] end,
     add_test_info_func = function(test_info)
       self.tests_info[test_info.name] = test_info
-      vim.schedule(function() self.term_tester.displayer:update_buffer(self.tests_info) end)
+      vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
     end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
@@ -52,7 +60,7 @@ function go_test:setup_user_command(user_command_prefix)
     function() self.term_tester.terminals:toggle_float_terminal(self.terminal_name) end,
     {}
   )
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() term_tester.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self.displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() self:load_quack_tests() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() term_tester:test_nearest_in_terminal() end, {})
@@ -77,7 +85,7 @@ function go_test:test_all(test_in_pkg_only)
   end
 
   self:reset()
-  self.term_tester.displayer:create_window_and_buf()
+  self.displayer:create_window_and_buf()
 
   self:_clean_up_prev_job()
   local self_ref = self
@@ -102,7 +110,7 @@ function go_test:test_all(test_in_pkg_only)
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded)
-          self_ref.term_tester.displayer:update_buffer(self_ref.tests_info)
+          self_ref.displayer:update_buffer(self_ref.tests_info)
           goto continue
         end
 
@@ -115,7 +123,7 @@ function go_test:test_all(test_in_pkg_only)
 
         if self._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
-          self_ref.term_tester.displayer:update_buffer(self_ref.tests_info)
+          self_ref.displayer:update_buffer(self_ref.tests_info)
           goto continue
         end
 
@@ -127,14 +135,14 @@ function go_test:test_all(test_in_pkg_only)
   })
 end
 
-function go_test:toggle_display() self.term_tester.displayer:toggle_display() end
+function go_test:toggle_display() self.displayer:toggle_display() end
 function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 function go_test:reset()
   self.job_id = -1
   self.tests_info = {}
   self.term_tester:reset()
-  self.term_tester.displayer:reset()
+  self.displayer:reset()
 end
 
 --- === Private functions ===
@@ -159,8 +167,7 @@ function go_test:_add_golang_test(entry)
   }
 
   self.tests_info[entry.Test] = test_info
-  self.term_tester.tests_info[entry.Test] = test_info
-  self.term_tester.displayer:update_buffer(self.tests_info)
+  self.displayer:update_buffer(self.tests_info)
 end
 
 function go_test:_filter_golang_output(entry)
@@ -190,7 +197,7 @@ function go_test:_filter_golang_output(entry)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
   self.tests_info[entry.Test] = test_info
-  self.term_tester.displayer:update_buffer(self.tests_info)
+  self.displayer:update_buffer(self.tests_info)
 end
 
 function go_test:_mark_outcome(entry)
