@@ -99,6 +99,7 @@ function terminal_test:retest_in_terminal_by_name(test_name)
     assert(intermediate_path, 'No intermediate path found')
     local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
 
+    ---@type terminal.testInfo
     local test_info = {
       test_line = lsp_param.test_line,
       filepath = lsp_param.filepath,

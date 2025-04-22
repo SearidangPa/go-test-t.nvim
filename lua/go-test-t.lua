@@ -15,7 +15,7 @@ function go_test.new(opts)
   self.pin_tester = require('terminal_test.pin_test').new {
     go_test_prefix = self.go_test_prefix,
     update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
-    toggle_display_func = function() self.displayer:toggle_display() end,
+    toggle_display_func = function(do_not_close) self.displayer:toggle_display(do_not_close) end,
     retest_in_terminal_by_name = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
     test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
     add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
@@ -67,7 +67,7 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self_ref.pin_tester:pin_nearest_test() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() self_ref.pin_tester:test_all_pinned() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPinned', function() self_ref.pin_tester:test_all_pinned() end, {})
 end
 
 function go_test:reset()

@@ -47,11 +47,8 @@ end
 ---@param tests_info? table<string, terminal.testInfo>
 ---@param self GoTestDisplay
 function Test_Display:update_buffer(tests_info, pin_triggered)
-  if not tests_info then
-    tests_info = self.get_tests_info_func()
-  else
-    tests_info = vim.tbl_extend('force', self.get_tests_info_func(), tests_info)
-  end
+  tests_info = tests_info or {}
+  tests_info = vim.list_extend(self.get_tests_info_func(), tests_info)
 
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
     return

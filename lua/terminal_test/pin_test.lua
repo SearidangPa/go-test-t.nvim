@@ -35,9 +35,11 @@ end
 
 function pin_tester:test_all_pinned()
   for _, test_info in pairs(self.pinned_list) do
+    print(string.format('Retesting pinned %s', vim.inspect(test_info)))
     self.pinned_list[test_info.name].status = 'fired'
     test_info.status = 'fired'
     self.add_test_info_func(test_info)
+    require('fidget').notify(string.format('Retesting pinned %s', test_info.name), vim.log.levels.INFO)
     self.retest_in_terminal_by_name(test_info.name)
   end
   self.toggle_display_func(true)
