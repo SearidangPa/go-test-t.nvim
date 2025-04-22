@@ -10,7 +10,6 @@ function go_test.new(opts)
 
   self.job_id = -1
   self.tests_info = {}
-  self.terminal_name = opts.terminal_name or 'test all'
   self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.pin_tester = require('terminal_test.pin_test').new {
@@ -55,11 +54,6 @@ function go_test:setup_user_command(user_command_prefix)
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self:test_all(false) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self:test_all(true) end, {})
-  vim.api.nvim_create_user_command(
-    user_command_prefix .. 'TestAllView',
-    function() self.term_tester.terminals:toggle_float_terminal(self.terminal_name) end,
-    {}
-  )
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self.displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() self:load_quack_tests() end, {})
 

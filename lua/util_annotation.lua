@@ -1,28 +1,26 @@
 ---@class GoTestT
 ---@field go_test_prefix string
+---@field user_command_prefix string
 ---@field tests_info table<string, terminal.testInfo>
 ---@field job_id number
----@field terminal_name string
+---@field ns_id number
 ---@field term_tester termTester
 ---@field pin_tester PinTester
 ---@field displayer GoTestDisplay
----@field user_command_prefix string
----@field ns_id number
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
----@field test_all? fun(self: GoTestT, test_in_pkg_only: boolean)
----@field toggle_display? fun(self: GoTestT)
----@field load_quack_tests? fun(self: GoTestT)
----@field _clean_up_prev_job? fun(self: GoTestT)
----@field _add_golang_test? fun(self: GoTestT, entry: table)
----@field _filter_golang_output? fun(self: GoTestT, entry: table)
----@field _mark_outcome? fun(self: GoTestT, entry: table)
----@field _setup_commands? fun(self: GoTestT)
+---@field test_all fun(self: GoTestT, test_in_pkg_only: boolean)
+---@field toggle_display fun(self: GoTestT)
+---@field load_quack_tests fun(self: GoTestT)
+---@field _clean_up_prev_job fun(self: GoTestT)
+---@field _add_golang_test fun(self: GoTestT, entry: table)
+---@field _filter_golang_output fun(self: GoTestT, entry: table)
+---@field _mark_outcome fun(self: GoTestT, entry: table)
+---@field _setup_commands fun(self: GoTestT)
 ---
 ---@class GoTestT.Options
 ---@field go_test_prefix string
 ---@field test_command string
----@field terminal_name? string
----@field display_title? string
+---@field display_title string
 ---@field user_command_prefix? string
 
 ---@class termTester
@@ -36,7 +34,7 @@
 
 ---@class termTest.Options
 ---@field go_test_prefix string
----@field ns_id? number
+---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field is_test_pinned_func fun(test_name: string): boolean
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
@@ -85,9 +83,9 @@
 ---
 ---@class Test_Display_Options
 ---@field display_title string
----@field tests_info?  table<string, terminal.testInfo>
+---@field tests_info  table<string, terminal.testInfo>
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
----@field pin_test_func? fun(test_info: terminal.testInfo)
+---@field pin_test_func fun(test_info: terminal.testInfo)
 ---@field is_test_pinned_func fun(test_name: string): boolean
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
