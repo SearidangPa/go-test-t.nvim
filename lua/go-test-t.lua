@@ -21,6 +21,7 @@ function go_test.new(opts)
     tests_info = self.tests_info,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
     display_title = 'Go Test Results',
+    is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)

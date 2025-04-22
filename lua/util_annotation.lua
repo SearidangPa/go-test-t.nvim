@@ -37,6 +37,7 @@
 ---@field tests_info table<string, terminal.testInfo>
 ---@field ns_id? number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
+---@field is_test_pinned_func fun(test_name: string): boolean
 ---@field display_title string
 
 ---@class terminal.testInfo
@@ -70,7 +71,7 @@
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func fun(test_info: terminal.testInfo)
----
+---@field is_test_pinned_func fun(test_name: string): boolean
 ---
 ---@class Test_Display_Options
 ---@field display_title string
@@ -78,3 +79,4 @@
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func? fun(test_info: terminal.testInfo)
+---@field is_test_pinned_func fun(test_name: string): boolean

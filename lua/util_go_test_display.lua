@@ -22,6 +22,9 @@ function Test_Display.new(display_opts)
   self.toggle_term_func = display_opts.toggle_term_func
   self.rerun_in_term_func = display_opts.rerun_in_term_func
   self.pin_test_func = display_opts.pin_test_func
+  self.is_test_pinned_func = display_opts.is_test_pinned_func
+
+  vim.api.nvim_set_hl(0, 'GoTestPinned', { fg = '#5097A4', bold = true })
   return self
 end
 
@@ -62,6 +65,25 @@ function Test_Display:update_buffer(tests_info)
       end_col = #new_lines[1],
       hl_group = 'Title',
     })
+
+    local line_idx = 1
+    for _, test_info in pairs(self.tests_info) do
+      if test_info.name and self.is_test_pinned_func(test_info.name) then
+        for i = 1, #new_lines do
+          local line = new_lines[i]
+          if line:match(test_info.name) then
+            vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i - 1, 0, {
+              end_line = i - 1,
+              end_col = #line,
+              hl_group = 'GoTestPinned',
+            })
+            break
+          end
+        end
+      end
+      line_idx = line_idx + 1
+    end
+
     for i = #new_lines - #self._help_text_lines, #new_lines - 1 do
       if i >= 0 and i < #new_lines then
         vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i, 0, {
@@ -232,6 +254,14 @@ function Test_Display:_setup_keymaps()
     assert(test_name, 'No test name found')
     self.rerun_in_term_func(test_name)
   end, map_opts)
+
+  map('n', 'p', function()
+    local test_name = this:_get_test_name_from_cursor()
+    assert(test_name, 'No test name found')
+    local tests_info = self.tests_info[test_name]
+    assert(tests_info, 'No test info found for test: ' .. test_name)
+    self.pin_test_func(tests_info)
+  end, map_opts)
 end
 
 function Test_Display:_close_display()
@@ -246,8 +276,8 @@ Test_Display._help_text_lines = {
   ' q       ===  Close Tracker Window',
   ' <CR>    ===  Jump to test code',
   ' t       ===  Toggle test terminal',
-  ' r       ===  (re)Run test in terminal',
-  ' p       ===  Pin/unpin test',
+  ' r       ===  (Re)Run test in terminal',
+  ' p       ===  Pin test',
 }
 
 return Test_Display

@@ -17,6 +17,8 @@ function pin_tester.new(opts)
   return self
 end
 
+function pin_tester:is_test_pinned(test_name) return self.pinned_list[test_name] ~= nil end
+
 ---@param test_info terminal.testInfo
 function pin_tester:pin_test(test_info)
   self.pinned_list[test_info.name] = test_info
