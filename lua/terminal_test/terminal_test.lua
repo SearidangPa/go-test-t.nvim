@@ -41,9 +41,9 @@ function terminal_test:reset()
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:test_in_terminal(test_info, from_global_go_test)
-  from_global_go_test = from_global_go_test or false
-  if not from_global_go_test then
+function terminal_test:test_in_terminal(test_info, do_not_assert_test_info)
+  do_not_assert_test_info = do_not_assert_test_info or false
+  if not do_not_assert_test_info then
     self:_validate_test_info(test_info)
   end
   self.terminals:delete_terminal(test_info.name)
