@@ -46,7 +46,7 @@ end
 ---@param tests_info table<string, terminal.testInfo>
 function Test_Display:update_buffer(tests_info)
   assert(tests_info, 'No test info found')
-  self.tests_info = vim.tbl_deep_extend('force', self.tests_info, tests_info)
+  self.tests_info = vim.tbl_deep_extend('force', tests_info, self.tests_info)
 
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
     return
