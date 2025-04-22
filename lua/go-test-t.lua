@@ -14,7 +14,7 @@ function go_test.new(opts)
 
   self.pin_tester = require('terminal_test.pin_test').new {
     go_test_prefix = self.go_test_prefix,
-    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
+    update_display_buffer_func = function(tests_info) self.displayer:update_display_buffer(tests_info) end,
     toggle_display_func = function(do_not_close) self.displayer:toggle_display(do_not_close) end,
     retest_in_terminal_by_name = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
     test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
@@ -40,7 +40,7 @@ function go_test.new(opts)
     add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
     ns_id = vim.api.nvim_create_namespace 'Terminal Test',
     toggle_display_func = function() self.displayer:toggle_display() end,
-    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
+    update_display_buffer_func = function(tests_info) self.displayer:update_display_buffer(tests_info) end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)
@@ -116,7 +116,7 @@ function go_test:test_all(test_in_pkg_only)
 
         if decoded.Action == 'run' then
           self_ref:_add_golang_test(decoded, test_in_pkg_only, intermediate_path)
-          self_ref.displayer:update_buffer()
+          self_ref.displayer:update_display_buffer()
           goto continue
         end
 
@@ -129,7 +129,7 @@ function go_test:test_all(test_in_pkg_only)
 
         if self_ref._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
-          self_ref.displayer:update_buffer()
+          self_ref.displayer:update_display_buffer()
           goto continue
         end
 
@@ -181,7 +181,7 @@ function go_test:_add_golang_test(entry, test_in_pkg_only, intermediate_path)
   }
 
   self_ref.tests_info[entry.Test] = test_info
-  vim.schedule(function() self_ref.displayer:update_buffer() end)
+  vim.schedule(function() self_ref.displayer:update_display_buffer() end)
 end
 
 function go_test:_filter_golang_output(entry)
@@ -212,7 +212,7 @@ function go_test:_filter_golang_output(entry)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
   self_ref.tests_info[entry.Test] = test_info
-  self_ref.displayer:update_buffer()
+  self_ref.displayer:update_display_buffer()
 end
 
 function go_test:_mark_outcome(entry)
@@ -233,6 +233,7 @@ function go_test:_mark_outcome(entry)
     local make_notify = require('mini.notify').make_notify {}
     make_notify(string.format('pinning %s', test_info.name), vim.log.levels.ERROR)
     self_ref.pin_tester:pin_test(test_info)
+    vim.schedule(function() self_ref.displayer:update_display_buffer() end)
   end
 end
 

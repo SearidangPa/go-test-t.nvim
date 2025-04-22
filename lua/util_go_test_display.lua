@@ -28,7 +28,7 @@ function Test_Display.new(display_opts)
   return self
 end
 
-function Test_Display:reset() self:update_buffer {} end
+function Test_Display:reset() self:update_display_buffer {} end
 
 function Test_Display:toggle_display(do_not_close)
   do_not_close = do_not_close or false
@@ -40,13 +40,13 @@ function Test_Display:toggle_display(do_not_close)
     self.display_win_id = -1
   else
     self:create_window_and_buf()
-    self:update_buffer(self.get_tests_info_func())
+    self:update_display_buffer(self.get_tests_info_func())
   end
 end
 
 ---@param tests_info? table<string, terminal.testInfo>
 ---@param self GoTestDisplay
-function Test_Display:update_buffer(tests_info, pin_triggered)
+function Test_Display:update_display_buffer(tests_info, pin_triggered)
   tests_info = tests_info or {}
   tests_info = vim.list_extend(self.get_tests_info_func(), tests_info)
 
@@ -277,7 +277,18 @@ function Test_Display:_setup_keymaps()
     local test_info = tests_info[test_name]
     assert(test_info, 'No test info found for test: ' .. test_name)
     self_ref.pin_test_func(test_info)
-    vim.schedule(function() self_ref:update_buffer(tests_info, true) end)
+    vim.schedule(function() self_ref:update_display_buffer(tests_info, true) end)
+  end, map_opts)
+
+  map('n', 'u', function()
+    local self_ref = self
+    local test_name = this:_get_test_name_from_cursor()
+    assert(test_name, 'No test name found')
+    local tests_info = self_ref:get_tests_info_func()
+    local test_info = tests_info[test_name]
+    assert(test_info, 'No test info found for test: ' .. test_name)
+    self_ref.unpin_test(test_info)
+    vim.schedule(function() self_ref:update_display_buffer(tests_info, true) end)
   end, map_opts)
 end
 
@@ -295,6 +306,7 @@ Test_Display._help_text_lines = {
   ' t       ===  Toggle test terminal',
   ' r       ===  (Re)Run test in terminal',
   ' p       ===  Pin test',
+  ' u       ===  Unpin test',
 }
 
 return Test_Display
