@@ -5,46 +5,46 @@ go_test.__index = go_test
 ---@param opts GoTestT.Options
 function go_test.new(opts)
   opts = opts or {}
-  local self_ref = setmetatable({}, go_test)
-  self_ref.go_test_prefix = opts.go_test_prefix or 'go test'
+  local self = setmetatable({}, go_test)
+  self.go_test_prefix = opts.go_test_prefix or 'go test'
 
-  self_ref.job_id = -1
-  self_ref.tests_info = {}
-  self_ref.go_test_ns_id = vim.api.nvim_create_namespace 'GoTestT'
+  self.job_id = -1
+  self.tests_info = {}
+  self.go_test_ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
-  self_ref.pin_tester = require('terminal_test.pin_test').new {
-    go_test_prefix = self_ref.go_test_prefix,
-    update_display_buffer_func = function(tests_info) self_ref.displayer:update_buffer(tests_info) end,
-    toggle_display_func = function() self_ref.displayer:toggle_display() end,
-    test_in_terminal_func = function(test_info) self_ref.term_tester:test_in_terminal(test_info) end,
-    test_nearest_in_terminal_func = function() return self_ref.term_tester:test_nearest_in_terminal() end,
-    add_test_info_func = function(test_info) self_ref.tests_info[test_info.name] = test_info end,
+  self.pin_tester = require('terminal_test.pin_test').new {
+    go_test_prefix = self.go_test_prefix,
+    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
+    toggle_display_func = function() self.displayer:toggle_display() end,
+    test_in_terminal_func = function(test_info) self.term_tester:test_in_terminal(test_info) end,
+    test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
+    add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
   }
 
-  self_ref.displayer = require('util_go_test_display').new {
+  self.displayer = require('util_go_test_display').new {
     display_title = 'Go Test Results',
-    toggle_term_func = function(test_name) self_ref.term_tester:toggle_term_func(test_name) end,
-    rerun_in_term_func = function(test_name) self_ref.term_tester:retest_in_terminal_by_name(test_name) end,
-    pin_test_func = function(test_info) self_ref.pin_tester:pin_test(test_info) end,
-    is_test_pinned_func = function(test_name) return self_ref.pin_tester:is_test_pinned(test_name) end,
-    get_tests_info_func = function() return self_ref.tests_info end,
-    get_pinned_tests_func = function() return self_ref.pin_tester.pinned_list end,
+    toggle_term_func = function(test_name) self.term_tester:toggle_term_func(test_name) end,
+    rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
+    pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
+    is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
+    get_tests_info_func = function() return self.tests_info end,
+    get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
   }
 
-  self_ref.term_tester = require('terminal_test.terminal_test').new {
-    go_test_prefix = self_ref.go_test_prefix,
-    tests_info = self_ref.tests_info,
-    pin_test_func = function(test_info) self_ref.pin_tester:pin_test(test_info) end,
-    get_pinned_tests_func = function() return self_ref.pin_tester.pinned_list end,
-    get_test_info_func = function(test_name) return self_ref.tests_info[test_name] end,
-    add_test_info_func = function(test_info) self_ref.tests_info[test_info.name] = test_info end,
+  self.term_tester = require('terminal_test.terminal_test').new {
+    go_test_prefix = self.go_test_prefix,
+    tests_info = self.tests_info,
+    pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
+    get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
+    get_test_info_func = function(test_name) return self.tests_info[test_name] end,
+    add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
     ns_id = vim.api.nvim_create_namespace 'Terminal Test',
-    toggle_display_func = function() self_ref.displayer:toggle_display() end,
-    update_display_buffer_func = function(tests_info) self_ref.displayer:update_buffer(tests_info) end,
+    toggle_display_func = function() self.displayer:toggle_display() end,
+    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
-  self_ref:setup_user_command(user_command_prefix)
-  return self_ref
+  self:setup_user_command(user_command_prefix)
+  return self
 end
 
 function go_test:setup_user_command(user_command_prefix)
