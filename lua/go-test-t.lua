@@ -114,7 +114,7 @@ function go_test:test_all(test_in_pkg_only)
         end
 
         if decoded.Action == 'run' then
-          self_ref:_add_golang_test(decoded)
+          self_ref:_add_golang_test(decoded, test_in_pkg_only, intermediate_path)
           self_ref.displayer:update_buffer()
           goto continue
         end
@@ -154,16 +154,29 @@ function go_test:_clean_up_prev_job()
   end
 end
 
-function go_test:_add_golang_test(entry)
+---@param entry table
+---@param test_in_pkg_only boolean
+---@param intermediate_path string
+function go_test:_add_golang_test(entry, test_in_pkg_only, intermediate_path)
   local self_ref = self
   if not entry.Test then
     return
   end
 
+  local test_command
+  if test_in_pkg_only then
+    test_command = string.format('%s %s -v', self_ref.go_test_prefix, intermediate_path)
+  else
+    test_command = string.format('%s ./... -v', self_ref.go_test_prefix)
+  end
+
+  ---@type terminal.testInfo
   local test_info = {
     name = entry.Test,
     status = 'running',
     filepath = '',
+    test_command = test_command,
+    set_ext_mark = false,
   }
 
   self_ref.tests_info[entry.Test] = test_info

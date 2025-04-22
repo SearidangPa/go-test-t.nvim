@@ -12,7 +12,7 @@
 ---@field toggle_display fun(self: GoTestT)
 ---@field load_quack_tests fun(self: GoTestT)
 ---@field _clean_up_prev_job fun(self: GoTestT)
----@field _add_golang_test fun(self: GoTestT, entry: table)
+---@field _add_golang_test fun(self: GoTestT, entry: table, test_in_pkg_only: boolean, intermediate_path: string)
 ---@field _filter_golang_output fun(self: GoTestT, entry: table)
 ---@field _mark_outcome fun(self: GoTestT, entry: table)
 ---@field _setup_commands fun(self: GoTestT)
@@ -48,8 +48,8 @@
 ---@field name string
 ---@field status string
 ---@field fail_at_line? number
----@field test_bufnr number
----@field test_line number
+---@field test_bufnr? number
+---@field test_line? number
 ---@field test_command string
 ---@field filepath string
 ---@field set_ext_mark boolean
