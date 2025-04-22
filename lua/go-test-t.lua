@@ -94,7 +94,7 @@ function go_test:test_all(test_in_pkg_only)
     test_command = string.format('%s ./... -v --json', self_ref.go_test_prefix)
   end
 
-  self_ref:reset()
+  self_ref:reset_keep_pin()
   self_ref.displayer:create_window_and_buf()
 
   self_ref:_clean_up_prev_job()
