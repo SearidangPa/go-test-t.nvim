@@ -21,8 +21,8 @@ function Test_Display.new(display_opts)
   self.toggle_term_func = display_opts.toggle_term_func
   self.rerun_in_term_func = display_opts.rerun_in_term_func
   self.pin_test_func = display_opts.pin_test_func
-  self.is_test_pinned_func = display_opts.is_test_pinned_func
   self.get_tests_info_func = display_opts.get_tests_info_func
+  self.get_pinned_tests_func = display_opts.get_pinned_tests_func
 
   vim.api.nvim_set_hl(0, 'GoTestPinned', { fg = '#5097A4', bold = true, underline = true })
   return self
@@ -74,19 +74,19 @@ function Test_Display:update_buffer(tests_info, pin_triggered)
     })
 
     local line_idx = 1
-    for _, test_info in pairs(self.get_tests_info_func()) do
-      if test_info.name and self.is_test_pinned_func(test_info.name) then
-        print('Found pinned test:', test_info.name)
-        for i = 1, #new_lines do
-          local line = new_lines[i]
-          if line:match(test_info.name) then
-            vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i - 1, 0, {
-              end_line = i - 1,
-              end_col = #line,
-              hl_group = 'GoTestPinned',
-            })
-            break
-          end
+    for _, test_info in pairs(self.get_pinned_tests_func()) do
+      assert(test_info, 'No test info found')
+      assert(test_info.name, 'No test name found')
+      print('Found pinned test:', test_info.name)
+      for i = 1, #new_lines do
+        local line = new_lines[i]
+        if line:match(test_info.name) then
+          vim.api.nvim_buf_set_extmark(self.display_bufnr, self.ns_id, i - 1, 0, {
+            end_line = i - 1,
+            end_col = #line,
+            hl_group = 'GoTestPinned',
+          })
+          break
         end
       end
       line_idx = line_idx + 1
@@ -147,6 +147,19 @@ function Test_Display:_sort_tests_by_status(tests)
       running = 5,
       pass = 6,
     }
+
+    if priority[a.status] == 'fail' and priority[b.status] ~= 'fail' then
+      return a.name < b.name
+    end
+
+    local pinned_tests = self.get_pinned_tests_func()
+    local is_a_pinned = pinned_tests[a.name] ~= nil
+    local is_b_pinned = pinned_tests[b.name] ~= nil
+
+    if is_a_pinned and not is_b_pinned then
+      return true
+    end
+
     if not priority[a.status] and priority[b.status] then
       return true
     end
