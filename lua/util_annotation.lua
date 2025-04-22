@@ -31,6 +31,7 @@
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---@field toggle_display_func fun()
+---@field update_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 
 ---@class termTest.Options
 ---@field go_test_prefix string
@@ -40,6 +41,7 @@
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---@field toggle_display_func fun()
+---@field update_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 
 ---@class terminal.testInfo
 ---@field name string

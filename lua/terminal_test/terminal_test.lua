@@ -18,6 +18,7 @@ function terminal_test.new(opts)
   self.get_test_info_func = opts.get_test_info_func
   self.add_test_info_func = opts.add_test_info_func
   self.toggle_display_func = opts.toggle_display_func
+  self.update_buffer_func = opts.update_buffer_func
 
   self.ns_id = opts.ns_id
   self.pin_test_func = opts.pin_test_func
@@ -138,6 +139,7 @@ function terminal_test:test_buf_in_terminals()
       set_ext_mark = false,
     }
     self.add_test_info_func(test_info)
+    self.update_buffer_func(test_info)
     self:_auto_update_test_line(test_info)
     self:test_in_terminal(test_info)
   end

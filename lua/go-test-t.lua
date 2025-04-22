@@ -18,6 +18,7 @@ function go_test.new(opts)
     toggle_display_func = function() self.displayer:toggle_display() end,
     test_in_terminal_func = function(test_info) self.term_tester:test_in_terminal(test_info) end,
     test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
+    add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
   }
 
   self.displayer = require('util_go_test_display').new {
@@ -35,12 +36,10 @@ function go_test.new(opts)
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
     is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
     get_test_info_func = function(test_name) return self.tests_info[test_name] end,
-    add_test_info_func = function(test_info)
-      self.tests_info[test_info.name] = test_info
-      vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
-    end,
+    add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
     ns_id = vim.api.nvim_create_namespace 'Terminal Test',
     toggle_display_func = function() self.displayer:toggle_display() end,
+    update_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)
