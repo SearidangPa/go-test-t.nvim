@@ -14,7 +14,7 @@ function go_test.new(opts)
 
   self.pin_tester = require('terminal_test.pin_test').new {
     go_test_prefix = self.go_test_prefix,
-    update_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
+    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
     toggle_display_func = function() self.displayer:toggle_display() end,
     test_in_terminal_func = function(test_info) self.term_tester:test_in_terminal(test_info) end,
     test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
@@ -34,12 +34,12 @@ function go_test.new(opts)
     go_test_prefix = self.go_test_prefix,
     tests_info = self.tests_info,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
-    is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
+    get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
     get_test_info_func = function(test_name) return self.tests_info[test_name] end,
     add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
     ns_id = vim.api.nvim_create_namespace 'Terminal Test',
     toggle_display_func = function() self.displayer:toggle_display() end,
-    update_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
+    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)

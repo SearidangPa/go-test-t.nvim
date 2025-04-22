@@ -28,20 +28,21 @@
 ---@field terminals TerminalMultiplexer
 ---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
+---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---@field toggle_display_func fun()
----@field update_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 
 ---@class termTest.Options
 ---@field go_test_prefix string
 ---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
----@field is_test_pinned_func fun(test_name: string): boolean
+---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---@field toggle_display_func fun()
----@field update_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 
 ---@class terminal.testInfo
 ---@field name string
@@ -64,7 +65,7 @@
 ---
 ---@class PinTesterOptions
 ---@field go_test_prefix string
----@field update_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 ---@field toggle_display_func fun(boolean)
 ---@field test_in_terminal_func fun(test_info: terminal.testInfo)
 ---@field test_nearest_in_terminal_func fun(): terminal.testInfo

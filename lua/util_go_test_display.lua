@@ -24,7 +24,7 @@ function Test_Display.new(display_opts)
   self.is_test_pinned_func = display_opts.is_test_pinned_func
   self.get_tests_info_func = display_opts.get_tests_info_func
 
-  vim.api.nvim_set_hl(0, 'GoTestPinned', { fg = '#5097A4', bold = true })
+  vim.api.nvim_set_hl(0, 'GoTestPinned', { fg = '#5097A4', bold = true, underline = true })
   return self
 end
 
@@ -134,7 +134,7 @@ end
 --- === Private Functions ===
 
 ---@param tests terminal.testInfo[]
-local function _sort_tests_by_status(tests)
+function Test_Display:_sort_tests_by_status(tests)
   table.sort(tests, function(a, b)
     if a.status == b.status then
       return a.name < b.name
@@ -175,7 +175,7 @@ function Test_Display:_parse_test_state_to_lines(tests_info)
       table.insert(tests_table, test)
     end
   end
-  _sort_tests_by_status(tests_table)
+  self:_sort_tests_by_status(tests_table)
 
   for _, test in ipairs(tests_table) do
     local status_icon = util_status_icon.get_status_icon(test.status)

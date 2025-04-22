@@ -18,10 +18,11 @@ function terminal_test.new(opts)
   self.get_test_info_func = opts.get_test_info_func
   self.add_test_info_func = opts.add_test_info_func
   self.toggle_display_func = opts.toggle_display_func
-  self.update_buffer_func = opts.update_buffer_func
+  self.update_display_buffer_func = opts.update_display_buffer_func
 
   self.ns_id = opts.ns_id
   self.pin_test_func = opts.pin_test_func
+  self.get_pinned_tests_func = opts.get_pinned_tests_func
   return self
 end
 
@@ -139,7 +140,7 @@ function terminal_test:test_buf_in_terminals()
       set_ext_mark = false,
     }
     self.add_test_info_func(test_info)
-    self.update_buffer_func(test_info)
+    self.update_display_buffer_func(test_info)
     self:_auto_update_test_line(test_info)
     self:test_in_terminal(test_info)
   end
@@ -223,7 +224,7 @@ function terminal_test:_handle_test_passed(test_info, current_time)
   end
   test_info.status = 'pass'
   self.add_test_info_func(test_info)
-  self.update_buffer_func(test_info)
+  self.update_display_buffer_func(test_info)
 end
 
 function terminal_test:_handle_test_failed(test_info, current_time)
@@ -239,7 +240,7 @@ function terminal_test:_handle_test_failed(test_info, current_time)
   require('util_go_test_quickfix').add_fail_test(test_info)
 
   self.add_test_info_func(test_info)
-  self.update_buffer_func(test_info)
+  self.update_display_buffer_func(test_info)
 end
 
 ---@param line string
@@ -262,7 +263,7 @@ function terminal_test:_handle_error_trace(line, test_info)
     test_info.fail_at_line = line_num
     self.pin_test_func(test_info)
     self.add_test_info_func(test_info)
-    self.update_buffer_func(test_info)
+    self.update_display_buffer_func(test_info)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
 end

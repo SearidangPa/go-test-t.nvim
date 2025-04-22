@@ -8,7 +8,7 @@ function pin_tester.new(opts)
   assert(opts.go_test_prefix, 'go_test_prefix is required')
   local self = setmetatable({}, pin_tester)
   self.pinned_list = {}
-  self.update_display_buffer_func = opts.update_buffer_func
+  self.update_display_buffer_func = opts.update_display_buffer_func
   self.toggle_display_func = opts.toggle_display_func
   self.test_in_terminal_func = opts.test_in_terminal_func
   self.test_nearest_in_terminal_func = opts.test_nearest_in_terminal_func
