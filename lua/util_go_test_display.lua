@@ -77,7 +77,6 @@ function Test_Display:update_buffer(tests_info, pin_triggered)
     for _, test_info in pairs(self.get_pinned_tests_func()) do
       assert(test_info, 'No test info found')
       assert(test_info.name, 'No test name found')
-      print('Found pinned test:', test_info.name)
       for i = 1, #new_lines do
         local line = new_lines[i]
         if line:match(test_info.name) then
@@ -136,9 +135,6 @@ end
 ---@param tests terminal.testInfo[]
 function Test_Display:_sort_tests_by_status(tests)
   table.sort(tests, function(a, b)
-    if a.status == b.status then
-      return a.name < b.name
-    end
     local priority = {
       fail = 1,
       paused = 2,
@@ -148,28 +144,24 @@ function Test_Display:_sort_tests_by_status(tests)
       pass = 6,
     }
 
-    if priority[a.status] == 'fail' and priority[b.status] ~= 'fail' then
-      return a.name < b.name
-    end
-
     local pinned_tests = self.get_pinned_tests_func()
     local is_a_pinned = pinned_tests[a.name] ~= nil
     local is_b_pinned = pinned_tests[b.name] ~= nil
 
     if is_a_pinned and not is_b_pinned then
       return true
-    end
-
-    if not priority[a.status] and priority[b.status] then
-      return true
-    end
-    if priority[a.status] and not priority[b.status] then
+    elseif not is_a_pinned and is_b_pinned then
       return false
     end
-    if not priority[a.status] and not priority[b.status] then
-      return a.name < b.name
+
+    local a_priority = priority[a.status] or 999
+    local b_priority = priority[b.status] or 999
+
+    if a_priority ~= b_priority then
+      return a_priority < b_priority
     end
-    return priority[a.status] < priority[b.status]
+
+    return a.name < b.name
   end)
 end
 

@@ -5,59 +5,60 @@ go_test.__index = go_test
 ---@param opts GoTestT.Options
 function go_test.new(opts)
   opts = opts or {}
-  local self = setmetatable({}, go_test)
-  self.go_test_prefix = opts.go_test_prefix or 'go test'
+  local self_ref = setmetatable({}, go_test)
+  self_ref.go_test_prefix = opts.go_test_prefix or 'go test'
 
-  self.job_id = -1
-  self.tests_info = {}
-  self.go_test_ns_id = vim.api.nvim_create_namespace 'GoTestT'
+  self_ref.job_id = -1
+  self_ref.tests_info = {}
+  self_ref.go_test_ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
-  self.pin_tester = require('terminal_test.pin_test').new {
-    go_test_prefix = self.go_test_prefix,
-    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
-    toggle_display_func = function() self.displayer:toggle_display() end,
-    test_in_terminal_func = function(test_info) self.term_tester:test_in_terminal(test_info) end,
-    test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
-    add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
+  self_ref.pin_tester = require('terminal_test.pin_test').new {
+    go_test_prefix = self_ref.go_test_prefix,
+    update_display_buffer_func = function(tests_info) self_ref.displayer:update_buffer(tests_info) end,
+    toggle_display_func = function() self_ref.displayer:toggle_display() end,
+    test_in_terminal_func = function(test_info) self_ref.term_tester:test_in_terminal(test_info) end,
+    test_nearest_in_terminal_func = function() return self_ref.term_tester:test_nearest_in_terminal() end,
+    add_test_info_func = function(test_info) self_ref.tests_info[test_info.name] = test_info end,
   }
 
-  self.displayer = require('util_go_test_display').new {
+  self_ref.displayer = require('util_go_test_display').new {
     display_title = 'Go Test Results',
-    toggle_term_func = function(test_name) self.term_tester:toggle_term_func(test_name) end,
-    rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
-    pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
-    is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
-    get_tests_info_func = function() return self.tests_info end,
-    get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
+    toggle_term_func = function(test_name) self_ref.term_tester:toggle_term_func(test_name) end,
+    rerun_in_term_func = function(test_name) self_ref.term_tester:retest_in_terminal_by_name(test_name) end,
+    pin_test_func = function(test_info) self_ref.pin_tester:pin_test(test_info) end,
+    is_test_pinned_func = function(test_name) return self_ref.pin_tester:is_test_pinned(test_name) end,
+    get_tests_info_func = function() return self_ref.tests_info end,
+    get_pinned_tests_func = function() return self_ref.pin_tester.pinned_list end,
   }
 
-  self.term_tester = require('terminal_test.terminal_test').new {
-    go_test_prefix = self.go_test_prefix,
-    tests_info = self.tests_info,
-    pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
-    get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
-    get_test_info_func = function(test_name) return self.tests_info[test_name] end,
-    add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
+  self_ref.term_tester = require('terminal_test.terminal_test').new {
+    go_test_prefix = self_ref.go_test_prefix,
+    tests_info = self_ref.tests_info,
+    pin_test_func = function(test_info) self_ref.pin_tester:pin_test(test_info) end,
+    get_pinned_tests_func = function() return self_ref.pin_tester.pinned_list end,
+    get_test_info_func = function(test_name) return self_ref.tests_info[test_name] end,
+    add_test_info_func = function(test_info) self_ref.tests_info[test_info.name] = test_info end,
     ns_id = vim.api.nvim_create_namespace 'Terminal Test',
-    toggle_display_func = function() self.displayer:toggle_display() end,
-    update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
+    toggle_display_func = function() self_ref.displayer:toggle_display() end,
+    update_display_buffer_func = function(tests_info) self_ref.displayer:update_buffer(tests_info) end,
   }
   local user_command_prefix = opts.user_command_prefix or ''
-  self:setup_user_command(user_command_prefix)
-  return self
+  self_ref:setup_user_command(user_command_prefix)
+  return self_ref
 end
 
 function go_test:setup_user_command(user_command_prefix)
-  local term_tester = self.term_tester
+  local self_ref = self
+  local term_tester = self_ref.term_tester
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function()
     term_tester:reset()
-    self:reset()
+    self_ref:reset()
   end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self:test_all(false) end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self:test_all(true) end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() self:load_quack_tests() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self_ref:test_all(false) end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self_ref:test_all(true) end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() self_ref:load_quack_tests() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() term_tester:test_nearest_in_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() term_tester:test_buf_in_terminals() end, {})
@@ -65,34 +66,35 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self.pin_tester:pin_nearest_test() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() self.pin_tester:test_all_pinned() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self_ref.pin_tester:pin_nearest_test() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() self_ref.pin_tester:test_all_pinned() end, {})
 end
 
 function go_test:reset()
-  self.job_id = -1
-  self.tests_info = {}
-  self.term_tester:reset()
-  self.displayer:reset()
+  local self_ref = self
+  self_ref.job_id = -1
+  self_ref.tests_info = {}
+  self_ref.term_tester:reset()
+  self_ref.displayer:reset()
 end
 
 function go_test:test_all(test_in_pkg_only)
+  local self_ref = self
   test_in_pkg_only = test_in_pkg_only or false
   local test_command
   if test_in_pkg_only then
     local util_path = require 'util_path'
     local intermediate_path = util_path.get_intermediate_path()
-    test_command = string.format('%s %s -v --json', self.go_test_prefix, intermediate_path)
+    test_command = string.format('%s %s -v --json', self_ref.go_test_prefix, intermediate_path)
   else
-    test_command = string.format('%s ./... -v --json', self.go_test_prefix)
+    test_command = string.format('%s ./... -v --json', self_ref.go_test_prefix)
   end
 
-  self:reset()
-  self.displayer:create_window_and_buf()
+  self_ref:reset()
+  self_ref.displayer:create_window_and_buf()
 
-  self:_clean_up_prev_job()
-  local self_ref = self
-  self.job_id = vim.fn.jobstart(test_command, {
+  self_ref:_clean_up_prev_job()
+  self_ref.job_id = vim.fn.jobstart(test_command, {
     stdout_buffered = false,
 
     on_stdout = function(_, data)
@@ -107,7 +109,7 @@ function go_test:test_all(test_in_pkg_only)
           goto continue
         end
 
-        if self._ignored_actions[decoded.Action] then
+        if self_ref._ignored_actions[decoded.Action] then
           goto continue
         end
 
@@ -124,7 +126,7 @@ function go_test:test_all(test_in_pkg_only)
           goto continue
         end
 
-        if self._action_state[decoded.Action] then
+        if self_ref._action_state[decoded.Action] then
           self_ref:_mark_outcome(decoded)
           self_ref.displayer:update_buffer()
           goto continue
@@ -144,9 +146,10 @@ function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_pa
 --- === Private functions ===
 
 function go_test:_clean_up_prev_job()
-  if self.job_id ~= -1 then
+  local self_ref = self
+  if self_ref.job_id ~= -1 then
     require('fidget').notify('Stopping job', vim.log.levels.INFO)
-    vim.fn.jobstop(self.job_id)
+    vim.fn.jobstop(self_ref.job_id)
     vim.diagnostic.reset()
   end
 end
@@ -168,11 +171,12 @@ function go_test:_add_golang_test(entry)
 end
 
 function go_test:_filter_golang_output(entry)
+  local self_ref = self
   assert(entry, 'No entry provided')
   if not entry.Test then
     return
   end
-  local test_info = self.tests_info[entry.Test]
+  local test_info = self_ref.tests_info[entry.Test]
   if not test_info then
     vim.notify('Filter Output: Test info not found for ' .. entry.Test, vim.log.levels.WARN)
     return
@@ -190,30 +194,31 @@ function go_test:_filter_golang_output(entry)
 
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
-    self.pin_tester:pin_test(test_info)
+    self_ref.pin_tester:pin_test(test_info)
     require('util_go_test_quickfix').add_fail_test(test_info)
   end
-  self.tests_info[entry.Test] = test_info
-  self.displayer:update_buffer()
+  self_ref.tests_info[entry.Test] = test_info
+  self_ref.displayer:update_buffer()
 end
 
 function go_test:_mark_outcome(entry)
+  local self_ref = self
   if not entry.Test then
     return
   end
   local key = entry.Test
-  local test_info = self.tests_info[key]
+  local test_info = self_ref.tests_info[key]
   if not test_info then
     return
   end
 
   test_info.status = entry.Action
-  self.tests_info[key] = test_info
+  self_ref.tests_info[key] = test_info
   if entry.Action == 'fail' then
     require('util_go_test_quickfix').add_fail_test(test_info)
     local make_notify = require('mini.notify').make_notify {}
     make_notify(string.format('pinning %s', test_info.name), vim.log.levels.ERROR)
-    self.pin_tester:pin_test(test_info)
+    self_ref.pin_tester:pin_test(test_info)
   end
 end
 

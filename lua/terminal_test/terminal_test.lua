@@ -41,8 +41,11 @@ function terminal_test:reset()
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:test_in_terminal(test_info)
-  self:_validate_test_info(test_info)
+function terminal_test:test_in_terminal(test_info, from_global_go_test)
+  from_global_go_test = from_global_go_test or false
+  if not from_global_go_test then
+    self:_validate_test_info(test_info)
+  end
   self.terminals:delete_terminal(test_info.name)
   self.add_test_info_func(test_info)
 
@@ -296,9 +299,9 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:_validate_test_info(test_info)
   assert(test_info.name, 'No test found')
-  assert(test_info.test_bufnr, 'No test buffer found')
   assert(test_info.test_line, 'No test line found')
   assert(test_info.test_command, 'No test command found')
+  assert(test_info.test_bufnr, 'No test buffer found')
   assert(vim.api.nvim_buf_is_valid(test_info.test_bufnr), 'Invalid buffer')
 end
 
