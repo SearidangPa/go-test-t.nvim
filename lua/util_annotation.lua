@@ -57,7 +57,7 @@
 
 ---@class PinTester
 ---@field pinned_list table<string, terminal.testInfo>
----@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field update_display_buffer_func fun(tests_info?: table<string, terminal.testInfo>)
 ---@field toggle_display_func fun(boolean)
 ---@field retest_in_terminal_by_name fun(test_name: string)
 ---@field test_nearest_in_terminal_func fun(): terminal.testInfo

@@ -25,6 +25,12 @@ function pin_tester:pin_test(test_info)
   vim.schedule(function() self.update_display_buffer_func(self.pinned_list) end)
 end
 
+function pin_tester:unpin_test(test_name)
+  require('fidget').notify(string.format('Unpinning %s', test_name), vim.log.levels.INFO)
+  self.pinned_list[test_name] = nil
+  vim.schedule(function() self.update_display_buffer_func() end)
+end
+
 function pin_tester:pin_nearest_test()
   local test_info = self.test_nearest_in_terminal_func()
   self.pinned_list[test_info.name] = test_info
