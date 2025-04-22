@@ -23,17 +23,22 @@ function M.get_intermediate_path(filepath)
   -- Get relative path
   local relative_path = filepath:sub(#cwd + 1)
 
-  -- Find the first directory separator
-  local first_dir_end = relative_path:find(path_sep)
-
-  -- Build intermediate path with proper prefix
-  local intermediate_path = ''
-  if first_dir_end then
-    local first_dir = relative_path:sub(1, first_dir_end - 1)
-    intermediate_path = '.' .. path_sep .. first_dir
+  -- Find the first two path segments
+  local segments = {}
+  for segment in relative_path:gmatch('[^' .. path_sep .. ']+') do
+    table.insert(segments, segment)
+    if #segments == 2 then
+      break
+    end
   end
 
-  return intermediate_path
+  if #segments == 0 then
+    return ''
+  elseif #segments == 1 then
+    return segments[1]
+  else
+    return segments[1] .. path_sep .. segments[2]
+  end
 end
 
 return M
