@@ -50,11 +50,7 @@ end
 function go_test:setup_user_command(user_command_prefix)
   local self_ref = self
   local term_tester = self_ref.term_tester
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function()
-    term_tester:reset()
-    self_ref:reset()
-  end, {})
-
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', self_ref:reset(), {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self_ref:test_all(false) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self_ref:test_all(true) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
