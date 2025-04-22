@@ -10,7 +10,7 @@ function go_test.new(opts)
 
   self.job_id = -1
   self.tests_info = {}
-  self.ns_id = vim.api.nvim_create_namespace 'GoTestT'
+  self.go_test_ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.pin_tester = require('terminal_test.pin_test').new {
     go_test_prefix = self.go_test_prefix,

@@ -3,7 +3,7 @@
 ---@field user_command_prefix string
 ---@field tests_info table<string, terminal.testInfo>
 ---@field job_id number
----@field ns_id number
+---@field go_test_ns_id number
 ---@field term_tester termTester
 ---@field pin_tester PinTester
 ---@field displayer GoTestDisplay
