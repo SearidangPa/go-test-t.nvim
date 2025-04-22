@@ -83,6 +83,7 @@
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func fun(test_info: terminal.testInfo)
+---@field unpin_test_func fun(test_name: string)
 ---@field get_tests_info_func fun(): table<string, terminal.testInfo>
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
 ---
@@ -91,5 +92,6 @@
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func fun(test_info: terminal.testInfo)
+---@field unpin_test_func fun(test_name: string)
 ---@field get_tests_info_func fun(): table<string, terminal.testInfo>
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>

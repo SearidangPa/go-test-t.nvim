@@ -26,7 +26,7 @@ function go_test.new(opts)
     toggle_term_func = function(test_name) self.term_tester:toggle_term_func(test_name) end,
     rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
-    is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
+    unpin_test_func = function(test_name) self.pin_tester:unpin_test(test_name) end,
     get_tests_info_func = function() return self.tests_info end,
     get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
   }

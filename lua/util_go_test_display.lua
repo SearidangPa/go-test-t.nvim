@@ -21,6 +21,7 @@ function Test_Display.new(display_opts)
   self.toggle_term_func = display_opts.toggle_term_func
   self.rerun_in_term_func = display_opts.rerun_in_term_func
   self.pin_test_func = display_opts.pin_test_func
+  self.unpin_test_func = display_opts.unpin_test_func
   self.get_tests_info_func = display_opts.get_tests_info_func
   self.get_pinned_tests_func = display_opts.get_pinned_tests_func
 
