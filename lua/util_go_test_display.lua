@@ -46,7 +46,7 @@ end
 
 ---@param tests_info? table<string, terminal.testInfo>
 ---@param self GoTestDisplay
-function Test_Display:update_buffer(tests_info)
+function Test_Display:update_buffer(tests_info, pin_triggered)
   if not tests_info then
     tests_info = self.get_tests_info_func()
   else
@@ -60,7 +60,8 @@ function Test_Display:update_buffer(tests_info)
   local new_lines = self:_parse_test_state_to_lines(tests_info)
   new_lines = self:_add_display_help_text(new_lines)
 
-  if vim.deep_equal(new_lines, self.current_buffer_lines) then
+  pin_triggered = pin_triggered or false
+  if vim.deep_equal(new_lines, self.current_buffer_lines) and not pin_triggered then
     return
   end
   self.current_buffer_lines = new_lines
@@ -274,7 +275,7 @@ function Test_Display:_setup_keymaps()
     local test_info = tests_info[test_name]
     assert(test_info, 'No test info found for test: ' .. test_name)
     self_ref.pin_test_func(test_info)
-    vim.schedule(function() self_ref:update_buffer(tests_info) end)
+    vim.schedule(function() self_ref:update_buffer(tests_info, true) end)
   end, map_opts)
 end
 
