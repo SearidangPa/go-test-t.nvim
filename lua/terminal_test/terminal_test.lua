@@ -67,7 +67,7 @@ function terminal_test:test_nearest_in_terminal()
 
   local util_path = require 'util_path'
   local intermediate_path = util_path.get_intermediate_path()
-  local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
+  local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
 
   ---@type terminal.testInfo
   local test_info = {
@@ -97,7 +97,7 @@ function terminal_test:retest_in_terminal_by_name(test_name)
     local util_path = require 'util_path'
     local intermediate_path = util_path.get_intermediate_path(lsp_param.filepath)
     assert(intermediate_path, 'No intermediate path found')
-    local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
+    local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
 
     ---@type terminal.testInfo
     local test_info = {
@@ -128,7 +128,7 @@ function terminal_test:test_buf_in_terminals()
     local util_path = require 'util_path'
     local intermediate_path = util_path.get_intermediate_path()
     assert(intermediate_path, 'No intermediate path found')
-    local test_command = string.format('%s %s -v -run %s', self.go_test_prefix, intermediate_path, test_name)
+    local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
 
     ---@type terminal.testInfo
     local test_info = {

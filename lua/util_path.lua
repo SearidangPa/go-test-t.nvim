@@ -35,9 +35,9 @@ function M.get_intermediate_path(filepath)
   if #segments == 0 then
     return ''
   elseif #segments == 1 then
-    return segments[1]
+    return '.' .. path_sep .. segments[1]
   else
-    return segments[1] .. path_sep .. segments[2]
+    return '.' .. path_sep .. segments[1] .. path_sep .. segments[2]
   end
 end
 
