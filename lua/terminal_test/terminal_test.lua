@@ -41,11 +41,8 @@ function terminal_test:reset()
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:test_in_terminal(test_info, do_not_assert_test_info)
-  do_not_assert_test_info = do_not_assert_test_info or false
-  if not do_not_assert_test_info then
-    self:_validate_test_info(test_info)
-  end
+function terminal_test:test_in_terminal(test_info)
+  self:_validate_test_info(test_info)
   self.terminals:delete_terminal(test_info.name)
   self.add_test_info_func(test_info)
 

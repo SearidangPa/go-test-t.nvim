@@ -10,7 +10,7 @@ function pin_tester.new(opts)
   self.pinned_list = {}
   self.update_display_buffer_func = opts.update_display_buffer_func
   self.toggle_display_func = opts.toggle_display_func
-  self.test_in_terminal_func = opts.test_in_terminal_func
+  self.retest_in_terminal_by_name = opts.retest_in_terminal_by_name
   self.test_nearest_in_terminal_func = opts.test_nearest_in_terminal_func
   self.add_test_info_func = opts.add_test_info_func
   return self
@@ -38,7 +38,7 @@ function pin_tester:test_all_pinned()
     self.pinned_list[test_info.name].status = 'fired'
     test_info.status = 'fired'
     self.add_test_info_func(test_info)
-    self.test_in_terminal_func(test_info, true)
+    self.retest_in_terminal_by_name(test_info)
   end
   self.toggle_display_func(true)
   self.update_display_buffer_func(self.pinned_list)

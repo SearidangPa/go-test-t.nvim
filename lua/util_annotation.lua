@@ -59,7 +59,7 @@
 ---@field pinned_list table<string, terminal.testInfo>
 ---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 ---@field toggle_display_func fun(boolean)
----@field test_in_terminal_func fun(test_info: terminal.testInfo, do_not_assert_test_info: boolean)
+---@field retest_in_terminal_by_name fun(test_name: string)
 ---@field test_nearest_in_terminal_func fun(): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---
@@ -67,7 +67,7 @@
 ---@field go_test_prefix string
 ---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 ---@field toggle_display_func fun(boolean)
----@field test_in_terminal_func fun(test_info: terminal.testInfo, do_not_assert_test_info: boolean)
+---@field retest_in_terminal_by_name fun(test_name: string)
 ---@field test_nearest_in_terminal_func fun(): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---

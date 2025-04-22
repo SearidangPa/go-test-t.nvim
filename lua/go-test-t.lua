@@ -16,7 +16,7 @@ function go_test.new(opts)
     go_test_prefix = self.go_test_prefix,
     update_display_buffer_func = function(tests_info) self.displayer:update_buffer(tests_info) end,
     toggle_display_func = function() self.displayer:toggle_display() end,
-    test_in_terminal_func = function(test_info, do_not_assert_test_info) self.term_tester:test_in_terminal(test_info, do_not_assert_test_info) end,
+    retest_in_terminal_by_name = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
     test_nearest_in_terminal_func = function() return self.term_tester:test_nearest_in_terminal() end,
     add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
   }
