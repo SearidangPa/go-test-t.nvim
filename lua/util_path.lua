@@ -1,12 +1,9 @@
 local M = {}
 
----@param steps number? Number of path segments to include (nil for all)
----@return string?
-function M.get_intermediate_path(filepath, steps)
+function M.get_intermediate_path(filepath)
   local cwd = vim.fn.getcwd()
   filepath = filepath or vim.fn.expand '%:p'
   local path_sep = package.config:sub(1, 1)
-
   cwd = cwd:gsub('/', path_sep):gsub('\\', path_sep)
   filepath = filepath:gsub('/', path_sep):gsub('\\', path_sep)
 
@@ -20,16 +17,18 @@ function M.get_intermediate_path(filepath, steps)
 
   local relative_path = filepath:sub(#cwd + 1)
   local segments = {}
+  local path_only = vim.fn.fnamemodify(relative_path, ':h')
 
-  for segment in relative_path:gmatch('[^' .. path_sep .. ']+') do
+  if path_only == '.' then
+    return '.' .. path_sep
+  end
+
+  for segment in path_only:gmatch('[^' .. path_sep .. ']+') do
     table.insert(segments, segment)
-    if steps and #segments == steps then
-      break
-    end
   end
 
   if #segments == 0 then
-    return ''
+    return '.' .. path_sep
   else
     local result = '.' .. path_sep
     for i, segment in ipairs(segments) do
@@ -38,6 +37,12 @@ function M.get_intermediate_path(filepath, steps)
         result = result .. path_sep
       end
     end
+
+    -- Always add the trailing separator to indicate it's a directory
+    if result:sub(-1) ~= path_sep then
+      result = result .. path_sep
+    end
+
     return result
   end
 end
