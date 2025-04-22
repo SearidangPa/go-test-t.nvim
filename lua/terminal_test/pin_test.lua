@@ -20,6 +20,7 @@ function pin_tester:is_test_pinned(test_name) return self.pinned_list[test_name]
 
 ---@param test_info terminal.testInfo
 function pin_tester:pin_test(test_info)
+  print('Pinning test:', test_info.name)
   self.pinned_list[test_info.name] = test_info
   vim.schedule(function() self.update_display_buffer_func(self.pinned_list) end)
 end

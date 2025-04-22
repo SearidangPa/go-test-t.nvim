@@ -151,6 +151,7 @@ function go_test:_clean_up_prev_job()
 end
 
 function go_test:_add_golang_test(entry)
+  local self_ref = self
   if not entry.Test then
     return
   end
@@ -161,8 +162,8 @@ function go_test:_add_golang_test(entry)
     filepath = '',
   }
 
-  self.tests_info[entry.Test] = test_info
-  vim.schedule(function() self.displayer:update_buffer() end)
+  self_ref.tests_info[entry.Test] = test_info
+  vim.schedule(function() self_ref.displayer:update_buffer() end)
 end
 
 function go_test:_filter_golang_output(entry)

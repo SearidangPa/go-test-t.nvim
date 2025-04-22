@@ -75,6 +75,7 @@ function Test_Display:update_buffer(tests_info)
     local line_idx = 1
     for _, test_info in pairs(self.get_tests_info_func()) do
       if test_info.name and self.is_test_pinned_func(test_info.name) then
+        print('Found pinned test:', test_info.name)
         for i = 1, #new_lines do
           local line = new_lines[i]
           if line:match(test_info.name) then
@@ -266,13 +267,14 @@ function Test_Display:_setup_keymaps()
   end, map_opts)
 
   map('n', 'p', function()
+    local self_ref = self
     local test_name = this:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
-    local tests_info = self:get_tests_info_func()
+    local tests_info = self_ref:get_tests_info_func()
     local test_info = tests_info[test_name]
     assert(test_info, 'No test info found for test: ' .. test_name)
-    self.pin_test_func(test_info)
-    vim.schedule(function() self:update_buffer(tests_info) end)
+    self_ref.pin_test_func(test_info)
+    vim.schedule(function() self_ref:update_buffer(tests_info) end)
   end, map_opts)
 end
 
