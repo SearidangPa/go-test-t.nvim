@@ -8,8 +8,8 @@ terminal_test.__index = terminal_test
 function terminal_test.new(opts)
   assert(opts, 'No options found')
   assert(opts.pin_test_func, 'No pin test function found')
-  assert(opts.display_title, 'No display title found')
   assert(opts.go_test_prefix, 'No go test prefix found')
+  assert(opts.ns_id, 'No namespace ID found')
 
   local self = setmetatable({}, terminal_test)
   self.go_test_prefix = opts.go_test_prefix
@@ -18,7 +18,7 @@ function terminal_test.new(opts)
   self.get_test_info_func = opts.get_test_info_func
   self.add_test_info_func = opts.add_test_info_func
 
-  self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
+  self.ns_id = opts.ns_id
   self.pin_test_func = opts.pin_test_func
   return self
 end

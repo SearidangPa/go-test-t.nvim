@@ -39,6 +39,7 @@ function go_test.new(opts)
       self.tests_info[test_info.name] = test_info
       vim.schedule(function() self.displayer:update_buffer(self.tests_info) end)
     end,
+    ns_id = vim.api.nvim_create_namespace 'Terminal Test',
   }
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)

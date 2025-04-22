@@ -17,7 +17,6 @@ function Test_Display.new(display_opts)
   self.original_test_buf = -1
   self.current_buffer_lines = {}
   self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
-  self.tests_info = display_opts.tests_info or {}
   self.display_title = display_opts.display_title
   self.toggle_term_func = display_opts.toggle_term_func
   self.rerun_in_term_func = display_opts.rerun_in_term_func

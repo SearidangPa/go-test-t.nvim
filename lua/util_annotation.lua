@@ -26,7 +26,6 @@
 ---@class termTester
 ---@field go_test_prefix string
 ---@field terminals TerminalMultiplexer
----@field tests_info table<string, terminal.testInfo>
 ---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
@@ -73,7 +72,6 @@
 ---@field original_test_buf number
 ---@field current_buffer_lines string[]
 ---@field ns_id number
----@field tests_info  table<string, terminal.testInfo>
 ---@field _close_display fun(self: GoTestDisplay)
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
@@ -83,7 +81,6 @@
 ---
 ---@class Test_Display_Options
 ---@field display_title string
----@field tests_info  table<string, terminal.testInfo>
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func fun(test_info: terminal.testInfo)
