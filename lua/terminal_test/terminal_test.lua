@@ -19,6 +19,7 @@ function terminal_test.new(opts)
     display_title = opts.display_title,
     toggle_term_func = function(test_name) self:toggle_term_func(test_name) end,
     rerun_in_term_func = function(test_name) self:retest_in_terminal_by_name(test_name) end,
+    pin_test_func = opts.pin_test_func,
   }
   self.ns_id = opts.ns_id or vim.api.nvim_create_namespace 'Terminal Test'
   self.pin_test_func = opts.pin_test_func

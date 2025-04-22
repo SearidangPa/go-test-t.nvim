@@ -4,12 +4,6 @@ local util_status_icon = require 'util_status_icon'
 local Test_Display = {}
 Test_Display.__index = Test_Display
 
----@class Test_Display_Options
----@field display_title string
----@field tests_info?  table<string, terminal.testInfo>
----@field toggle_term_func fun(test_name: string)
----@field rerun_in_term_func fun(test_name: string)
-
 ---@param display_opts Test_Display_Options
 function Test_Display.new(display_opts)
   assert(display_opts, 'No display options found')
@@ -27,6 +21,7 @@ function Test_Display.new(display_opts)
   self.display_title = display_opts.display_title
   self.toggle_term_func = display_opts.toggle_term_func
   self.rerun_in_term_func = display_opts.rerun_in_term_func
+  self.pin_test_func = display_opts.pin_test_func
   return self
 end
 
@@ -108,6 +103,7 @@ end
 
 --- === Private Functions ===
 
+---@param tests terminal.testInfo[]
 local function _sort_tests_by_status(tests)
   table.sort(tests, function(a, b)
     if a.status == b.status then
@@ -137,6 +133,8 @@ end
 ---@param tests_info  table<string, terminal.testInfo>
 function Test_Display:_parse_test_state_to_lines(tests_info)
   assert(tests_info, 'No test info found')
+
+  ---@type terminal.testInfo[]
   local tests_table = {}
   local buf_lines = { self.display_title }
 
@@ -234,13 +232,6 @@ function Test_Display:_setup_keymaps()
     assert(test_name, 'No test name found')
     self.rerun_in_term_func(test_name)
   end, map_opts)
-
-  map('n', 'K', function()
-    local test_name = this:_get_test_name_from_cursor()
-    assert(test_name, 'No test name found')
-    local status = self.tests_info[test_name].status
-    print('Status of ' .. test_name .. ': ' .. status)
-  end, map_opts)
 end
 
 function Test_Display:_close_display()
@@ -253,10 +244,10 @@ end
 Test_Display._help_text_lines = {
   ' Help 🧊',
   ' q       ===  Close Tracker Window',
-  ' <CR> ===  Jump to test code',
+  ' <CR>    ===  Jump to test code',
   ' t       ===  Toggle test terminal',
-  ' r       ===  Run test in terminal',
-  ' d       ===  Delete from tracker',
+  ' r       ===  (re)Run test in terminal',
+  ' p       ===  Pin/unpin test',
 }
 
 return Test_Display

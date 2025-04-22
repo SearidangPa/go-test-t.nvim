@@ -43,7 +43,6 @@
 ---@field name string
 ---@field status string
 ---@field fail_at_line? number
----@field has_details? boolean
 ---@field test_bufnr number
 ---@field test_line number
 ---@field test_command string
@@ -70,4 +69,12 @@
 ---@field _close_display fun(self: GoTestDisplay)
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
+---@field pin_test_func fun(test_info: terminal.testInfo)
 ---
+---
+---@class Test_Display_Options
+---@field display_title string
+---@field tests_info?  table<string, terminal.testInfo>
+---@field toggle_term_func fun(test_name: string)
+---@field rerun_in_term_func fun(test_name: string)
+---@field pin_test_func? fun(test_info: terminal.testInfo)
