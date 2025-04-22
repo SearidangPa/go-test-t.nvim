@@ -38,7 +38,7 @@ function pin_tester:test_all_pinned()
     self.pinned_list[test_info.name].status = 'fired'
     test_info.status = 'fired'
     self.add_test_info_func(test_info)
-    self.retest_in_terminal_by_name(test_info)
+    self.retest_in_terminal_by_name(test_info.name)
   end
   self.toggle_display_func(true)
   self.update_display_buffer_func(self.pinned_list)
