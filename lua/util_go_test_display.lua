@@ -22,16 +22,13 @@ function Test_Display.new(display_opts)
   self.rerun_in_term_func = display_opts.rerun_in_term_func
   self.pin_test_func = display_opts.pin_test_func
   self.is_test_pinned_func = display_opts.is_test_pinned_func
-  self.get_test_info_func = display_opts.get_test_info_func
+  self.get_tests_info_func = display_opts.get_tests_info_func
 
   vim.api.nvim_set_hl(0, 'GoTestPinned', { fg = '#5097A4', bold = true })
   return self
 end
 
-function Test_Display:reset()
-  self.tests_info = {}
-  self:update_buffer {}
-end
+function Test_Display:reset() self:update_buffer {} end
 
 function Test_Display:toggle_display()
   if vim.api.nvim_win_is_valid(self.display_win_id) then
@@ -39,14 +36,14 @@ function Test_Display:toggle_display()
     self.display_win_id = -1
   else
     self:create_window_and_buf()
-    self:update_buffer(self.tests_info)
+    self:update_buffer(self.get_tests_info_func())
   end
 end
 
 ---@param tests_info table<string, terminal.testInfo>
+---@param self GoTestDisplay
 function Test_Display:update_buffer(tests_info)
   assert(tests_info, 'No test info found')
-  self.tests_info = vim.list_extend(self.tests_info, tests_info)
 
   if not self.display_bufnr or not vim.api.nvim_buf_is_valid(self.display_bufnr) then
     return
@@ -68,7 +65,7 @@ function Test_Display:update_buffer(tests_info)
     })
 
     local line_idx = 1
-    for _, test_info in pairs(self.tests_info) do
+    for _, test_info in pairs(self.get_tests_info_func()) do
       if test_info.name and self.is_test_pinned_func(test_info.name) then
         for i = 1, #new_lines do
           local line = new_lines[i]
@@ -211,7 +208,9 @@ end
 function Test_Display:_jump_to_test_location_from_cursor()
   self:_assert_display_buf_win()
   local test_name = self:_get_test_name_from_cursor()
-  local test_info = self.tests_info[test_name]
+  local tests_info = self:get_tests_info_func()
+  local test_info = tests_info[test_name]
+
   assert(test_info, 'No test info found for test: ' .. test_name)
   if test_info.filepath and test_info.test_line then
     self:_jump_to_test_location(test_info.filepath, test_info.test_line, test_name)
@@ -259,7 +258,8 @@ function Test_Display:_setup_keymaps()
   map('n', 'p', function()
     local test_name = this:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
-    local test_info = self.tests_info[test_name]
+    local tests_info = self:get_tests_info_func()
+    local test_info = tests_info[test_name]
     assert(test_info, 'No test info found for test: ' .. test_name)
     self.pin_test_func(test_info)
   end, map_opts)

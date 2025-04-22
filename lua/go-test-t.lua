@@ -26,7 +26,7 @@ function go_test.new(opts)
     rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
     is_test_pinned_func = function(test_name) return self.pin_tester:is_test_pinned(test_name) end,
-    get_test_info_func = function(test_name) return self.tests_info[test_name] end,
+    get_tests_info_func = function() return self.tests_info end,
   }
 
   self.term_tester = require('terminal_test.terminal_test').new {

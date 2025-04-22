@@ -79,7 +79,7 @@
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func fun(test_info: terminal.testInfo)
 ---@field is_test_pinned_func fun(test_name: string): boolean
----@field get_test_info_func fun(test_name: string): terminal.testInfo
+---@field get_tests_info_func fun(): table<string, terminal.testInfo>
 ---
 ---@class Test_Display_Options
 ---@field display_title string
@@ -87,4 +87,4 @@
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func fun(test_info: terminal.testInfo)
 ---@field is_test_pinned_func fun(test_name: string): boolean
----@field get_test_info_func fun(test_name: string): terminal.testInfo
+---@field get_tests_info_func fun(): table<string, terminal.testInfo>
