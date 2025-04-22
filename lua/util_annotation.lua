@@ -53,10 +53,17 @@
 
 ---@class PinTester
 ---@field pinned_list table<string, terminal.testInfo>
----@field term_tester termTester
+---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field toggle_display_func fun()
+---@field test_in_terminal_func fun(test_info: terminal.testInfo)
+---@field test_nearest_in_terminal_func fun(): terminal.testInfo
 ---
 ---@class PinTesterOptions
 ---@field go_test_prefix string
+---@field update_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field toggle_display_func fun()
+---@field test_in_terminal_func fun(test_info: terminal.testInfo)
+---@field test_nearest_in_terminal_func fun(): terminal.testInfo
 ---
 ---@class GoTestDisplay
 ---@field display_title string

@@ -46,6 +46,7 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:test_in_terminal(test_info)
   self:_validate_test_info(test_info)
+  self.terminals:delete_terminal(test_info.name)
 
   self.tests_info[test_info.name] = test_info
   self:_auto_update_test_line(test_info)
@@ -67,7 +68,6 @@ function terminal_test:test_nearest_in_terminal()
   local test_name, test_line = util_find_test.get_enclosing_test()
   assert(test_name, 'Not inside a test function')
   assert(test_line, 'No test line found')
-  self.terminals:delete_terminal(test_name)
 
   local util_path = require 'util_path'
   local intermediate_path = util_path.get_intermediate_path()
@@ -128,7 +128,6 @@ function terminal_test:test_buf_in_terminals()
   self.displayer:create_window_and_buf()
 
   for test_name, test_line in pairs(all_tests_in_buf) do
-    self.terminals:delete_terminal(test_name)
     local util_path = require 'util_path'
     local intermediate_path = util_path.get_intermediate_path()
     assert(intermediate_path, 'No intermediate path found')
