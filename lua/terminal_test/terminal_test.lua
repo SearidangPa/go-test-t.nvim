@@ -17,6 +17,7 @@ function terminal_test.new(opts)
 
   self.get_test_info_func = opts.get_test_info_func
   self.add_test_info_func = opts.add_test_info_func
+  self.toggle_display_func = opts.toggle_display_func
 
   self.ns_id = opts.ns_id
   self.pin_test_func = opts.pin_test_func
@@ -118,7 +119,7 @@ function terminal_test:test_buf_in_terminals()
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test_func'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
-  self.displayer:create_window_and_buf()
+  self.toggle_display_func()
 
   for test_name, test_line in pairs(all_tests_in_buf) do
     local util_path = require 'util_path'

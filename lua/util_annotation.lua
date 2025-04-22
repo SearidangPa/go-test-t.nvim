@@ -30,6 +30,7 @@
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
+---@field toggle_display_func fun()
 
 ---@class termTest.Options
 ---@field go_test_prefix string
@@ -38,6 +39,7 @@
 ---@field is_test_pinned_func fun(test_name: string): boolean
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
+---@field toggle_display_func fun()
 
 ---@class terminal.testInfo
 ---@field name string
