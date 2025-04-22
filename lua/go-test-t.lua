@@ -39,22 +39,21 @@ function go_test.new(opts)
 end
 
 function go_test:setup_user_command(user_command_prefix)
-  local this = self
   local term_tester = self.term_tester
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function()
     term_tester:reset()
     self:reset()
   end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() this:test_all(false) end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() this:test_all(true) end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self:test_all(false) end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self:test_all(true) end, {})
   vim.api.nvim_create_user_command(
     user_command_prefix .. 'TestAllView',
-    function() this.term_tester.terminals:toggle_float_terminal(this.terminal_name) end,
+    function() self.term_tester.terminals:toggle_float_terminal(self.terminal_name) end,
     {}
   )
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() term_tester.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() this:load_quack_tests() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuackTestQuickfix', function() self:load_quack_tests() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() term_tester:test_nearest_in_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() term_tester:test_buf_in_terminals() end, {})
@@ -62,8 +61,8 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminals:search_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() this.pin_tester:pin_nearest_test() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() this.pin_tester:test_all_pinned() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self.pin_tester:pin_nearest_test() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAllPinned', function() self.pin_tester:test_all_pinned() end, {})
 end
 
 function go_test:test_all(test_in_pkg_only)
