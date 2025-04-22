@@ -259,9 +259,9 @@ function Test_Display:_setup_keymaps()
   map('n', 'p', function()
     local test_name = this:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
-    local tests_info = self.tests_info[test_name]
-    assert(tests_info, 'No test info found for test: ' .. test_name)
-    self.pin_test_func(tests_info)
+    local test_info = self.tests_info[test_name]
+    assert(test_info, 'No test info found for test: ' .. test_name)
+    self.pin_test_func(test_info)
   end, map_opts)
 end
 
