@@ -61,19 +61,24 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPinned', function() self_ref.pin_tester:test_all_pinned() end, {})
-
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', self_ref:reset(), {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self_ref.pin_tester:pin_nearest_test() end, {})
+
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function() self_ref:reset_all() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestResetKeepPin', function() self_ref:reset_keep_pin() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'LoadQuackTestQuickfix', function() self_ref:load_quack_tests() end, {})
 end
 
-function go_test:reset()
+function go_test:reset_keep_pin()
   local self_ref = self
   self_ref.job_id = -1
   self_ref.tests_info = {}
-  self_ref.pin_tester.pinned_list = {}
   self_ref.term_tester:reset()
   self_ref.displayer:reset()
+end
+
+function go_test:reset_all()
+  self:reset_keep_pin()
+  self.pin_tester.pinned_list = {}
 end
 
 function go_test:test_all(test_in_pkg_only)
