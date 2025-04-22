@@ -288,7 +288,7 @@ function Test_Display:_setup_keymaps()
     local tests_info = self_ref:get_tests_info_func()
     local test_info = tests_info[test_name]
     assert(test_info, 'No test info found for test: ' .. test_name)
-    self_ref.unpin_test(test_info)
+    self_ref.unpin_test_func(test_info.name)
     vim.schedule(function() self_ref:update_display_buffer(tests_info, true) end)
   end, map_opts)
 end
