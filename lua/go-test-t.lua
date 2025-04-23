@@ -29,6 +29,7 @@ function go_test.new(opts)
     unpin_test_func = function(test_name) self.pin_tester:unpin_test(test_name) end,
     get_tests_info_func = function() return self.tests_info end,
     get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
+    preview_terminal_func = function(test_name) return self.term_tester:preview_terminal(test_name) end,
   }
 
   self.term_tester = require('terminal_test.terminal_test').new {
