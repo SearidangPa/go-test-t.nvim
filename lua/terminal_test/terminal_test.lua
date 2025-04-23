@@ -218,7 +218,7 @@ function terminal_test:preview_terminal(terminal_name)
   })
 end
 
---- === Private ===
+--------------------------------------- === Private === ---------------------------------------
 
 ---@param test_info terminal.testInfo
 function terminal_test:_auto_update_test_line(test_info)
