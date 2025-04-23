@@ -208,7 +208,7 @@ function terminal_test:preview_terminal(terminal_name)
 
   vim.api.nvim_win_call(float_terminal_state.win, function() vim.cmd 'normal! G' end)
   float_terminal_state.footer_win = vim.api.nvim_open_win(float_terminal_state.footer_buf, false, {
-    relative = 'editor', -- Changed from 'win' to 'editor' for consistent positioning
+    relative = 'editor',
     width = width,
     height = 1,
     row = height - 3,
