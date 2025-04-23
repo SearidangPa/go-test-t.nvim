@@ -289,7 +289,7 @@ function test_display:_setup_keymaps()
     vim.schedule(function() self_ref:update_display_buffer(tests_info, true) end)
   end, map_opts)
 
-  map('n', 'u', function()
+  map('n', 'v', function()
     local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     self_ref.preview_terminal_func(test_name)
