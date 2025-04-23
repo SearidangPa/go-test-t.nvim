@@ -313,7 +313,7 @@ Test_Display._help_text_lines = {
 require 'terminal-multiplexer'
 ---@param float_terminal_state TerminalMultiplexer.FloatTermState
 ---@param terminal_name string
-function Test_Display._create_float_window(terminal_multiplexer, float_terminal_state, terminal_name)
+function Test_Display._create_two_third_float_window(terminal_multiplexer, float_terminal_state, terminal_name)
   local total_width = math.floor(vim.o.columns)
   local width = math.floor(total_width * 2 / 3) - 2 -- Use 2/3 of the screen width
   local height = math.floor(vim.o.lines)
@@ -328,10 +328,17 @@ function Test_Display._create_float_window(terminal_multiplexer, float_terminal_
   local padding = string.rep(' ', width - #terminal_name - 1)
   local footer_text = padding .. terminal_name
   vim.api.nvim_buf_set_lines(float_terminal_state.footer_buf, 0, -1, false, { footer_text })
-  ---@diagnostic disable-next-line: deprecated
-  vim.api.nvim_buf_add_highlight(float_terminal_state.footer_buf, -1, 'Title', 0, 0, -1)
-  ---@diagnostic disable-next-line: deprecated
-  vim.api.nvim_buf_add_highlight(float_terminal_state.footer_buf, -1, 'TerminalNameUnderline', 0, #padding, -1)
+  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, terminal_multiplexer.ns_id, 0, 0, {
+    end_row = 0,
+    end_col = #footer_text,
+    hl_group = 'Title',
+  })
+
+  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, terminal_multiplexer.ns_id, 0, #padding, {
+    end_row = 0,
+    end_col = #footer_text,
+    hl_group = 'TerminalNameUnderline',
+  })
 
   float_terminal_state.win = vim.api.nvim_open_win(float_terminal_state.bufnr, true, {
     relative = 'editor',
