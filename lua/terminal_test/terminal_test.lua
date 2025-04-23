@@ -13,7 +13,7 @@ function terminal_test.new(opts)
 
   local self = setmetatable({}, terminal_test)
   self.go_test_prefix = opts.go_test_prefix
-  self.terminals = require('terminal-multiplexer').new {}
+  self.terminal_multiplexer = require('terminal-multiplexer').new {}
 
   self.get_test_info_func = opts.get_test_info_func
   self.add_test_info_func = opts.add_test_info_func
@@ -27,28 +27,28 @@ function terminal_test.new(opts)
 end
 
 function terminal_test:toggle_term_func(test_name)
-  local test_info = self.terminals.all_terminals[test_name]
+  local test_info = self.terminal_multiplexer.all_terminals[test_name]
   if not test_info then
     self:retest_in_terminal_by_name(test_name)
   end
-  self.terminals:toggle_float_terminal(test_name)
+  self.terminal_multiplexer:toggle_float_terminal(test_name)
 end
 
 function terminal_test:reset()
-  for test_name, _ in pairs(self.terminals.all_terminals) do
-    self.terminals:delete_terminal(test_name)
+  for test_name, _ in pairs(self.terminal_multiplexer.all_terminals) do
+    self.terminal_multiplexer:delete_terminal(test_name)
   end
 end
 
 ---@param test_info terminal.testInfo
 function terminal_test:test_in_terminal(test_info)
   self:_validate_test_info(test_info)
-  self.terminals:delete_terminal(test_info.name)
+  self.terminal_multiplexer:delete_terminal(test_info.name)
   self.add_test_info_func(test_info)
 
   self:_auto_update_test_line(test_info)
-  self.terminals:toggle_float_terminal(test_info.name)
-  local float_term_state = self.terminals:toggle_float_terminal(test_info.name)
+  self.terminal_multiplexer:toggle_float_terminal(test_info.name)
+  local float_term_state = self.terminal_multiplexer:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
 
   local self_ref = self
@@ -156,22 +156,22 @@ function terminal_test:test_nearest_with_view_term()
   if not test_info then
     self:test_nearest_in_terminal()
   end
-  self.terminals:toggle_float_terminal(test_name)
+  self.terminal_multiplexer:toggle_float_terminal(test_name)
 end
 
 function terminal_test:toggle_last_test_terminal()
-  local test_name = self.terminals.last_terminal_name
+  local test_name = self.terminal_multiplexer.last_terminal_name
   if not test_name then
     vim.notify('No last test terminal found', vim.log.levels.WARN)
     return
   end
-  self.terminals:toggle_float_terminal(test_name)
+  self.terminal_multiplexer:toggle_float_terminal(test_name)
 end
 
 require 'terminal-multiplexer'
 ---@param float_terminal_state TerminalMultiplexer.FloatTermState
 ---@param terminal_name string
-function terminal_test:_create_two_third_float_window(terminal_multiplexer, float_terminal_state, terminal_name)
+function terminal_test:_create_two_third_float_window(float_terminal_state, terminal_name)
   local total_width = math.floor(vim.o.columns)
   local width = math.floor(total_width * 2 / 3) - 2 -- Use 2/3 of the screen width
   local height = math.floor(vim.o.lines)
@@ -186,7 +186,7 @@ function terminal_test:_create_two_third_float_window(terminal_multiplexer, floa
   local padding = string.rep(' ', width - #terminal_name - 1)
   local footer_text = padding .. terminal_name
   vim.api.nvim_buf_set_lines(float_terminal_state.footer_buf, 0, -1, false, { footer_text })
-  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, terminal_multiplexer.ns_id, 0, 0, {
+  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, self.terminal_multiplexer.ns_id, 0, 0, {
     end_row = 0,
     end_col = #footer_text,
     hl_group = 'Title',

@@ -25,7 +25,7 @@
 
 ---@class termTester
 ---@field go_test_prefix string
----@field terminals TerminalMultiplexer
+---@field terminal_multiplexer TerminalMultiplexer
 ---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
