@@ -70,6 +70,12 @@ function go_test:setup_user_command(user_command_prefix)
 end
 
 function go_test:reset_keep_pin()
+  for _, test_info in pairs(self.tests_info) do
+    if test_info.fidget_handle then
+      test_info.fidget_handle:cancel()
+    end
+  end
+
   local self_ref = self
   self_ref.job_id = -1
   self_ref.tests_info = {}
