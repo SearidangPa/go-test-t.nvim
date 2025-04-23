@@ -244,8 +244,6 @@ function terminal_test:_auto_update_test_line(test_info)
   return augroup
 end
 
---- === Process Buffer Lines ===
-
 ---@param buf number
 ---@param first_line number
 ---@param last_line number
@@ -343,8 +341,6 @@ function terminal_test:_process_one_line(line, test_info, current_time)
     return true
   end
 end
-
---- === Validate Test Info ===
 
 ---@param test_info terminal.testInfo
 function terminal_test:_validate_test_info(test_info)
