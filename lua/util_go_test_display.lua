@@ -22,6 +22,7 @@ function test_display.new(display_opts)
   self.unpin_test_func = display_opts.unpin_test_func
   self.get_tests_info_func = display_opts.get_tests_info_func
   self.get_pinned_tests_func = display_opts.get_pinned_tests_func
+  self.preview_terminal_func = display_opts.preview_terminal_func
 
   vim.api.nvim_set_hl(0, 'GoTestPinned', { fg = '#5097A4', bold = true, underline = true })
   return self
@@ -249,28 +250,27 @@ function test_display:_jump_to_test_location(filepath, test_line, test_name)
 end
 
 function test_display:_setup_keymaps()
-  local this = self -- Capture the current 'self' reference
+  local self_ref = self -- Capture the current 'self' reference
   local map_opts = { buffer = self.display_bufnr, noremap = true, silent = true }
   local map = vim.keymap.set
 
-  map('n', 'q', function() this:_close_display() end, map_opts)
-  map('n', '<CR>', function() this:_jump_to_test_location_from_cursor() end, map_opts)
+  map('n', 'q', function() self_ref:_close_display() end, map_opts)
+  map('n', '<CR>', function() self_ref:_jump_to_test_location_from_cursor() end, map_opts)
 
   map('n', 't', function()
-    local test_name = this:_get_test_name_from_cursor()
+    local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     self.toggle_term_func(test_name)
   end, map_opts)
 
   map('n', 'r', function()
-    local test_name = this:_get_test_name_from_cursor()
+    local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     self.rerun_in_term_func(test_name)
   end, map_opts)
 
   map('n', 'p', function()
-    local self_ref = self
-    local test_name = this:_get_test_name_from_cursor()
+    local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     local tests_info = self_ref:get_tests_info_func()
     local test_info = tests_info[test_name]
@@ -280,14 +280,19 @@ function test_display:_setup_keymaps()
   end, map_opts)
 
   map('n', 'u', function()
-    local self_ref = self
-    local test_name = this:_get_test_name_from_cursor()
+    local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
     local tests_info = self_ref:get_tests_info_func()
     local test_info = tests_info[test_name]
     assert(test_info, 'No test info found for test: ' .. test_name)
     self_ref.unpin_test_func(test_info.name)
     vim.schedule(function() self_ref:update_display_buffer(tests_info, true) end)
+  end, map_opts)
+
+  map('n', 'u', function()
+    local test_name = self_ref:_get_test_name_from_cursor()
+    assert(test_name, 'No test name found')
+    self_ref.preview_terminal_func(test_name)
   end, map_opts)
 end
 
@@ -306,6 +311,7 @@ test_display._help_text_lines = {
   ' r       ===  (Re)Run test in terminal',
   ' p       ===  Pin test',
   ' u       ===  Unpin test',
+  ' v       ===  Preview test in terminal',
 }
 
 return test_display

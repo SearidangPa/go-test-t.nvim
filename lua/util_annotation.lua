@@ -86,6 +86,7 @@
 ---@field unpin_test_func fun(test_name: string)
 ---@field get_tests_info_func fun(): table<string, terminal.testInfo>
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
+---@field preview_terminal_func fun(test_name: string)
 ---
 ---@class Test_Display_Options
 ---@field display_title string
@@ -95,3 +96,4 @@
 ---@field unpin_test_func fun(test_name: string)
 ---@field get_tests_info_func fun(): table<string, terminal.testInfo>
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
+---@field preview_terminal_func fun(test_name: string)
