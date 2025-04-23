@@ -40,7 +40,7 @@ function go_test.new(opts)
     get_test_info_func = function(test_name) return self.tests_info[test_name] end,
     add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
     ns_id = vim.api.nvim_create_namespace 'Terminal Test',
-    toggle_display_func = function() self.displayer:toggle_display() end,
+    toggle_display_func = function(do_not_close) self.displayer:toggle_display(do_not_close) end,
     update_display_buffer_func = function(tests_info) self.displayer:update_display_buffer(tests_info) end,
   }
   local user_command_prefix = opts.user_command_prefix or ''

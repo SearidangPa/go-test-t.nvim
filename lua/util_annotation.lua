@@ -31,7 +31,7 @@
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
----@field toggle_display_func fun()
+---@field toggle_display_func fun(do_not_close: boolean)
 ---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 
 ---@class termTest.Options
@@ -41,7 +41,7 @@
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
----@field toggle_display_func fun()
+---@field toggle_display_func fun(do_not_close: boolean)
 ---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 
 ---@class terminal.testInfo

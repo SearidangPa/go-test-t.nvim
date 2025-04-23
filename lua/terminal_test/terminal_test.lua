@@ -122,7 +122,7 @@ function terminal_test:test_buf_in_terminals()
   local source_bufnr = vim.api.nvim_get_current_buf()
   local util_find_test = require 'util_find_test_func'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
-  self.toggle_display_func()
+  self.toggle_display_func(true)
 
   for test_name, test_line in pairs(all_tests_in_buf) do
     local util_path = require 'util_path'
