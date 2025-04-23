@@ -6,7 +6,7 @@
 ---@field go_test_ns_id number
 ---@field term_tester termTester
 ---@field pin_tester PinTester
----@field displayer GoTestDisplay
+---@field displayer TestDisplay
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
 ---@field test_all fun(self: GoTestT, test_in_pkg_only: boolean)
 ---@field toggle_display fun(self: GoTestT)
@@ -71,22 +71,24 @@
 ---@field test_nearest_in_terminal_func fun(): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---
----@class GoTestDisplay
+---@class TestDisplay
 ---@field display_title string
 ---@field display_win_id number
+---@field preview_win_id number
 ---@field display_bufnr number
 ---@field original_test_win number
 ---@field original_test_buf number
 ---@field current_buffer_lines string[]
+---@field augroup_id number
 ---@field ns_id number
----@field _close_display fun(self: GoTestDisplay)
+---@field _close_display fun(self: TestDisplay)
 ---@field toggle_term_func fun(test_name: string)
 ---@field rerun_in_term_func fun(test_name: string)
 ---@field pin_test_func fun(test_info: terminal.testInfo)
 ---@field unpin_test_func fun(test_name: string)
 ---@field get_tests_info_func fun(): table<string, terminal.testInfo>
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
----@field preview_terminal_func fun(test_name: string)
+---@field preview_terminal_func fun(test_name: string): number? # return the win id of the floating terminal
 ---
 ---@class Test_Display_Options
 ---@field display_title string
@@ -96,4 +98,4 @@
 ---@field unpin_test_func fun(test_name: string)
 ---@field get_tests_info_func fun(): table<string, terminal.testInfo>
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
----@field preview_terminal_func fun(test_name: string)
+---@field preview_terminal_func fun(test_name: string): number?    # return the win_id of the floating terminal

@@ -1,4 +1,4 @@
----@class GoTestDisplay
+---@class TestDisplay
 local test_display = {}
 test_display.__index = test_display
 
@@ -11,9 +11,11 @@ function test_display.new(display_opts)
   local self = setmetatable({}, test_display)
   self.display_win_id = -1
   self.display_bufnr = -1
+  self.preview_win_id = -1
   self.original_test_win = -1
   self.original_test_buf = -1
   self.current_buffer_lines = {}
+  self.augroup_id = vim.api.nvim_create_augroup('GoTestDisplay', { clear = true })
   self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
   self.display_title = display_opts.display_title
   self.toggle_term_func = display_opts.toggle_term_func
@@ -45,7 +47,7 @@ function test_display:toggle_display(do_not_close)
 end
 
 ---@param tests_info? table<string, terminal.testInfo>
----@param self GoTestDisplay
+---@param self TestDisplay
 function test_display:update_display_buffer(tests_info, pin_triggered)
   tests_info = tests_info or {}
   tests_info = vim.list_extend(self.get_tests_info_func(), tests_info)
@@ -292,8 +294,27 @@ function test_display:_setup_keymaps()
   map('n', 'v', function()
     local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
-    self_ref.preview_terminal_func(test_name)
+    local win_id = self_ref.preview_terminal_func(test_name)
+    if win_id and vim.api.nvim_win_is_valid(win_id) then
+      self_ref.preview_win_id = win_id
+    end
   end, map_opts)
+
+  self_ref:attach_autocmd_buf()
+end
+
+function test_display:attach_autocmd_buf()
+  local self_ref = self
+
+  vim.api.nvim_create_autocmd({ 'BufLeave', 'WinLeave' }, {
+    buffer = self_ref.display_bufnr,
+    group = self_ref.augroup_id,
+    callback = function()
+      if vim.api.nvim_win_is_valid(self_ref.preview_win_id) then
+        vim.api.nvim_win_close(self_ref.preview_win_id, true)
+      end
+    end,
+  })
 end
 
 function test_display:_close_display()
