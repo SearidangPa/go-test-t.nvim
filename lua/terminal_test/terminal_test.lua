@@ -180,22 +180,6 @@ function terminal_test:preview_terminal(terminal_name)
   local total_width = math.floor(vim.o.columns)
   local width = math.floor(total_width * 2 / 3) - 2 -- Use 2/3 of the screen width
   local height = math.floor(vim.o.lines)
-  float_terminal_state.footer_buf = vim.api.nvim_create_buf(false, true)
-  local padding = string.rep(' ', width - #terminal_name - 1)
-  local footer_text = padding .. terminal_name
-  vim.api.nvim_buf_set_lines(float_terminal_state.footer_buf, 0, -1, false, { footer_text })
-  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, self.terminal_multiplexer.ns_id, 0, 0, {
-    end_row = 0,
-    end_col = #footer_text,
-    hl_group = 'Title',
-  })
-
-  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, self.terminal_multiplexer.ns_id, 0, #padding, {
-    end_row = 0,
-    end_col = #footer_text,
-    hl_group = 'TerminalNameUnderline',
-  })
-
   float_terminal_state.win = vim.api.nvim_open_win(float_terminal_state.bufnr, true, {
     relative = 'editor',
     width = width,
@@ -204,17 +188,6 @@ function terminal_test:preview_terminal(terminal_name)
     col = 0,
     style = 'minimal',
     border = 'rounded',
-  })
-
-  vim.api.nvim_win_call(float_terminal_state.win, function() vim.cmd 'normal! G' end)
-  float_terminal_state.footer_win = vim.api.nvim_open_win(float_terminal_state.footer_buf, false, {
-    relative = 'editor',
-    width = width,
-    height = 1,
-    row = height - 3,
-    col = 0,
-    style = 'minimal',
-    border = 'none',
   })
 end
 
