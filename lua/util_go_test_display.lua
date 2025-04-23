@@ -1,16 +1,14 @@
-local util_status_icon = require 'util_status_icon'
-
 ---@class GoTestDisplay
-local Test_Display = {}
-Test_Display.__index = Test_Display
+local test_display = {}
+test_display.__index = test_display
 
 ---@param display_opts Test_Display_Options
-function Test_Display.new(display_opts)
+function test_display.new(display_opts)
   assert(display_opts, 'No display options found')
   assert(display_opts.display_title, 'No display title found')
   assert(display_opts.toggle_term_func, 'No toggle term function found')
   assert(display_opts.rerun_in_term_func, 'No rerun in term function found')
-  local self = setmetatable({}, Test_Display)
+  local self = setmetatable({}, test_display)
   self.display_win_id = -1
   self.display_bufnr = -1
   self.original_test_win = -1
@@ -29,9 +27,9 @@ function Test_Display.new(display_opts)
   return self
 end
 
-function Test_Display:reset() self:update_display_buffer {} end
+function test_display:reset() self:update_display_buffer {} end
 
-function Test_Display:toggle_display(do_not_close)
+function test_display:toggle_display(do_not_close)
   do_not_close = do_not_close or false
   if vim.api.nvim_win_is_valid(self.display_win_id) then
     if do_not_close then
@@ -47,7 +45,7 @@ end
 
 ---@param tests_info? table<string, terminal.testInfo>
 ---@param self GoTestDisplay
-function Test_Display:update_display_buffer(tests_info, pin_triggered)
+function test_display:update_display_buffer(tests_info, pin_triggered)
   tests_info = tests_info or {}
   tests_info = vim.list_extend(self.get_tests_info_func(), tests_info)
 
@@ -100,7 +98,7 @@ function Test_Display:update_display_buffer(tests_info, pin_triggered)
   end)
 end
 
-function Test_Display:create_window_and_buf()
+function test_display:create_window_and_buf()
   self.original_test_win = vim.api.nvim_get_current_win()
   self.original_test_buf = vim.api.nvim_get_current_buf()
 
@@ -131,7 +129,7 @@ end
 --- === Private Functions ===
 
 ---@param tests terminal.testInfo[]
-function Test_Display:_sort_tests_by_status(tests)
+function test_display:_sort_tests_by_status(tests)
   table.sort(tests, function(a, b)
     local priority = {
       fail = 1,
@@ -164,7 +162,7 @@ function Test_Display:_sort_tests_by_status(tests)
 end
 
 ---@param tests_info  table<string, terminal.testInfo>
-function Test_Display:_parse_test_state_to_lines(tests_info)
+function test_display:_parse_test_state_to_lines(tests_info)
   assert(tests_info, 'No test info found')
 
   ---@type terminal.testInfo[]
@@ -181,7 +179,7 @@ function Test_Display:_parse_test_state_to_lines(tests_info)
   self:_sort_tests_by_status(tests_table)
 
   for _, test in ipairs(tests_table) do
-    local status_icon = util_status_icon.get_status_icon(test.status)
+    local status_icon = require('util_status_icon').get_status_icon(test.status)
     if test.status == 'fail' and test.filepath ~= '' and test.fail_at_line then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
       table.insert(buf_lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
@@ -192,7 +190,7 @@ function Test_Display:_parse_test_state_to_lines(tests_info)
   return buf_lines
 end
 
-function Test_Display:_add_display_help_text(buf_lines)
+function test_display:_add_display_help_text(buf_lines)
   if self.display_win_id and vim.api.nvim_win_is_valid(self.display_win_id) then
     local window_width = vim.api.nvim_win_get_width(self.display_win_id)
     table.insert(buf_lines, string.rep('─', window_width - 2))
@@ -203,14 +201,14 @@ function Test_Display:_add_display_help_text(buf_lines)
   return buf_lines
 end
 
-function Test_Display:_assert_display_buf_win()
+function test_display:_assert_display_buf_win()
   assert(self.display_bufnr, 'display_buf is nil in jump_to_test_location')
   assert(self.display_win_id, 'display_win is nil in jump_to_test_location')
 end
 
 local icons = '🔥❌✅🔄⏸️🪵⏺️🏁'
 
-function Test_Display:_get_test_name_from_cursor()
+function test_display:_get_test_name_from_cursor()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local line_nr = cursor[1]
   local line = vim.api.nvim_buf_get_lines(self.display_bufnr, line_nr - 1, line_nr, false)[1]
@@ -220,7 +218,7 @@ function Test_Display:_get_test_name_from_cursor()
   return test_name
 end
 
-function Test_Display:_jump_to_test_location_from_cursor()
+function test_display:_jump_to_test_location_from_cursor()
   self:_assert_display_buf_win()
   local test_name = self:_get_test_name_from_cursor()
   local tests_info = self:get_tests_info_func()
@@ -235,7 +233,7 @@ function Test_Display:_jump_to_test_location_from_cursor()
   require('util_lsp').action_from_test_name(test_name, function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name) end)
 end
 
-function Test_Display:_jump_to_test_location(filepath, test_line, test_name)
+function test_display:_jump_to_test_location(filepath, test_line, test_name)
   assert(test_name, 'No test name found for test')
   assert(filepath, 'No filepath found for test: ' .. test_name)
   assert(test_line, 'No test line found for test: ' .. test_name)
@@ -250,7 +248,7 @@ function Test_Display:_jump_to_test_location(filepath, test_line, test_name)
   end
 end
 
-function Test_Display:_setup_keymaps()
+function test_display:_setup_keymaps()
   local this = self -- Capture the current 'self' reference
   local map_opts = { buffer = self.display_bufnr, noremap = true, silent = true }
   local map = vim.keymap.set
@@ -293,14 +291,14 @@ function Test_Display:_setup_keymaps()
   end, map_opts)
 end
 
-function Test_Display:_close_display()
+function test_display:_close_display()
   if vim.api.nvim_win_is_valid(self.display_win_id) then
     vim.api.nvim_win_close(self.display_win_id, true)
     self.display_win_id = -1
   end
 end
 
-Test_Display._help_text_lines = {
+test_display._help_text_lines = {
   ' Help 🧊',
   ' q       ===  Close Tracker Window',
   ' <CR>    ===  Jump to test code',
@@ -310,56 +308,4 @@ Test_Display._help_text_lines = {
   ' u       ===  Unpin test',
 }
 
-require 'terminal-multiplexer'
----@param float_terminal_state TerminalMultiplexer.FloatTermState
----@param terminal_name string
-function Test_Display._create_two_third_float_window(terminal_multiplexer, float_terminal_state, terminal_name)
-  local total_width = math.floor(vim.o.columns)
-  local width = math.floor(total_width * 2 / 3) - 2 -- Use 2/3 of the screen width
-  local height = math.floor(vim.o.lines)
-  local row = 0 -- Start from the top
-  local col = 0 -- Start from the left
-
-  if float_terminal_state.bufnr == -1 then
-    float_terminal_state.bufnr = vim.api.nvim_create_buf(false, true)
-  end
-
-  float_terminal_state.footer_buf = vim.api.nvim_create_buf(false, true)
-  local padding = string.rep(' ', width - #terminal_name - 1)
-  local footer_text = padding .. terminal_name
-  vim.api.nvim_buf_set_lines(float_terminal_state.footer_buf, 0, -1, false, { footer_text })
-  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, terminal_multiplexer.ns_id, 0, 0, {
-    end_row = 0,
-    end_col = #footer_text,
-    hl_group = 'Title',
-  })
-
-  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, terminal_multiplexer.ns_id, 0, #padding, {
-    end_row = 0,
-    end_col = #footer_text,
-    hl_group = 'TerminalNameUnderline',
-  })
-
-  float_terminal_state.win = vim.api.nvim_open_win(float_terminal_state.bufnr, true, {
-    relative = 'editor',
-    width = width,
-    height = height - 3,
-    row = row,
-    col = col,
-    style = 'minimal',
-    border = 'rounded',
-  })
-
-  vim.api.nvim_win_call(float_terminal_state.win, function() vim.cmd 'normal! G' end)
-  float_terminal_state.footer_win = vim.api.nvim_open_win(float_terminal_state.footer_buf, false, {
-    relative = 'editor', -- Changed from 'win' to 'editor' for consistent positioning
-    width = width,
-    height = 1,
-    row = height - 3,
-    col = col,
-    style = 'minimal',
-    border = 'none',
-  })
-end
-
-return Test_Display
+return test_display
