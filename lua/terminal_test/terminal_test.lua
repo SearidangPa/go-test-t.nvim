@@ -168,20 +168,18 @@ function terminal_test:toggle_last_test_terminal()
   self.terminal_multiplexer:toggle_float_terminal(test_name)
 end
 
-require 'terminal-multiplexer'
----@param float_terminal_state TerminalMultiplexer.FloatTermState
 ---@param terminal_name string
-function terminal_test:_create_two_third_float_window(float_terminal_state, terminal_name)
+function terminal_test:preview_terminal(terminal_name)
+  local float_terminal_state = self.terminal_multiplexer.all_terminals[terminal_name]
+  if not float_terminal_state then
+    require('fidget').notify('No terminal found', vim.log.levels.WARN)
+    return
+  end
+  assert(float_terminal_state.bufnr, 'No buffer found for terminal')
+
   local total_width = math.floor(vim.o.columns)
   local width = math.floor(total_width * 2 / 3) - 2 -- Use 2/3 of the screen width
   local height = math.floor(vim.o.lines)
-  local row = 0 -- Start from the top
-  local col = 0 -- Start from the left
-
-  if float_terminal_state.bufnr == -1 then
-    float_terminal_state.bufnr = vim.api.nvim_create_buf(false, true)
-  end
-
   float_terminal_state.footer_buf = vim.api.nvim_create_buf(false, true)
   local padding = string.rep(' ', width - #terminal_name - 1)
   local footer_text = padding .. terminal_name
@@ -192,7 +190,7 @@ function terminal_test:_create_two_third_float_window(float_terminal_state, term
     hl_group = 'Title',
   })
 
-  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, terminal_multiplexer.ns_id, 0, #padding, {
+  vim.api.nvim_buf_set_extmark(float_terminal_state.footer_buf, self.terminal_multiplexer.ns_id, 0, #padding, {
     end_row = 0,
     end_col = #footer_text,
     hl_group = 'TerminalNameUnderline',
@@ -202,8 +200,8 @@ function terminal_test:_create_two_third_float_window(float_terminal_state, term
     relative = 'editor',
     width = width,
     height = height - 3,
-    row = row,
-    col = col,
+    row = 0,
+    col = 0,
     style = 'minimal',
     border = 'rounded',
   })
@@ -214,7 +212,7 @@ function terminal_test:_create_two_third_float_window(float_terminal_state, term
     width = width,
     height = 1,
     row = height - 3,
-    col = col,
+    col = 0,
     style = 'minimal',
     border = 'none',
   })
