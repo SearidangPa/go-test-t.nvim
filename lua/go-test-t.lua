@@ -49,6 +49,7 @@ function go_test.new(opts)
 end
 
 function go_test:setup_user_command(user_command_prefix)
+  require 'terminal-multiplexer'
   local self_ref = self
   local term_tester = self_ref.term_tester
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self_ref:test_all(false) end, {})
