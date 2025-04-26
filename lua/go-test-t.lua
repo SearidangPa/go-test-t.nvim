@@ -67,7 +67,6 @@ function go_test:setup_user_command(user_command_prefix)
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function() self_ref:reset_all() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestResetKeepPin', function() self_ref:reset_keep_pin() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuickfix', function() self_ref:load_quack_tests() end, {})
 end
 
 function go_test:reset_keep_pin()
