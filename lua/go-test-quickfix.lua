@@ -57,7 +57,7 @@ local function populate_quickfix_list(qf_entries)
   end
 end
 
----@param tests_info terminal.testInfo[] []
+---@param tests_info terminal.testInfo[]
 util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   local qf_entries = {}
   local tests_to_resolve = {}
