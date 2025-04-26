@@ -10,7 +10,6 @@
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
 ---@field test_all fun(self: GoTestT, test_in_pkg_only: boolean)
 ---@field toggle_display fun(self: GoTestT)
----@field load_quack_tests fun(self: GoTestT)
 ---@field _clean_up_prev_job fun(self: GoTestT)
 ---@field _add_golang_test fun(self: GoTestT, entry: table, test_in_pkg_only: boolean, intermediate_path: string)
 ---@field _filter_golang_output fun(self: GoTestT, entry: table)

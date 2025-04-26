@@ -67,7 +67,7 @@ function go_test:setup_user_command(user_command_prefix)
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function() self_ref:reset_all() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestResetKeepPin', function() self_ref:reset_keep_pin() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'LoadQuackTestQuickfix', function() self_ref:load_quack_tests() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestLoadQuickfix', function() self_ref:load_quack_tests() end, {})
 end
 
 function go_test:reset_keep_pin()
@@ -153,7 +153,6 @@ function go_test:test_all(test_in_pkg_only)
 end
 
 function go_test:toggle_display() self.displayer:toggle_display() end
-function go_test:load_quack_tests() require('util_go_test_quickfix').load_non_passing_tests_to_quickfix(self.tests_info) end
 
 --- === Private functions ===
 
