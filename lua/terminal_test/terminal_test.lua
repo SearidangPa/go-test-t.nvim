@@ -41,13 +41,15 @@ function terminal_test:reset()
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:test_in_terminal(test_info)
+function terminal_test:test_in_terminal(test_info, do_not_close)
   self:_validate_test_info(test_info)
   self.terminal_multiplexer:delete_terminal(test_info.name)
   self.add_test_info_func(test_info)
 
   self:_auto_update_test_line(test_info)
-  self.terminal_multiplexer:toggle_float_terminal(test_info.name)
+  if not do_not_close then
+    self.terminal_multiplexer:toggle_float_terminal(test_info.name)
+  end
   local float_term_state = self.terminal_multiplexer:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
 
@@ -60,15 +62,27 @@ function terminal_test:test_in_terminal(test_info)
 end
 
 function terminal_test:test_nearest_in_terminal()
+  local test_name, test_line
   local util_find_test = require 'util_find_test_func'
-  local test_name, test_line = util_find_test.get_enclosing_test()
-  assert(test_name, 'Not inside a test function')
-  assert(test_line, 'No test line found')
+  test_name, test_line = util_find_test.get_enclosing_test()
+
+  if not test_name and not test_line then
+    local last_test = self.terminal_multiplexer.last_terminal_name
+    local test_info = self.get_test_info_func(last_test)
+    if test_info then
+      test_name = test_info.name
+      test_line = test_info.test_line
+    else
+      vim.notify('No test name found', vim.log.levels.WARN)
+      return
+    end
+  end
 
   local util_path = require 'util_path'
   local intermediate_path = util_path.get_intermediate_path()
   local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
 
+  assert(test_name, 'No test name found')
   ---@type terminal.testInfo
   local test_info = {
     name = test_name,
@@ -85,7 +99,8 @@ function terminal_test:test_nearest_in_terminal()
     },
   }
 
-  self:test_in_terminal(test_info)
+  self:test_in_terminal(test_info, true)
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('G', true, false, true), 'n', false)
   return test_info
 end
 
