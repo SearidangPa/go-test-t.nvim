@@ -301,17 +301,13 @@ function terminal_test:_process_one_line(line, test_info, current_time)
   self:_handle_error_trace(line, test_info)
 
   if string.match(line, '--- FAIL') or string.match(line, 'FATAL') then
-    if test_info.fidget_handle then
-      local make_notify = require('mini.notify').make_notify {}
-      make_notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
-    end
+    local make_notify = require('mini.notify').make_notify {}
+    make_notify(string.format('%s fail', test_info.name), vim.log.levels.ERROR)
     self:_handle_test_failed(test_info, current_time)
     return true
   elseif string.match(line, '--- PASS') then
-    if test_info.fidget_handle then
-      local make_notify = require('mini.notify').make_notify {}
-      make_notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
-    end
+    local make_notify = require('mini.notify').make_notify {}
+    make_notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
     self:_handle_test_passed(test_info, current_time)
     return true
   end
