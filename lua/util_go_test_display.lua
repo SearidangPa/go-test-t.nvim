@@ -305,7 +305,30 @@ function test_display:_setup_keymaps()
     assert(test_name, 'No test name found')
     local tests_info = self_ref.get_tests_info_func()
     local test_info = tests_info[test_name]
-    Snacks.debug.inspect('test_info.output', test_info.output)
+    local output = test_info.output
+
+    local bufnr = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
+
+    local total_width = math.floor(vim.o.columns)
+    local width = math.floor(total_width * 3 / 4) - 2
+    local height = math.floor(vim.o.lines)
+    local win = vim.api.nvim_open_win(bufnr, true, {
+      relative = 'editor',
+      width = width,
+      height = height - 3,
+      row = 0,
+      col = 0,
+      style = 'minimal',
+      border = 'rounded',
+    })
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('G', true, false, true), 'n', false)
+
+    vim.keymap.set('n', 'q', function()
+      if vim.api.nvim_win_is_valid(win) then
+        vim.api.nvim_win_close(win, true)
+      end
+    end, { buffer = bufnr, noremap = true, silent = true })
   end, map_opts)
 
   self_ref:attach_autocmd_buf()
