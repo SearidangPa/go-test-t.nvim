@@ -144,6 +144,7 @@ function terminal_test:test_buf_in_terminals()
       status = 'fired',
       filepath = vim.fn.expand '%:p',
       set_ext_mark = false,
+      output = {},
     }
     self.add_test_info_func(test_info)
     self.update_display_buffer_func(test_info)
