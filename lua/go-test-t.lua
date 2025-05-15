@@ -154,8 +154,6 @@ function go_test:test_all(test_in_pkg_only)
   })
 end
 
-function go_test:toggle_display() self.displayer:toggle_display() end
-
 --- === Private functions ===
 
 function go_test:_clean_up_prev_job()
