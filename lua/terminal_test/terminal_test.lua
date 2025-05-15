@@ -185,7 +185,7 @@ function terminal_test:preview_terminal(terminal_name)
   assert(float_terminal_state.bufnr, 'No buffer found for terminal')
 
   local total_width = math.floor(vim.o.columns)
-  local width = math.floor(total_width * 3 / 4) - 2 -- Use 2/3 of the screen width
+  local width = math.floor(total_width * 3 / 4) - 2
   local height = math.floor(vim.o.lines)
   float_terminal_state.win = vim.api.nvim_open_win(float_terminal_state.bufnr, true, {
     relative = 'editor',
