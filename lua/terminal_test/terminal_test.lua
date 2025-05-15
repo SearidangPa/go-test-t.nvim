@@ -41,16 +41,16 @@ function terminal_test:reset()
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:test_in_terminal(test_info, silent)
+function terminal_test:test_in_terminal(test_info, do_not_open_term)
   self:_validate_test_info(test_info)
   self.terminal_multiplexer:delete_terminal(test_info.name)
   self.add_test_info_func(test_info)
 
   self:_auto_update_test_line(test_info)
-  if silent then
-    self.terminal_multiplexer:toggle_float_terminal(test_info.name)
-  else
+  if do_not_open_term then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('G', true, false, true), 'n', false)
+  else
+    self.terminal_multiplexer:toggle_float_terminal(test_info.name)
   end
   local float_term_state = self.terminal_multiplexer:toggle_float_terminal(test_info.name)
   vim.api.nvim_chan_send(float_term_state.chan, test_info.test_command .. '\n')
