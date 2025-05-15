@@ -76,12 +76,10 @@ function go_test:setup_user_command(user_command_prefix)
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestResetAll', function() self_ref:reset_all() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function() self_ref:reset_keep_pin() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestCancelFidget', function() self_ref:cancel_all_fidget() end, {})
 end
 
 function go_test:reset_keep_pin()
   local self_ref = self
-  self_ref:cancel_all_fidget()
   self_ref.job_id = -1
   self_ref.tests_info = {}
   self_ref.term_tester:reset()
@@ -91,14 +89,6 @@ end
 function go_test:reset_all()
   self:reset_keep_pin()
   self.pin_tester.pinned_list = {}
-end
-
-function go_test:cancel_all_fidget()
-  for _, test_info in pairs(self.tests_info) do
-    if test_info.fidget_handle then
-      test_info.fidget_handle:cancel()
-    end
-  end
 end
 
 function go_test:test_all(test_in_pkg_only)
