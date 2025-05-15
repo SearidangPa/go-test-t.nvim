@@ -303,32 +303,6 @@ function test_display:_setup_keymaps()
   self_ref:attach_autocmd_buf()
 end
 
--- local function show_fullscreen_popup_at_mark(marks_info)
---   local util_mark_info = require 'util_blackboard_mark_info'
---   local mark_char = util_mark_info.get_mark_char(blackboard_state)
---   if not mark_char then
---     return
---   elseif blackboard_state.current_mark == mark_char and vim.api.nvim_win_is_valid(blackboard_state.popup_win) then
---     return
---   end
---   blackboard_state.current_mark = mark_char
---
---   local mark_info = util_mark_info.retrieve_mark_info(marks_info, mark_char)
---   local target_line = mark_info.line
---
---   local file_content_lines = blackboard_state.filepath_to_content_lines[mark_info.filepath]
---   assert(file_content_lines, string.format('File content not found for %s', mark_info.filepath))
---
---   if not vim.api.nvim_win_is_valid(blackboard_state.popup_win) then
---     blackboard_state.popup_buf = vim.api.nvim_create_buf(false, true)
---     local util_blackboard_preview = require 'util_blackboard_preview'
---     util_blackboard_preview.open_popup_win(blackboard_state, mark_info)
---   end
---   file_content_lines = blackboard_state.filepath_to_content_lines[mark_info.filepath]
---   vim.api.nvim_buf_set_lines(blackboard_state.popup_buf, 0, -1, false, file_content_lines)
---   set_cursor_for_popup_win(target_line, mark_char)
--- end
-
 function test_display:attach_autocmd_buf()
   local self_ref = self
 
