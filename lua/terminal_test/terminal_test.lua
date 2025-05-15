@@ -197,7 +197,7 @@ function terminal_test:preview_terminal(terminal_name)
     style = 'minimal',
     border = 'rounded',
   })
-  vim.api.nvim_set_current_win(original_win)
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('G', true, false, true), 'n', false)
   return float_terminal_state.win
 end
 
