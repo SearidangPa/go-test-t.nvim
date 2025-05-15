@@ -41,13 +41,13 @@ function terminal_test:reset()
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:test_in_terminal(test_info, do_not_open_term)
+function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
   self:_validate_test_info(test_info)
   self.terminal_multiplexer:delete_terminal(test_info.name)
   self.add_test_info_func(test_info)
 
   self:_auto_update_test_line(test_info)
-  if do_not_open_term then
+  if do_not_close_terminal then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('G', true, false, true), 'n', false)
   else
     self.terminal_multiplexer:toggle_float_terminal(test_info.name)
@@ -86,6 +86,7 @@ function terminal_test:test_nearest_in_terminal()
         name = test_name,
       },
     },
+    output = {},
   }
 
   self:test_in_terminal(test_info, true)
@@ -116,6 +117,7 @@ function terminal_test:retest_in_terminal_by_name(test_name)
           name = test_name,
         },
       },
+      output = {},
     }
     self_ref:test_in_terminal(test_info)
   end)

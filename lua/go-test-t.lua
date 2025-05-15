@@ -188,6 +188,7 @@ function go_test:_add_golang_test(entry, test_in_pkg_only, intermediate_path)
     filepath = '',
     test_command = test_command,
     set_ext_mark = false,
+    output = {},
   }
 
   self_ref.tests_info[entry.Test] = test_info
