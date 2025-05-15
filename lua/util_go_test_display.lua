@@ -354,7 +354,7 @@ test_display._help_text_lines = {
   ' Help 🧊',
   ' q       ===  Close Tracker Window',
   ' <CR>    ===  Jump to test code',
-  ' t       ===  Toggle test terminal',
+  ' t       ===  Toggle test in terminal',
   ' r       ===  (Re)Run test in terminal',
   ' p       ===  Pin test',
   ' u       ===  Unpin test',
