@@ -207,6 +207,7 @@ function go_test:_filter_golang_output(entry)
   end
 
   local trimmed_output = vim.trim(entry.Output)
+  table.insert(test_info.output, trimmed_output)
 
   local file, line_num_any = string.match(trimmed_output, 'Error Trace:%s+([^:]+):(%d+)')
   if file and line_num_any then

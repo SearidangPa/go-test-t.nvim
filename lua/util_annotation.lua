@@ -51,6 +51,7 @@ require 'terminal-multiplexer'
 ---@field test_command string
 ---@field filepath string
 ---@field set_ext_mark boolean
+---@field output? string[]
 
 ---@class PinTester
 ---@field pinned_list table<string, terminal.testInfo>
