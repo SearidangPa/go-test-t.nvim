@@ -209,7 +209,7 @@ function test_display:_assert_display_buf_win()
   assert(self.display_win_id, 'display_win is nil in jump_to_test_location')
 end
 
-local icons = '🔥❌✅🔄⏸️🪵⏺️🏁'
+local icons = '🔥❌✅🔄🛑'
 
 function test_display:_get_test_name_from_cursor()
   local cursor = vim.api.nvim_win_get_cursor(0)

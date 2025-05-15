@@ -14,7 +14,7 @@ function M.get_status_icon(status)
   elseif status == 'pause' then
     return '🛑'
   elseif status == 'running' then
-    return '🦔'
+    return '🔄'
   elseif status == 'fired' then
     return '🔥'
   else
