@@ -341,6 +341,7 @@ test_display._help_text_lines = {
   ' p       ===  Pin test',
   ' u       ===  Unpin test',
   ' v       ===  Preview terminal test',
+  ' o       ===  Show test output',
 }
 
 return test_display
