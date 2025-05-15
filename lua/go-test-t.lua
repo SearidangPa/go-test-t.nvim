@@ -56,7 +56,16 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self_ref:test_all(true) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function() term_tester:test_nearest_in_terminal() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function()
+    local test_info
+    local last_test = self_ref.term_tester.terminal_multiplexer.last_terminal_name
+    if last_test then
+      test_info = self_ref.term_tester.get_test_info_func(last_test)
+      self.term_tester:test_in_terminal(test_info, true)
+    else
+      self_ref.term_tester:test_nearest_in_terminal()
+    end
+  end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() term_tester:test_buf_in_terminals() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermView', function() term_tester:test_nearest_with_view_term() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
