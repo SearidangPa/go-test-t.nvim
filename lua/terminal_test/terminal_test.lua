@@ -177,7 +177,6 @@ end
 ---@param terminal_name string
 ---@return number?
 function terminal_test:preview_terminal(terminal_name)
-  local original_win = vim.api.nvim_get_current_win()
   local float_terminal_state = self.terminal_multiplexer.all_terminals[terminal_name]
   if not float_terminal_state then
     require('fidget').notify('No terminal found', vim.log.levels.WARN)
