@@ -300,6 +300,14 @@ function test_display:_setup_keymaps()
     end
   end, map_opts)
 
+  map('n', 'o', function()
+    local test_name = self_ref:_get_test_name_from_cursor()
+    assert(test_name, 'No test name found')
+    local tests_info = self_ref.get_tests_info_func()
+    local test_info = tests_info[test_name]
+    Snacks.debug.inspect('test_info.output', test_info.output)
+  end, map_opts)
+
   self_ref:attach_autocmd_buf()
 end
 
