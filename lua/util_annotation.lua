@@ -20,7 +20,6 @@
 ---@field go_test_prefix string
 ---@field user_command_prefix? string
 
-require 'terminal-multiplexer'
 ---@class termTester
 ---@field go_test_prefix string
 ---@field terminal_multiplexer TerminalMultiplexer

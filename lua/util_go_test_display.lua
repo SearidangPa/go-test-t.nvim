@@ -182,7 +182,7 @@ function test_display:_parse_test_state_to_lines(tests_info)
   self:_sort_tests_by_status(tests_table)
 
   for _, test in ipairs(tests_table) do
-    local status_icon = require('util_status_icon').get_status_icon(test.status)
+    local status_icon = require('util_go_test_status_icon').get_status_icon(test.status)
     if test.status == 'fail' and test.filepath ~= '' and test.fail_at_line then
       local filename = vim.fn.fnamemodify(test.filepath, ':t')
       table.insert(buf_lines, string.format('%s %s -> %s:%d', status_icon, test.name, filename, test.fail_at_line))
@@ -233,7 +233,10 @@ function test_display:_jump_to_test_location_from_cursor()
     return
   end
 
-  require('util_lsp').action_from_test_name(test_name, function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name) end)
+  require('util_go_test_lsp').action_from_test_name(
+    test_name,
+    function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name) end
+  )
 end
 
 function test_display:_jump_to_test_location(filepath, test_line, test_name)

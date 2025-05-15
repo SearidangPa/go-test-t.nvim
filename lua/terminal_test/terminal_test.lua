@@ -68,7 +68,7 @@ function terminal_test:test_nearest_in_terminal()
   local util_find_test = require 'util_find_test_func'
   local test_name, test_line = util_find_test.get_enclosing_test()
 
-  local util_path = require 'util_path'
+  local util_path = require 'util_go_test_path'
   local intermediate_path = util_path.get_intermediate_path()
   local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
 
@@ -98,8 +98,8 @@ function terminal_test:retest_in_terminal_by_name(test_name)
   assert(test_name, 'No test name found')
 
   local self_ref = self
-  require('util_lsp').action_from_test_name(test_name, function(lsp_param)
-    local util_path = require 'util_path'
+  require('util_go_test_lsp').action_from_test_name(test_name, function(lsp_param)
+    local util_path = require 'util_go_test_path'
     local intermediate_path = util_path.get_intermediate_path(lsp_param.filepath)
     assert(intermediate_path, 'No intermediate path found')
     local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
@@ -131,7 +131,7 @@ function terminal_test:test_buf_in_terminals()
   self.toggle_display_func(true)
 
   for test_name, test_line in pairs(all_tests_in_buf) do
-    local util_path = require 'util_path'
+    local util_path = require 'util_go_test_path'
     local intermediate_path = util_path.get_intermediate_path()
     assert(intermediate_path, 'No intermediate path found')
     local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
@@ -206,7 +206,7 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:_auto_update_test_line(test_info)
   local augroup = vim.api.nvim_create_augroup('TestLineTracker_' .. test_info.name, { clear = true })
-  local util_lsp = require 'util_lsp'
+  local util_lsp = require 'util_go_test_lsp'
 
   vim.api.nvim_create_autocmd('BufWritePost', {
     group = augroup,
