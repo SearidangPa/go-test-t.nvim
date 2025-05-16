@@ -1,5 +1,3 @@
-local fidget = require 'fidget'
-
 ---@class termTester
 local terminal_test = {}
 terminal_test.__index = terminal_test
@@ -82,11 +80,6 @@ function terminal_test:test_nearest_in_terminal()
     status = 'fired',
     filepath = vim.fn.expand '%:p',
     set_ext_mark = false,
-    fidget_handle = fidget.progress.handle.create {
-      lsp_client = {
-        name = test_name,
-      },
-    },
     output = {},
   }
 
@@ -113,11 +106,6 @@ function terminal_test:retest_in_terminal_by_name(test_name)
       test_command = test_command,
       status = 'fired',
       set_ext_mark = false,
-      fidget_handle = fidget.progress.handle.create {
-        lsp_client = {
-          name = test_name,
-        },
-      },
       output = {},
     }
     self_ref:test_in_terminal(test_info, true)
