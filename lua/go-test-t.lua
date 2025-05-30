@@ -57,11 +57,14 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function()
-    local test_info
-    local last_test = self_ref.term_tester.terminal_multiplexer.last_terminal_name
-    if last_test then
-      test_info = self_ref.term_tester.get_test_info_func(last_test)
-      self.term_tester:test_in_terminal(test_info, true)
+    local util_find_test = require 'util_find_test_func'
+    local test_name, test_line = util_find_test.get_enclosing_test()
+    if not test_name then
+      local last_test = self_ref.term_tester.terminal_multiplexer.last_terminal_name
+      if last_test then
+        local test_info = self_ref.term_tester.get_test_info_func(last_test)
+        self.term_tester:test_in_terminal(test_info, true)
+      end
     else
       self_ref.term_tester:test_nearest_in_terminal()
     end
