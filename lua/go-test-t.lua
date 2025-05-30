@@ -47,7 +47,11 @@ function go_test.new(opts)
   return self
 end
 
-function go_test:set_go_test_prefix(new_prefix)
+---@param opts GoTestT.Options
+function go_test:set_go_test_prefix(opts)
+  assert(type(opts) == 'table', 'Options must be a table')
+  assert(opts.go_test_prefix, 'go_test_prefix must be provided in options')
+  local new_prefix = opts.go_test_prefix
   local self_ref = self
   self_ref.go_test_prefix = new_prefix
   self_ref.term_tester.go_test_prefix = new_prefix

@@ -5,7 +5,6 @@ pin_tester.__index = pin_tester
 ---@param opts PinTesterOptions
 function pin_tester.new(opts)
   opts = opts or {}
-  assert(opts.go_test_prefix, 'go_test_prefix is required')
   local self = setmetatable({}, pin_tester)
   self.pinned_list = {}
   self.update_display_buffer_func = opts.update_display_buffer_func
