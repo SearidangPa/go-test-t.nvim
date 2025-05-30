@@ -13,7 +13,6 @@ function go_test.new(opts)
   self.go_test_ns_id = vim.api.nvim_create_namespace 'GoTestT'
 
   self.pin_tester = require('terminal_test.pin_test').new {
-    go_test_prefix = self.go_test_prefix,
     update_display_buffer_func = function(tests_info) self.displayer:update_display_buffer(tests_info) end,
     toggle_display_func = function(do_not_close) self.displayer:toggle_display(do_not_close) end,
     retest_in_terminal_by_name = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
@@ -46,6 +45,12 @@ function go_test.new(opts)
   local user_command_prefix = opts.user_command_prefix or ''
   self:setup_user_command(user_command_prefix)
   return self
+end
+
+function go_test:set_go_test_prefix(new_prefix)
+  local self_ref = self
+  self_ref.go_test_prefix = new_prefix
+  self_ref.term_tester.go_test_prefix = new_prefix
 end
 
 function go_test:setup_user_command(user_command_prefix)

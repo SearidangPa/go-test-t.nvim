@@ -53,6 +53,7 @@
 ---@field output string[]
 
 ---@class PinTester
+---@field go_test_prefix string
 ---@field pinned_list table<string, terminal.testInfo>
 ---@field update_display_buffer_func fun(tests_info?: table<string, terminal.testInfo>)
 ---@field toggle_display_func fun(boolean)
@@ -61,7 +62,6 @@
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---
 ---@class PinTesterOptions
----@field go_test_prefix string
 ---@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
 ---@field toggle_display_func fun(boolean)
 ---@field retest_in_terminal_by_name fun(test_name: string)
