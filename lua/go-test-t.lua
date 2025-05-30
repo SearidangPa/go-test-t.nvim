@@ -58,7 +58,7 @@ function go_test:setup_user_command(user_command_prefix)
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function()
     local util_find_test = require 'util_find_test_func'
-    local test_name, test_line = util_find_test.get_enclosing_test()
+    local test_name, _ = util_find_test.get_enclosing_test()
     if not test_name then
       local last_test = self_ref.term_tester.terminal_multiplexer.last_terminal_name
       if last_test then
