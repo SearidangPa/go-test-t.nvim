@@ -78,16 +78,16 @@ The plugin provides several user commands (prefixed with your `user_command_pref
 
 ```lua
 -- Run all tests
-:TestAll
+:GoTestAll
 
 -- Run tests in current package
-:TestPkg
+:GoTestPkg
 
 -- Run test under cursor in terminal
-:TestTerm
+:GoTestTerm
 
 -- Toggle results display
-:TestToggleDisplay
+:GoTestToggleDisplay
 ```
 
 ### Test Pinning Workflow
