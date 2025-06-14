@@ -150,9 +150,6 @@ The plugin consists of several modules:
 - **util_*.lua**: Utility modules for test discovery, display, paths, etc.
 - **go-test-quickfix.lua**: Quickfix list integration
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## Credit
 
