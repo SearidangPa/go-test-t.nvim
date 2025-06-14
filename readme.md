@@ -13,7 +13,6 @@ Running and managing Go tests with terminal integration, pinning capabilities, a
 - **Real-time Results**: Live test output with JSON parsing
 - **Test Discovery**: Automatically find and run enclosing tests
 - **Quickfix Integration**: Failed tests appear in quickfix list
-- **Visual Feedback**: Status icons and namespace highlighting
 - **Multiple Test Scopes**: Run all tests, package tests, or individual tests
 
 ## Installation
