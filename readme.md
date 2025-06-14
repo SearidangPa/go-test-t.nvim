@@ -1,6 +1,6 @@
 # go-test-t.nvim
 
-A powerful Neovim plugin for running and managing Go tests with terminal integration, pinning capabilities, and comprehensive test result display.
+Running and managing Go tests with terminal integration, pinning capabilities, and comprehensive test result display.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/819eb2ae-7ccd-4d64-a74c-0b6a84cdcbcb" width="300" alt="go-test-t.nvim Screenshot">
