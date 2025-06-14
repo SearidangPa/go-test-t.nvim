@@ -2,7 +2,7 @@
 <img src="https://github.com/user-attachments/assets/819eb2ae-7ccd-4d64-a74c-0b6a84cdcbcb" width="200" alt="go-test-t.nvim Screenshot">
 </p>
 
-# go-test-t.nvim
+## What is go-test-t?
 
 Running and managing Go tests with terminal integration, pinning capabilities, and comprehensive test result display.
 
