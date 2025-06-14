@@ -50,7 +50,7 @@ local go_test = require('go-test-t').new({
 })
 
 -- Optionally change test prefix later
-go_test:set_go_test_prefix({ go_test_prefix = 'gotestsum --format=testname --' })
+go_test:set_go_test_prefix({ go_test_prefix = 'go test --race' })
 ```
 
 ## Commands
