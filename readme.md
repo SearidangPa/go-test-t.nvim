@@ -22,12 +22,12 @@ A powerful Neovim plugin for running and managing Go tests with terminal integra
 
 ```lua
 {
+   'SearidangPa/terminal-multiplexer', -- Required dependency
+    event = 'VeryLazy', -- Load when Neovim is ready
+    lazy = true, -- Load on demand
+},
+{
   'SearidangPa/go-test-t.nvim',
-  dependencies = {
-    'terminal-multiplexer', -- Required dependency
-    'fidget.nvim',          -- For notifications
-    'mini.notify',          -- For notifications
-  },
   ft = 'go',
   lazy = true,             -- Load on Go filetype
   events = 'VeryLazy',     -- Load after Neovim is ready
