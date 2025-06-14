@@ -168,6 +168,3 @@ The plugin consists of several modules:
 
 * Many thanks to [Teej](https://www.youtube.com/@teej_dv) for many great Neovim tutorials that inspired this plugin.
 
-## License
-
-MIT License - see LICENSE file for details.
