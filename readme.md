@@ -40,21 +40,6 @@ A powerful Neovim plugin for running and managing Go tests with terminal integra
 }
 ```
 
-### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
-
-```lua
-use {
-  'your-username/go-test-t.nvim',
-  requires = {
-    'terminal-multiplexer',
-    'fidget.nvim',
-    'mini.notify',
-  },
-  config = function()
-    local go_test = require('go-test-t').new()
-  end,
-}
-```
 
 ## Configuration
 
