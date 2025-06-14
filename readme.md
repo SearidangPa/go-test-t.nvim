@@ -132,6 +132,20 @@ vim.keymap.set('n', '<leader>tr', '<cmd>TestPinned<cr>', { desc = 'Run pinned te
 - Integration with quickfix list for failed tests
 - Real-time display updates
 
+### Display Buffer Keybinds
+The test display buffer provides local keybinds for efficient test management:
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `q` | Close | Close the test display window |
+| `<CR>` | Jump | Navigate to test function in source code |
+| `t` | Toggle | Toggle test terminal window |
+| `r` | Rerun | Rerun test in terminal |
+| `p` | Pin | Pin test for quick re-execution |
+| `u` | Unpin | Remove test from pinned list |
+| `v` | Preview | Preview test terminal output |
+| `o` | Output | Show full test output in floating window |
+
 ## Requirements
 
 - Neovim >= 0.8.0
