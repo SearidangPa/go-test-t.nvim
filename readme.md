@@ -29,6 +29,8 @@ A powerful Neovim plugin for running and managing Go tests with terminal integra
     'mini.notify',          -- For notifications
   },
   ft = 'go',
+  lazy = true,             -- Load on Go filetype
+  events = 'VeryLazy',     -- Load after Neovim is ready
   config = function()
     local go_test = require('go-test-t').new({
       go_test_prefix = 'go test',        -- Custom test command prefix
