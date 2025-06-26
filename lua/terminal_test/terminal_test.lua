@@ -168,7 +168,7 @@ end
 function terminal_test:preview_terminal(terminal_name)
   local float_terminal_state = self.terminal_multiplexer.all_terminals[terminal_name]
   if not float_terminal_state then
-    require('fidget').notify('No terminal found', vim.log.levels.WARN)
+    vim.notify('No terminal found', vim.log.levels.WARN)
     return nil
   end
   assert(float_terminal_state.bufnr, 'No buffer found for terminal')

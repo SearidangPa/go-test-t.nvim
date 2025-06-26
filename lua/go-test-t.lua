@@ -171,7 +171,7 @@ end
 function go_test:_clean_up_prev_job()
   local self_ref = self
   if self_ref.job_id ~= -1 then
-    require('fidget').notify('Stopping job', vim.log.levels.INFO)
+    vim.notify('Stopping job', vim.log.levels.INFO)
     vim.fn.jobstop(self_ref.job_id)
     vim.diagnostic.reset()
   end
@@ -254,8 +254,7 @@ function go_test:_mark_outcome(entry)
   self_ref.tests_info[key] = test_info
   if entry.Action == 'fail' then
     require('util_go_test_quickfix').add_fail_test(test_info)
-    local make_notify = require('mini.notify').make_notify {}
-    make_notify(string.format('pinning %s', test_info.name), vim.log.levels.ERROR)
+    vim.notify(string.format('pinning %s', test_info.name), vim.log.levels.ERROR)
     self_ref.pin_tester:pin_test(test_info)
     vim.schedule(function() self_ref.displayer:update_display_buffer() end)
   end

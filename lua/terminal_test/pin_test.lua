@@ -19,12 +19,12 @@ function pin_tester:is_test_pinned(test_name) return self.pinned_list[test_name]
 
 ---@param test_info terminal.testInfo
 function pin_tester:pin_test(test_info)
-  require('fidget').notify(string.format('Pinning %s', test_info.name), vim.log.levels.INFO)
+  vim.notify(string.format('Pinning %s', test_info.name), vim.log.levels.INFO)
   self.pinned_list[test_info.name] = test_info
 end
 
 function pin_tester:unpin_test(test_name)
-  require('fidget').notify(string.format('Unpinning %s', test_name), vim.log.levels.INFO)
+  vim.notify(string.format('Unpinning %s', test_name), vim.log.levels.INFO)
   self.pinned_list[test_name] = nil
 end
 
@@ -41,7 +41,7 @@ function pin_tester:test_all_pinned()
     self.pinned_list[test_info.name].status = 'fired'
     test_info.status = 'fired'
     self.add_test_info_func(test_info)
-    require('fidget').notify(string.format('Retesting pinned %s', test_info.name), vim.log.levels.INFO)
+    vim.notify(string.format('Retesting pinned %s', test_info.name), vim.log.levels.INFO)
     self.retest_in_terminal_by_name(test_info.name)
   end
   self.toggle_display_func(true)
