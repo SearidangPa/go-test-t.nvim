@@ -18,15 +18,9 @@ end
 function pin_tester:is_test_pinned(test_name) return self.pinned_list[test_name] ~= nil end
 
 ---@param test_info terminal.testInfo
-function pin_tester:pin_test(test_info)
-  vim.notify(string.format('Pinning %s', test_info.name), vim.log.levels.INFO)
-  self.pinned_list[test_info.name] = test_info
-end
+function pin_tester:pin_test(test_info) self.pinned_list[test_info.name] = test_info end
 
-function pin_tester:unpin_test(test_name)
-  vim.notify(string.format('Unpinning %s', test_name), vim.log.levels.INFO)
-  self.pinned_list[test_name] = nil
-end
+function pin_tester:unpin_test(test_name) self.pinned_list[test_name] = nil end
 
 function pin_tester:pin_nearest_test()
   local test_info = self.test_nearest_in_terminal_func()
