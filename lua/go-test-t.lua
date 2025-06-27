@@ -254,7 +254,6 @@ function go_test:_mark_outcome(entry)
   self_ref.tests_info[key] = test_info
   if entry.Action == 'fail' then
     require('util_go_test_quickfix').add_fail_test(test_info)
-    vim.notify(string.format('pinning %s', test_info.name), vim.log.levels.ERROR)
     self_ref.pin_tester:pin_test(test_info)
     vim.schedule(function() self_ref.displayer:update_display_buffer() end)
   end
