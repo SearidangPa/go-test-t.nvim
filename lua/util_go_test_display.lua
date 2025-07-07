@@ -262,12 +262,6 @@ function test_display:_setup_keymaps()
   map('n', 'q', function() self_ref:_close_display() end, map_opts)
   map('n', '<CR>', function() self_ref:_jump_to_test_location_from_cursor() end, map_opts)
 
-  map('n', 't', function()
-    local test_name = self_ref:_get_test_name_from_cursor()
-    assert(test_name, 'No test name found')
-    self.toggle_term_func(test_name)
-  end, map_opts)
-
   map('n', 'r', function()
     local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
@@ -340,7 +334,6 @@ end
 
 test_display._help_text_lines = {
   '<CR>=== Jump to test code',
-  't   === Toggle test in terminal',
   'r   === (Re)Run test in terminal',
   'o   === Show terminal or test output',
   'q   === Close Tracker Window',
