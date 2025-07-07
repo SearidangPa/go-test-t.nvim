@@ -22,10 +22,7 @@ function go_test.new(opts)
 
   self.displayer = require('util_go_test_display').new {
     display_title = 'Go Test Results',
-    toggle_term_func = function(test_name) self.term_tester:toggle_term_func(test_name) end,
     rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
-    pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
-    unpin_test_func = function(test_name) self.pin_tester:unpin_test(test_name) end,
     get_tests_info_func = function() return self.tests_info end,
     get_pinned_tests_func = function() return self.pin_tester.pinned_list end,
     preview_terminal_func = function(test_name) return self.term_tester:preview_terminal(test_name) end,

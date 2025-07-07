@@ -42,6 +42,7 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
   self:_validate_test_info(test_info)
+  self:_clear_test_extmarks(test_info)
   self.terminal_multiplexer:delete_terminal(test_info.name)
   self.add_test_info_func(test_info)
 
@@ -192,6 +193,22 @@ end
 --------------------------------------- === Private === ---------------------------------------
 
 ---@param test_info terminal.testInfo
+function terminal_test:_clear_test_extmarks(test_info)
+  if test_info.test_bufnr and test_info.test_line then
+    local extmarks = vim.api.nvim_buf_get_extmarks(
+      test_info.test_bufnr,
+      self.ns_id,
+      { test_info.test_line - 1, 0 },
+      { test_info.test_line - 1, -1 },
+      {}
+    )
+    for _, extmark in ipairs(extmarks) do
+      vim.api.nvim_buf_del_extmark(test_info.test_bufnr, self.ns_id, extmark[1])
+    end
+  end
+end
+
+---@param test_info terminal.testInfo
 function terminal_test:_auto_update_test_line(test_info)
   local augroup = vim.api.nvim_create_augroup('TestLineTracker_' .. test_info.name, { clear = true })
   local util_lsp = require 'util_go_test_lsp'
@@ -233,6 +250,7 @@ end
 ---@param current_time string
 function terminal_test:_handle_test_passed(test_info, current_time)
   if not test_info.set_ext_mark then
+    self:_clear_test_extmarks(test_info)
     vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
       virt_text = { { string.format('✅ %s', current_time) } },
       virt_text_pos = 'eol',
@@ -246,6 +264,7 @@ end
 
 function terminal_test:_handle_test_failed(test_info, current_time)
   if not test_info.set_ext_mark then
+    self:_clear_test_extmarks(test_info)
     vim.api.nvim_buf_set_extmark(test_info.test_bufnr, self.ns_id, test_info.test_line - 1, 0, {
       virt_text = { { string.format('❌ %s', current_time) } },
       virt_text_pos = 'eol',

@@ -6,7 +6,6 @@ test_display.__index = test_display
 function test_display.new(display_opts)
   assert(display_opts, 'No display options found')
   assert(display_opts.display_title, 'No display title found')
-  assert(display_opts.toggle_term_func, 'No toggle term function found')
   assert(display_opts.rerun_in_term_func, 'No rerun in term function found')
   local self = setmetatable({}, test_display)
   self.display_win_id = -1
@@ -18,10 +17,7 @@ function test_display.new(display_opts)
   self.augroup_id = vim.api.nvim_create_augroup('GoTestDisplay', { clear = true })
   self.ns_id = vim.api.nvim_create_namespace 'go_test_display'
   self.display_title = display_opts.display_title
-  self.toggle_term_func = display_opts.toggle_term_func
   self.rerun_in_term_func = display_opts.rerun_in_term_func
-  self.pin_test_func = display_opts.pin_test_func
-  self.unpin_test_func = display_opts.unpin_test_func
   self.get_tests_info_func = display_opts.get_tests_info_func
   self.get_pinned_tests_func = display_opts.get_pinned_tests_func
   self.preview_terminal_func = display_opts.preview_terminal_func
