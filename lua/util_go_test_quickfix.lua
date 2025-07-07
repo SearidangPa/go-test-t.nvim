@@ -79,7 +79,7 @@ util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   return qf_entries
 end
 
----@param test_info terminal.testInfo | gotest.TestInfo
+---@param test_info terminal.testInfo
 local function already_exist_in_quickfix(test_info)
   local qf_list = vim.fn.getqflist()
   for _, existing_item in ipairs(qf_list) do
