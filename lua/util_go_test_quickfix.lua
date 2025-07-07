@@ -1,6 +1,6 @@
 local util_quickfix = {}
 
----@param test_info terminal.testInfo | gotest.TestInfo
+---@param test_info terminal.testInfo
 local function add_direct_file_entries(test_info, qf_entries)
   assert(test_info.filepath, 'File not found for test: ' .. test_info.name)
   table.insert(qf_entries, {
@@ -57,7 +57,7 @@ local function populate_quickfix_list(qf_entries)
   end
 end
 
----@param tests_info terminal.testInfo[] | gotest.TestInfo[]
+---@param tests_info terminal.testInfo[]
 util_quickfix.load_non_passing_tests_to_quickfix = function(tests_info)
   local qf_entries = {}
   local tests_to_resolve = {}
@@ -90,7 +90,7 @@ local function already_exist_in_quickfix(test_info)
   return false
 end
 
----@param test_info terminal.testInfo | gotest.TestInfo
+---@param test_info terminal.testInfo
 util_quickfix.add_fail_test = function(test_info)
   local qf_entries = {}
   local tests_to_resolve = {}
