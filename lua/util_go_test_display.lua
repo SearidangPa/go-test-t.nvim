@@ -274,18 +274,18 @@ function test_display:_setup_keymaps()
     self.rerun_in_term_func(test_name)
   end, map_opts)
 
-  map('n', 'v', function()
-    local test_name = self_ref:_get_test_name_from_cursor()
-    assert(test_name, 'No test name found')
-    local win_id = self_ref.preview_terminal_func(test_name)
-    if win_id and vim.api.nvim_win_is_valid(win_id) then
-      self_ref.preview_win_id = win_id
-    end
-  end, map_opts)
-
   map('n', 'o', function()
     local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
+
+    -- Try terminal preview first
+    local win_id = self_ref.preview_terminal_func(test_name)
+    if win_id and vim.api.nvim_win_is_valid(win_id) then
+      self_ref.preview_win_id = win_id
+      return
+    end
+
+    -- Fallback to test output if no terminal available
     local tests_info = self_ref.get_tests_info_func()
     local test_info = tests_info[test_name]
     local output = test_info.output
@@ -339,13 +339,11 @@ function test_display:_close_display()
 end
 
 test_display._help_text_lines = {
-  ' Help 🧊',
-  ' q       ===  Close Tracker Window',
-  ' <CR>    ===  Jump to test code',
-  ' t       ===  Toggle test in terminal',
-  ' r       ===  (Re)Run test in terminal',
-  ' v       ===  Preview terminal test',
-  ' o       ===  Show test output',
+  '<CR>=== Jump to test code',
+  't   === Toggle test in terminal',
+  'r   === (Re)Run test in terminal',
+  'o   === Show terminal or test output',
+  'q   === Close Tracker Window',
 }
 
 return test_display
