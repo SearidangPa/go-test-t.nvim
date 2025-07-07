@@ -274,26 +274,6 @@ function test_display:_setup_keymaps()
     self.rerun_in_term_func(test_name)
   end, map_opts)
 
-  map('n', 'p', function()
-    local test_name = self_ref:_get_test_name_from_cursor()
-    assert(test_name, 'No test name found')
-    local tests_info = self_ref:get_tests_info_func()
-    local test_info = tests_info[test_name]
-    assert(test_info, 'No test info found for test: ' .. test_name)
-    self_ref.pin_test_func(test_info)
-    vim.schedule(function() self_ref:update_display_buffer(tests_info, true) end)
-  end, map_opts)
-
-  map('n', 'u', function()
-    local test_name = self_ref:_get_test_name_from_cursor()
-    assert(test_name, 'No test name found')
-    local tests_info = self_ref:get_tests_info_func()
-    local test_info = tests_info[test_name]
-    assert(test_info, 'No test info found for test: ' .. test_name)
-    self_ref.unpin_test_func(test_info.name)
-    vim.schedule(function() self_ref:update_display_buffer(tests_info, true) end)
-  end, map_opts)
-
   map('n', 'v', function()
     local test_name = self_ref:_get_test_name_from_cursor()
     assert(test_name, 'No test name found')
@@ -364,8 +344,6 @@ test_display._help_text_lines = {
   ' <CR>    ===  Jump to test code',
   ' t       ===  Toggle test in terminal',
   ' r       ===  (Re)Run test in terminal',
-  ' p       ===  Pin test',
-  ' u       ===  Unpin test',
   ' v       ===  Preview terminal test',
   ' o       ===  Show test output',
 }
