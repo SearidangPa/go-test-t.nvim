@@ -83,12 +83,17 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTReset', function() self_ref:reset_all() end, {})
 end
 
-function go_test:reset_all()
+function go_test:reset_keep_pin()
   local self_ref = self
   self_ref.job_id = -1
   self_ref.tests_info = {}
   self_ref.term_tester:reset()
   self_ref.displayer:reset()
+end
+
+function go_test:reset_all()
+  local self_ref = self
+  self_ref:reset_keep_pin()
   self_ref.pin_tester.pinned_list = {}
 end
 
