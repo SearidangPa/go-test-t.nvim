@@ -58,9 +58,10 @@ function go_test:setup_user_command(user_command_prefix)
   require 'terminal-multiplexer'
   local self_ref = self
   local term_tester = self_ref.term_tester
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestT', function() self_ref.displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self_ref:test_all(false) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self_ref:test_all(true) end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestDisplay', function() self_ref.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestBuf', function() term_tester:test_buf_in_terminals() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function()
     local util_find_test = require 'util_find_test_func'
@@ -75,12 +76,9 @@ function go_test:setup_user_command(user_command_prefix)
       self_ref.term_tester:test_nearest_in_terminal()
     end
   end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermBuf', function() term_tester:test_buf_in_terminals() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermView', function() term_tester:test_nearest_with_view_term() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminal_multiplexer:search_terminal() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTReset', function() self_ref:reset_all() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestView', function() term_tester:test_nearest_with_view_term() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function() self_ref:reset_all() end, {})
 end
 
 function go_test:reset_keep_pin()
