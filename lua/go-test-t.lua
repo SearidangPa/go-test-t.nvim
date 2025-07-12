@@ -60,7 +60,7 @@ function go_test:setup_user_command(user_command_prefix)
   local term_tester = self_ref.term_tester
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self_ref:test_all(false) end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self_ref:test_all(true) end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestToggleDisplay', function() self_ref.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestDisplay', function() self_ref.displayer:toggle_display() end, {})
 
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function()
     local util_find_test = require 'util_find_test_func'
@@ -80,24 +80,16 @@ function go_test:setup_user_command(user_command_prefix)
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermViewLast', function() term_tester:toggle_last_test_terminal() end, {})
   vim.api.nvim_create_user_command(user_command_prefix .. 'TestTermSearch', function() term_tester.terminal_multiplexer:search_terminal() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPinned', function() self_ref.pin_tester:test_all_pinned() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'PinTest', function() self_ref.pin_tester:pin_nearest_test() end, {})
-
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestResetAll', function() self_ref:reset_all() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function() self_ref:reset_keep_pin() end, {})
+  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTReset', function() self_ref:reset_all() end, {})
 end
 
-function go_test:reset_keep_pin()
+function go_test:reset_all()
   local self_ref = self
   self_ref.job_id = -1
   self_ref.tests_info = {}
   self_ref.term_tester:reset()
   self_ref.displayer:reset()
-end
-
-function go_test:reset_all()
-  self:reset_keep_pin()
-  self.pin_tester.pinned_list = {}
+  self_ref.pin_tester.pinned_list = {}
 end
 
 function go_test:test_all(test_in_pkg_only)
