@@ -143,18 +143,6 @@ function terminal_test:test_buf_in_terminals()
   end
 end
 
-function terminal_test:test_nearest_with_view_term()
-  local util_find_test = require 'util_find_test_func'
-  local test_name, _ = util_find_test.get_enclosing_test()
-  assert(test_name, 'No test name found')
-  local test_info = self.get_test_info_func(test_name)
-
-  if not test_info then
-    self:test_nearest_in_terminal()
-  end
-  self.terminal_multiplexer:toggle_float_terminal(test_name)
-end
-
 function terminal_test:toggle_last_test_terminal()
   local test_name = self.terminal_multiplexer.last_terminal_name
   if not test_name then
@@ -195,13 +183,7 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:_clear_test_extmarks(test_info)
   if test_info.test_bufnr and test_info.test_line then
-    local extmarks = vim.api.nvim_buf_get_extmarks(
-      test_info.test_bufnr,
-      self.ns_id,
-      { test_info.test_line - 1, 0 },
-      { test_info.test_line - 1, -1 },
-      {}
-    )
+    local extmarks = vim.api.nvim_buf_get_extmarks(test_info.test_bufnr, self.ns_id, { test_info.test_line - 1, 0 }, { test_info.test_line - 1, -1 }, {})
     for _, extmark in ipairs(extmarks) do
       vim.api.nvim_buf_del_extmark(test_info.test_bufnr, self.ns_id, extmark[1])
     end
