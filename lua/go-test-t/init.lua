@@ -103,7 +103,6 @@ function go_test:test_all(test_in_pkg_only)
   else
     test_command = string.format('%s ./... -v --json', self_ref.go_test_prefix)
   end
-  vim.notify('Running: ' .. test_command, vim.log.levels.INFO)
 
   self_ref:reset_keep_pin()
   self_ref.displayer:create_window_and_buf()
@@ -111,6 +110,7 @@ function go_test:test_all(test_in_pkg_only)
   self_ref:_clean_up_prev_job()
   self_ref.job_id = vim.fn.jobstart(test_command, {
     stdout_buffered = false,
+    stderr_buffered = false,
 
     on_stdout = function(_, data)
       assert(data, 'No data received from job')
@@ -151,6 +151,14 @@ function go_test:test_all(test_in_pkg_only)
       end
     end,
 
+    on_stderr = function(_, data)
+      assert(data, 'No data received from job stderr')
+      for _, line in ipairs(data) do
+        if line ~= '' then
+          vim.notify('Job stderr: ' .. line, vim.log.levels.ERROR)
+        end
+      end
+    end,
     on_exit = function() end,
   })
 end
@@ -209,6 +217,7 @@ function go_test:_filter_golang_output(entry)
   end
 
   local trimmed_output = vim.trim(entry.Output)
+
   table.insert(test_info.output, trimmed_output)
 
   local file, line_num_any = string.match(trimmed_output, 'Error Trace:%s+([^:]+):(%d+)')
