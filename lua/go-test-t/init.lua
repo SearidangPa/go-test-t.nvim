@@ -103,6 +103,7 @@ function go_test:test_all(test_in_pkg_only)
   else
     test_command = string.format('%s ./... -v --json', self_ref.go_test_prefix)
   end
+  vim.notify('Running: ' .. test_command, vim.log.levels.INFO)
 
   self_ref:reset_keep_pin()
   self_ref.displayer:create_window_and_buf()
