@@ -64,10 +64,10 @@ function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
 end
 
 function terminal_test:test_nearest_in_terminal()
-  local util_find_test = require 'lua.util_find_test'
+  local util_find_test = require 'go-test-t.util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
 
-  local util_path = require 'lua.util_go_test_path'
+  local util_path = require 'go-test-tutil_go_test_path'
   local intermediate_path = util_path.get_intermediate_path()
   local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
 
@@ -92,8 +92,8 @@ function terminal_test:retest_in_terminal_by_name(test_name)
   assert(test_name, 'No test name found')
 
   local self_ref = self
-  require('lua.util_go_test_lsp').action_from_test_name(test_name, function(lsp_param)
-    local util_path = require 'lua.util_go_test_path'
+  require('go-test-tutil_go_test_lsp').action_from_test_name(test_name, function(lsp_param)
+    local util_path = require 'go-test-tutil_go_test_path'
     local intermediate_path = util_path.get_intermediate_path(lsp_param.filepath)
     assert(intermediate_path, 'No intermediate path found')
     local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
@@ -115,12 +115,12 @@ end
 
 function terminal_test:test_buf_in_terminals()
   local source_bufnr = vim.api.nvim_get_current_buf()
-  local util_find_test = require 'lua.util_find_test'
+  local util_find_test = require 'go-test-tutil_find_test'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
   self.toggle_display_func(true)
 
   for test_name, test_line in pairs(all_tests_in_buf) do
-    local util_path = require 'lua.util_go_test_path'
+    local util_path = require 'go-test-tutil_go_test_path'
     local intermediate_path = util_path.get_intermediate_path()
     assert(intermediate_path, 'No intermediate path found')
     local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
@@ -193,7 +193,7 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:_auto_update_test_line(test_info)
   local augroup = vim.api.nvim_create_augroup('TestLineTracker_' .. test_info.name, { clear = true })
-  local util_lsp = require 'lua.util_go_test_lsp'
+  local util_lsp = require 'go-test-tutil_go_test_lsp'
 
   vim.api.nvim_create_autocmd('BufWritePost', {
     group = augroup,
@@ -255,7 +255,7 @@ function terminal_test:_handle_test_failed(test_info, current_time)
   end
   test_info.status = 'fail'
   self.pin_test_func(test_info)
-  require('lua.util_go_test_quickfix').add_fail_test(test_info)
+  require('go-test-tutil_go_test_quickfix').add_fail_test(test_info)
 
   self.add_test_info_func(test_info)
   self.update_display_buffer_func(test_info)
@@ -282,7 +282,7 @@ function terminal_test:_handle_error_trace(line, test_info)
     self.pin_test_func(test_info)
     self.add_test_info_func(test_info)
     self.update_display_buffer_func(test_info)
-    require('lua.util_go_test_quickfix').add_fail_test(test_info)
+    require('go-test-tutil_go_test_quickfix').add_fail_test(test_info)
   end
 end
 
