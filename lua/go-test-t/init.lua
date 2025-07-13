@@ -222,7 +222,7 @@ function go_test:_filter_golang_output(entry)
   if trimmed_output:match '^--- FAIL:' then
     test_info.status = 'fail'
     self_ref.pin_tester:pin_test(test_info)
-    require('util_quickfix').add_fail_test(test_info)
+    require('go-test-t.util_quickfix').add_fail_test(test_info)
   end
   self_ref.tests_info[entry.Test] = test_info
   self_ref.displayer:update_display_buffer()
@@ -242,7 +242,7 @@ function go_test:_mark_outcome(entry)
   test_info.status = entry.Action
   self_ref.tests_info[key] = test_info
   if entry.Action == 'fail' then
-    require('util_quickfix').add_fail_test(test_info)
+    require('go-test-t.util_quickfix').add_fail_test(test_info)
     self_ref.pin_tester:pin_test(test_info)
     vim.schedule(function() self_ref.displayer:update_display_buffer() end)
   end
