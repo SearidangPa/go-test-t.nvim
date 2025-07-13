@@ -229,7 +229,7 @@ function test_display:_jump_to_test_location_from_cursor()
     return
   end
 
-  require('util_go_test_lsp').action_from_test_name(
+  require('go-test-t.util_lsp').action_from_test_name(
     test_name,
     function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name) end
   )
