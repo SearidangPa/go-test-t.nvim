@@ -20,7 +20,7 @@ function go_test.new(opts)
     add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
   }
 
-  self.displayer = require('util_go_test_display').new {
+  self.displayer = require('go-test-t.util_go_test_display').new {
     display_title = 'Go Test Results',
     rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
     get_tests_info_func = function() return self.tests_info end,
