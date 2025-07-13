@@ -329,10 +329,9 @@ function test_display:_close_display()
 end
 
 test_display._help_text_lines = {
-  '<CR>=== Jump to test code',
-  'r   === (Re)Run test in terminal',
-  'o   === Show terminal or test output',
-  'q   === Close Tracker Window',
+  'r    === (Re)Run test in terminal',
+  'o    === Show terminal or test output',
+  '<CR> === Jump to test (code)',
 }
 
 return test_display
