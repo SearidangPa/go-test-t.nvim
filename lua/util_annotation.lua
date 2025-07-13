@@ -18,7 +18,6 @@
 ---
 ---@class GoTestT.Options
 ---@field go_test_prefix string
----@field user_command_prefix? string
 
 ---@class termTester
 ---@field go_test_prefix string

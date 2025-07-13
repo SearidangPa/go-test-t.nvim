@@ -39,8 +39,7 @@ function go_test.new(opts)
     toggle_display_func = function(do_not_close) self.displayer:toggle_display(do_not_close) end,
     update_display_buffer_func = function(tests_info) self.displayer:update_display_buffer(tests_info) end,
   }
-  local user_command_prefix = opts.user_command_prefix or ''
-  self:setup_user_command(user_command_prefix)
+  self:setup_user_command()
   return self
 end
 
@@ -54,16 +53,16 @@ function go_test:set_go_test_prefix(opts)
   self_ref.term_tester.go_test_prefix = new_prefix
 end
 
-function go_test:setup_user_command(user_command_prefix)
+function go_test:setup_user_command()
   require 'terminal-multiplexer'
   local self_ref = self
   local term_tester = self_ref.term_tester
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestT', function() self_ref.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestAll', function() self_ref:test_all(false) end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestPkg', function() self_ref:test_all(true) end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestBuf', function() term_tester:test_buf_in_terminals() end, {})
+  vim.api.nvim_create_user_command('TestBoard', function() self_ref.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command('TestAll', function() self_ref:test_all(false) end, {})
+  vim.api.nvim_create_user_command('TestPkg', function() self_ref:test_all(true) end, {})
+  vim.api.nvim_create_user_command('GoTestFile', function() term_tester:test_buf_in_terminals() end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestTerm', function()
+  vim.api.nvim_create_user_command('GoTest', function()
     local util_find_test = require 'util_find_test_func'
     local test_name, _ = util_find_test.get_enclosing_test()
     if not test_name then
@@ -77,8 +76,8 @@ function go_test:setup_user_command(user_command_prefix)
     end
   end, {})
 
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestView', function() term_tester:test_nearest_with_view_term() end, {})
-  vim.api.nvim_create_user_command(user_command_prefix .. 'TestReset', function() self_ref:reset_all() end, {})
+  vim.api.nvim_create_user_command('TestView', function() term_tester:test_nearest_with_view_term() end, {})
+  vim.api.nvim_create_user_command('TestReset', function() self_ref:reset_all() end, {})
 end
 
 function go_test:reset_keep_pin()
