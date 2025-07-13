@@ -75,8 +75,6 @@ function go_test:setup_user_command()
       self_ref.term_tester:test_nearest_in_terminal()
     end
   end, {})
-
-  vim.api.nvim_create_user_command('TestView', function() term_tester:test_nearest_with_view_term() end, {})
 end
 
 function go_test:reset_keep_pin()
