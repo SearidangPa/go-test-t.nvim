@@ -20,7 +20,7 @@ function go_test.new(opts)
     add_test_info_func = function(test_info) self.tests_info[test_info.name] = test_info end,
   }
 
-  self.displayer = require('go-test-t.util_go_test_display').new {
+  self.displayer = require('go-test-t.test_board').new {
     display_title = 'Go Test Results',
     rerun_in_term_func = function(test_name) self.term_tester:retest_in_terminal_by_name(test_name) end,
     get_tests_info_func = function() return self.tests_info end,
@@ -28,7 +28,7 @@ function go_test.new(opts)
     preview_terminal_func = function(test_name) return self.term_tester:preview_terminal(test_name) end,
   }
 
-  self.term_tester = require('go-test-t.terminal_test').new {
+  self.term_tester = require('go-test-t.test_terminal').new {
     go_test_prefix = self.go_test_prefix,
     tests_info = self.tests_info,
     pin_test_func = function(test_info) self.pin_tester:pin_test(test_info) end,
