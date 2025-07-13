@@ -63,7 +63,7 @@ function go_test:setup_user_command()
   vim.api.nvim_create_user_command('TestFile', function() term_tester:test_buf_in_terminals() end, {})
 
   vim.api.nvim_create_user_command('Test', function()
-    local util_find_test = require 'util_find_test_func'
+    local util_find_test = require 'util_find_test'
     local test_name, _ = util_find_test.get_enclosing_test()
     if not test_name then
       local last_test = self_ref.term_tester.terminal_multiplexer.last_terminal_name

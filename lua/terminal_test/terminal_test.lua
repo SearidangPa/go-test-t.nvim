@@ -64,7 +64,7 @@ function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
 end
 
 function terminal_test:test_nearest_in_terminal()
-  local util_find_test = require 'util_find_test_func'
+  local util_find_test = require 'util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
 
   local util_path = require 'util_go_test_path'
@@ -115,7 +115,7 @@ end
 
 function terminal_test:test_buf_in_terminals()
   local source_bufnr = vim.api.nvim_get_current_buf()
-  local util_find_test = require 'util_find_test_func'
+  local util_find_test = require 'util_find_test'
   local all_tests_in_buf = util_find_test.find_all_tests_in_buf(source_bufnr)
   self.toggle_display_func(true)
 
