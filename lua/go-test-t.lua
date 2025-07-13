@@ -60,9 +60,9 @@ function go_test:setup_user_command()
   vim.api.nvim_create_user_command('TestBoard', function() self_ref.displayer:toggle_display() end, {})
   vim.api.nvim_create_user_command('TestAll', function() self_ref:test_all(false) end, {})
   vim.api.nvim_create_user_command('TestPkg', function() self_ref:test_all(true) end, {})
-  vim.api.nvim_create_user_command('GoTestFile', function() term_tester:test_buf_in_terminals() end, {})
+  vim.api.nvim_create_user_command('TestFile', function() term_tester:test_buf_in_terminals() end, {})
 
-  vim.api.nvim_create_user_command('GoTest', function()
+  vim.api.nvim_create_user_command('Test', function()
     local util_find_test = require 'util_find_test_func'
     local test_name, _ = util_find_test.get_enclosing_test()
     if not test_name then
@@ -77,7 +77,6 @@ function go_test:setup_user_command()
   end, {})
 
   vim.api.nvim_create_user_command('TestView', function() term_tester:test_nearest_with_view_term() end, {})
-  vim.api.nvim_create_user_command('TestReset', function() self_ref:reset_all() end, {})
 end
 
 function go_test:reset_keep_pin()
