@@ -4,16 +4,16 @@
 
 ## What is go-test-t?
 
-Running and managing Go tests with terminal integration, pinning capabilities, and comprehensive test result display.
+Running, viewing, and navigating between code and terminal for Go tests 
 
 ## Features
 
-- **Terminal Integration**: Run tests in dedicated terminals with multiplexer support
-- **Test Pinning**: Pin failing tests for quick re-execution
 - **Real-time Results**: Live test output with JSON parsing
-- **Test Discovery**: Automatically find and run enclosing tests
 - **Quickfix Integration**: Failed tests appear in quickfix list
 - **Multiple Test Scopes**: Run all tests, package tests, or individual tests
+- **Test Pinning**: Pin failing tests for visual tracking when rerunning
+- **Terminal Integration**: Run tests in dedicated terminals with multiplexer support. 
+
 
 ## Installation
 
@@ -21,55 +21,34 @@ Running and managing Go tests with terminal integration, pinning capabilities, a
 
 ```lua
 {
-   'SearidangPa/terminal-multiplexer', -- Required dependency
-    event = 'VeryLazy', -- Load when Neovim is ready
-    lazy = true, -- Load on demand
+  'SearidangPa/terminal-multiplexer', -- Required dependency
+  event = 'VeryLazy',
+  lazy = true,
 },
 {
   'SearidangPa/go-test-t.nvim',
   ft = 'go',
-  lazy = true,             -- Load on Go filetype
-  events = 'VeryLazy',     -- Load after Neovim is ready
-  config = function()
-    local go_test = require('go-test-t').new({
-      go_test_prefix = 'go test',        -- Custom test command prefix
-      user_command_prefix = '',          -- Prefix for user commands
-    })
-  end,
+  lazy = true,
+  opts = {
+    go_test_prefix = 'go test -race -count=1',   -- Command prefix for running tests
+  },
 }
 ```
 
 
-## Configuration
-
-```lua
-local go_test = require('go-test-t').new({
-  go_test_prefix = 'go test',        -- Command prefix for running tests
-  user_command_prefix = 'Go',        -- Prefix for user commands (e.g., 'GoTestAll')
-})
-
--- Optionally change test prefix later
-go_test:set_go_test_prefix({ go_test_prefix = 'go test --race' })
-```
-
 ## Commands
 
-The plugin provides several user commands (prefixed with your `user_command_prefix`):
+The plugin provides several user commands:
 
 | Command | Description |
 |---------|-------------|
 | `TestAll` | Run all tests in the project |
 | `TestPkg` | Run tests in current package only |
-| `TestTerm` | Run nearest test in terminal (or last test if none found) |
-| `TestTermBuf` | Run all tests in current buffer in terminals |
-| `TestTermView` | Run nearest test with terminal view |
-| `TestTermViewLast` | Toggle last test terminal |
-| `TestTermSearch` | Search and select terminal |
-| `TestToggleDisplay` | Toggle test results display window |
-| `TestPinned` | Run all pinned tests |
-| `PinTest` | Pin nearest test for quick re-execution |
-| `TestReset` | Reset test results (keep pinned tests) |
-| `TestResetAll` | Reset everything including pinned tests |
+| `Test` | Run nearest test in terminal (or last test if none found) |
+| `TestFile` | Run all tests in current buffer in terminals |
+| `TestBoard` | Toggle test results display window |
+| `TestLocation` | Go to the location of the last test |
+| `TestViewLast` | Toggle last test terminal |
 
 ## Usage Examples
 
@@ -77,59 +56,20 @@ The plugin provides several user commands (prefixed with your `user_command_pref
 
 ```lua
 -- Run all tests
-:GoTestAll
+:TestAll
 
 -- Run tests in current package
-:GoTestPkg
+:TestPkg
 
 -- Run test under cursor in terminal
-:GoTestTerm
+:Test
 
 -- Toggle results display
-:GoTestToggleDisplay
+:TestBoard
 ```
 
-### Test Pinning Workflow
 
-1. Run tests with `:TestAll`
-2. Failed tests are automatically pinned
-3. Use `:TestPinned` to re-run only failed tests
-4. Manually pin specific tests with `:PinTest`
 
-### Key Mappings Example
-
-```lua
-vim.keymap.set('n', '<leader>ta', '<cmd>TestAll<cr>', { desc = 'Run all tests' })
-vim.keymap.set('n', '<leader>tp', '<cmd>TestPkg<cr>', { desc = 'Run package tests' })
-vim.keymap.set('n', '<leader>tt', '<cmd>TestTerm<cr>', { desc = 'Run nearest test' })
-vim.keymap.set('n', '<leader>td', '<cmd>TestToggleDisplay<cr>', { desc = 'Toggle test display' })
-vim.keymap.set('n', '<leader>tr', '<cmd>TestPinned<cr>', { desc = 'Run pinned tests' })
-```
-
-## Features in Detail
-
-### Terminal Integration
-- Each test runs in its own dedicated terminal
-- Terminal multiplexer manages multiple test terminals
-- View test output in real-time
-- Navigate between test terminals easily
-
-### Test Pinning
-- Failed tests are automatically pinned for quick access
-- Manually pin tests you want to run repeatedly
-- Run all pinned tests with a single command
-- Persistent across test sessions
-
-### Smart Test Discovery
-- Automatically finds the enclosing test function
-- Falls back to last run test if no enclosing test found
-- Supports Go test naming conventions
-
-### Visual Feedback
-- Status icons show test states (running, passed, failed)
-- Namespace highlighting for test results
-- Integration with quickfix list for failed tests
-- Real-time display updates
 
 ### Display Buffer Keybinds
 The test display buffer provides local keybinds for efficient test management:
@@ -138,30 +78,9 @@ The test display buffer provides local keybinds for efficient test management:
 |-----|--------|-------------|
 | `q` | Close | Close the test display window |
 | `<CR>` | Jump | Navigate to test function in source code |
-| `t` | Toggle | Toggle test terminal window |
 | `r` | Rerun | Rerun test in terminal |
-| `p` | Pin | Pin test for quick re-execution |
-| `u` | Unpin | Remove test from pinned list |
-| `v` | Preview | Preview test terminal output |
 | `o` | Output | Show full test output in floating window |
 
-## Requirements
-
-- Neovim >= 0.8.0
-- Go toolchain
-- Required Lua dependencies:
-  - `terminal-multiplexer`
-  - `fidget.nvim` (for notifications)
-  - `mini.notify` (for notifications)
-
-## Architecture
-
-The plugin consists of several modules:
-
-- **go-test-t.lua**: Main plugin interface and test orchestration
-- **terminal_test/**: Terminal integration and multiplexer management  
-- **util_*.lua**: Utility modules for test discovery, display, paths, etc.
-- **go-test-quickfix.lua**: Quickfix list integration
 
 
 ## Credit
