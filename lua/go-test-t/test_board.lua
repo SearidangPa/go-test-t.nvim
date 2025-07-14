@@ -234,6 +234,128 @@ function test_display:_jump_to_test_location_from_cursor()
     function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name) end
   )
 end
+local function parse_ansi_output(lines)
+  local clean_lines = {}
+  local highlights = {}
+
+  local ansi_colors = {
+    ['30'] = 'AnsiBlack', -- black
+    ['31'] = 'AnsiRed', -- red
+    ['32'] = 'AnsiGreen', -- green
+    ['33'] = 'AnsiYellow', -- yellow
+    ['34'] = 'AnsiBlue', -- blue
+    ['35'] = 'AnsiMagenta', -- magenta
+    ['36'] = 'AnsiCyan', -- cyan
+    ['37'] = 'AnsiWhite', -- white
+    ['90'] = 'AnsiGray', -- bright black (gray)
+    ['91'] = 'AnsiBrightRed', -- bright red
+    ['92'] = 'AnsiBrightGreen', -- bright green
+    ['93'] = 'AnsiBrightYellow', -- bright yellow
+    ['94'] = 'AnsiBrightBlue', -- bright blue
+    ['95'] = 'AnsiBrightMagenta', -- bright magenta
+    ['96'] = 'AnsiBrightCyan', -- bright cyan
+    ['97'] = 'AnsiBrightWhite', -- bright white
+  }
+  for line_idx, line in ipairs(lines) do
+    local clean_line = ''
+    local col_offset = 0
+    local current_hl = nil
+    local hl_start = nil
+
+    -- Match ANSI escape sequences: \033[...m or \027[...m or [ESC][...m
+    for text, codes in line:gmatch '([^\027]*)\027%[([0-9;]*)m' do
+      -- Add text before the escape sequence
+      if #text > 0 then
+        if current_hl and hl_start then
+          table.insert(highlights, {
+            line = line_idx - 1,
+            col_start = hl_start,
+            col_end = col_offset + #text,
+            hl_group = current_hl,
+          })
+        end
+        clean_line = clean_line .. text
+        col_offset = col_offset + #text
+      end
+
+      -- Process the ANSI codes
+      if codes == '' or codes == '0' then
+        -- Reset formatting
+        current_hl = nil
+        hl_start = nil
+      else
+        -- Parse color codes (handle compound codes like "0;32")
+        for code in codes:gmatch '([^;]+)' do
+          if ansi_colors[code] then
+            if current_hl and hl_start then
+              -- End previous highlight
+              table.insert(highlights, {
+                line = line_idx - 1,
+                col_start = hl_start,
+                col_end = col_offset,
+                hl_group = current_hl,
+              })
+            end
+            current_hl = ansi_colors[code]
+            hl_start = col_offset
+          end
+        end
+      end
+    end
+
+    -- Handle any remaining text after the last escape sequence
+    local remaining = line:match '\027%[[0-9;]*m([^\027]*)$' or line:match '^([^\027]+)' or line
+    if not line:find '\027' then
+      remaining = line
+    end
+
+    if remaining and #remaining > 0 then
+      if current_hl and hl_start then
+        table.insert(highlights, {
+          line = line_idx - 1,
+          col_start = hl_start,
+          col_end = col_offset + #remaining,
+          hl_group = current_hl,
+        })
+      end
+      clean_line = clean_line .. remaining
+    end
+
+    table.insert(clean_lines, clean_line)
+  end
+
+  return clean_lines, highlights
+end
+
+-- Apply highlights to a buffer
+-- Takes buffer number and highlight information to apply syntax highlighting
+local function apply_highlights(bufnr, highlights)
+  local ns_id = vim.api.nvim_create_namespace 'ansi_colors'
+
+  for _, hl in ipairs(highlights) do
+    vim.api.nvim_buf_add_highlight(bufnr, ns_id, hl.hl_group, hl.line, hl.col_start, hl.col_end)
+  end
+end
+
+-- Add this function before apply_highlights
+local function setup_ansi_highlights()
+  vim.api.nvim_set_hl(0, 'AnsiBlack', { fg = '#000000' })
+  vim.api.nvim_set_hl(0, 'AnsiRed', { fg = '#ff0000' })
+  vim.api.nvim_set_hl(0, 'AnsiGreen', { fg = '#0dd4af' })
+  vim.api.nvim_set_hl(0, 'AnsiYellow', { fg = '#ffff00' })
+  vim.api.nvim_set_hl(0, 'AnsiBlue', { fg = '#42b6f5' })
+  vim.api.nvim_set_hl(0, 'AnsiMagenta', { fg = '#ff00ff' })
+  vim.api.nvim_set_hl(0, 'AnsiCyan', { fg = '#00ffff' })
+  vim.api.nvim_set_hl(0, 'AnsiWhite', { fg = '#ffffff' })
+  vim.api.nvim_set_hl(0, 'AnsiGray', { fg = '#808080' })
+  vim.api.nvim_set_hl(0, 'AnsiBrightRed', { fg = '#ff5555' })
+  vim.api.nvim_set_hl(0, 'AnsiBrightGreen', { fg = '#55ff55' })
+  vim.api.nvim_set_hl(0, 'AnsiBrightYellow', { fg = '#ffff55' })
+  vim.api.nvim_set_hl(0, 'AnsiBrightBlue', { fg = '#5555ff' })
+  vim.api.nvim_set_hl(0, 'AnsiBrightMagenta', { fg = '#ff55ff' })
+  vim.api.nvim_set_hl(0, 'AnsiBrightCyan', { fg = '#55ffff' })
+  vim.api.nvim_set_hl(0, 'AnsiBrightWhite', { fg = '#ffffff' })
+end
 
 function test_display:_jump_to_test_location(filepath, test_line, test_name)
   assert(test_name, 'No test name found for test')
@@ -275,13 +397,23 @@ function test_display:_setup_keymaps()
       return
     end
 
-    -- Fallback to test output if no terminal available
+    -- Fallback to test output with ANSI parsing
     local tests_info = self_ref.get_tests_info_func()
     local test_info = tests_info[test_name]
     local output = test_info.output
 
+    -- Parse ANSI codes and get clean output with highlights
+    local clean_lines, highlights = parse_ansi_output(output)
+
     local bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, output)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
+    vim.api.nvim_buf_set_option(bufnr, 'filetype', 'ansi_log')
+
+    setup_ansi_highlights()
+
+    -- And change the buffer creation to:
+    -- Apply ANSI color highlights
+    apply_highlights(bufnr, highlights)
 
     local total_width = math.floor(vim.o.columns)
     local width = math.floor(total_width * 3 / 4) - 2
@@ -295,8 +427,8 @@ function test_display:_setup_keymaps()
       style = 'minimal',
       border = 'rounded',
     })
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('G', true, false, true), 'n', false)
 
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('G', true, false, true), 'n', false)
     vim.keymap.set('n', 'q', function()
       if vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)
