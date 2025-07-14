@@ -2,6 +2,8 @@
 local go_test = {}
 go_test.__index = go_test
 
+function go_test.setup(opts) go_test.new(opts) end
+
 ---@param opts GoTestT.Options
 function go_test.new(opts)
   opts = opts or {}
@@ -75,6 +77,26 @@ function go_test:setup_user_command()
       self_ref.term_tester:test_nearest_in_terminal()
     end
   end, {})
+
+  vim.api.nvim_create_user_command('TestLocation', function()
+    local util_lsp = require 'go-test-t.util_lsp'
+    local test_name = self.term_tester.terminal_multiplexer.last_terminal_name
+    util_lsp.action_from_test_name(test_name, function(lsp_param)
+      local filepath = lsp_param.filepath
+      local test_line = lsp_param.test_line
+      vim.cmd('edit ' .. filepath)
+
+      if test_line then
+        local pos = { test_line, 0 }
+        vim.api.nvim_win_set_cursor(0, pos)
+        vim.cmd 'normal! zz'
+      end
+    end)
+  end, { desc = 'Go to test location', force = true })
+
+  vim.api.nvim_create_user_command('TestViewLast', function() self.term_tester:toggle_last_test_terminal() end, {
+    desc = 'Pin or unpin the last test terminal',
+  })
 end
 
 function go_test:reset_keep_pin()
