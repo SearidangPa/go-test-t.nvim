@@ -9,6 +9,7 @@ function go_test.new(opts)
   opts = opts or {}
   local self = setmetatable({}, go_test)
   self.go_test_prefix = opts.go_test_prefix or 'go test'
+  self.integration_test_pkg = opts.integration_test_pkg
 
   self.job_id = -1
   self.tests_info = {}
@@ -60,8 +61,17 @@ function go_test:setup_user_command()
   local self_ref = self
   local term_tester = self_ref.term_tester
   vim.api.nvim_create_user_command('TestBoard', function() self_ref.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command('TestAll', function() self_ref:test_all(false) end, {})
-  vim.api.nvim_create_user_command('TestPkg', function() self_ref:test_all(true) end, {})
+  vim.api.nvim_create_user_command('TestAll', function() self_ref:test_pkg './...' end, {})
+  vim.api.nvim_create_user_command('TestPkg', function()
+    local util_path = require 'go-test-t.util_path'
+    local test_pkg = util_path.get_intermediate_path()
+    self_ref:test_pkg(test_pkg)
+  end, {})
+
+  if self.integration_test_pkg and self.integration_test_pkg ~= '' then
+    vim.api.nvim_create_user_command('TestIntegration', function() self_ref:test_pkg(self.integration_test_pkg) end, {})
+  end
+
   vim.api.nvim_create_user_command('TestFile', function() term_tester:test_buf_in_terminals() end, {})
 
   vim.api.nvim_create_user_command('Test', function()
@@ -113,18 +123,11 @@ function go_test:reset_all()
   self_ref.pin_tester.pinned_list = {}
 end
 
-function go_test:test_all(test_in_pkg_only)
+---@param test_pkg? string
+function go_test:test_pkg(test_pkg)
   local self_ref = self
-  test_in_pkg_only = test_in_pkg_only or false
-  local test_command
-  local intermediate_path
-  if test_in_pkg_only then
-    local util_path = require 'go-test-t.util_path'
-    intermediate_path = util_path.get_intermediate_path()
-    test_command = string.format('%s %s -v --json', self_ref.go_test_prefix, intermediate_path)
-  else
-    test_command = string.format('%s ./... -v --json', self_ref.go_test_prefix)
-  end
+  test_pkg = test_pkg or './...'
+  local test_command = string.format('%s %s -v --json', self_ref.go_test_prefix, test_pkg)
 
   self_ref:reset_keep_pin()
   self_ref.displayer:create_window_and_buf()

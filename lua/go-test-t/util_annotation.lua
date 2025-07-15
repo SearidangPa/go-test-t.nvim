@@ -1,5 +1,6 @@
 ---@class GoTestT
 ---@field go_test_prefix string
+---@field integration_test_pkg string
 ---@field user_command_prefix string
 ---@field tests_info table<string, terminal.testInfo>
 ---@field job_id number
@@ -8,7 +9,7 @@
 ---@field pin_tester PinTester
 ---@field displayer TestDisplay
 ---@field set_up fun(self: GoTestT, user_command_prefix: string)
----@field test_all fun(self: GoTestT, test_in_pkg_only: boolean)
+---@field test_pkg fun(self: GoTestT, test_in_pkg_only: boolean)
 ---@field toggle_display fun(self: GoTestT)
 ---@field _clean_up_prev_job fun(self: GoTestT)
 ---@field _add_golang_test fun(self: GoTestT, entry: table, test_in_pkg_only: boolean, intermediate_path: string)
@@ -18,6 +19,7 @@
 ---
 ---@class GoTestT.Options
 ---@field go_test_prefix string
+---@field integration_test_pkg string
 
 ---@class termTester
 ---@field go_test_prefix string
