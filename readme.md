@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/user-attachments/assets/819eb2ae-7ccd-4d64-a74c-0b6a84cdcbcb" width="200" alt="go-test-t.nvim Screenshot">
+<img src="https://github.com/user-attachments/assets/819eb2ae-7ccd-4d64-a74c-0b6a84cdcbcb" width="200" alt="">
 </p>
 
 ## What is go-test-t?
