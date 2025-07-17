@@ -372,6 +372,23 @@ function test_display:_jump_to_test_location(filepath, test_line, test_name)
   end
 end
 
+local function clean_ansi_output(bufnr, output)
+  setup_ansi_highlights()
+  local clean_lines, highlights = parse_ansi_output(output)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
+  vim.bo[bufnr].filetype = 'ansi_log'
+  apply_highlights(bufnr, highlights)
+end
+
+vim.api.nvim_create_user_command('CleanAnsiOutput', function(opts)
+  local bufnr = opts.args and tonumber(opts.args) or vim.api.nvim_get_current_buf()
+  assert(bufnr, 'No buffer number provided')
+  assert(vim.api.nvim_buf_is_valid(bufnr), 'Invalid buffer number: ' .. bufnr)
+
+  local output = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  clean_ansi_output(bufnr, output)
+end, { nargs = '?' })
+
 function test_display:_setup_keymaps()
   local self_ref = self -- Capture the current 'self' reference
   local map_opts = { buffer = self.display_bufnr, noremap = true, silent = true }
@@ -403,17 +420,9 @@ function test_display:_setup_keymaps()
     local output = test_info.output
 
     -- Parse ANSI codes and get clean output with highlights
-    local clean_lines, highlights = parse_ansi_output(output)
 
     local bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
-    vim.api.nvim_buf_set_option(bufnr, 'filetype', 'ansi_log')
-
-    setup_ansi_highlights()
-
-    -- And change the buffer creation to:
-    -- Apply ANSI color highlights
-    apply_highlights(bufnr, highlights)
+    clean_ansi_output(bufnr, output)
 
     local total_width = math.floor(vim.o.columns)
     local width = math.floor(total_width * 3 / 4) - 2
