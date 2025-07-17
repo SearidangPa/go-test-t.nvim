@@ -380,7 +380,7 @@ local function clean_ansi_output(bufnr, output)
   apply_highlights(bufnr, highlights)
 end
 
-vim.api.nvim_create_user_command('CleanAnsiOutput', function(opts)
+vim.api.nvim_create_user_command('ClearAnsiOutput', function(opts)
   local bufnr = opts.args and tonumber(opts.args) or vim.api.nvim_get_current_buf()
   assert(bufnr, 'No buffer number provided')
   assert(vim.api.nvim_buf_is_valid(bufnr), 'Invalid buffer number: ' .. bufnr)
