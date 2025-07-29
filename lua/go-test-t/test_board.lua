@@ -234,27 +234,28 @@ function test_display:_jump_to_test_location_from_cursor()
     function(lsp_param) self:_jump_to_test_location(lsp_param.filepath, lsp_param.test_line, test_name) end
   )
 end
+
 local function parse_ansi_output(lines)
   local clean_lines = {}
   local highlights = {}
 
   local ansi_colors = {
-    ['30'] = 'AnsiBlack', -- black
-    ['31'] = 'AnsiRed', -- red
-    ['32'] = 'AnsiGreen', -- green
-    ['33'] = 'AnsiYellow', -- yellow
-    ['34'] = 'AnsiBlue', -- blue
-    ['35'] = 'AnsiMagenta', -- magenta
-    ['36'] = 'AnsiCyan', -- cyan
-    ['37'] = 'AnsiWhite', -- white
-    ['90'] = 'AnsiGray', -- bright black (gray)
-    ['91'] = 'AnsiBrightRed', -- bright red
-    ['92'] = 'AnsiBrightGreen', -- bright green
-    ['93'] = 'AnsiBrightYellow', -- bright yellow
-    ['94'] = 'AnsiBrightBlue', -- bright blue
+    ['30'] = 'AnsiBlack',         -- black
+    ['31'] = 'AnsiRed',           -- red
+    ['32'] = 'AnsiGreen',         -- green
+    ['33'] = 'AnsiYellow',        -- yellow
+    ['34'] = 'AnsiBlue',          -- blue
+    ['35'] = 'AnsiMagenta',       -- magenta
+    ['36'] = 'AnsiCyan',          -- cyan
+    ['37'] = 'AnsiWhite',         -- white
+    ['90'] = 'AnsiGray',          -- bright black (gray)
+    ['91'] = 'AnsiBrightRed',     -- bright red
+    ['92'] = 'AnsiBrightGreen',   -- bright green
+    ['93'] = 'AnsiBrightYellow',  -- bright yellow
+    ['94'] = 'AnsiBrightBlue',    -- bright blue
     ['95'] = 'AnsiBrightMagenta', -- bright magenta
-    ['96'] = 'AnsiBrightCyan', -- bright cyan
-    ['97'] = 'AnsiBrightWhite', -- bright white
+    ['96'] = 'AnsiBrightCyan',    -- bright cyan
+    ['97'] = 'AnsiBrightWhite',   -- bright white
   }
   for line_idx, line in ipairs(lines) do
     local clean_line = ''
@@ -327,13 +328,13 @@ local function parse_ansi_output(lines)
   return clean_lines, highlights
 end
 
--- Apply highlights to a buffer
--- Takes buffer number and highlight information to apply syntax highlighting
 local function apply_highlights(bufnr, highlights)
   local ns_id = vim.api.nvim_create_namespace 'ansi_colors'
-
   for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(bufnr, ns_id, hl.hl_group, hl.line, hl.col_start, hl.col_end)
+    vim.api.nvim_buf_set_extmark(bufnr, ns_id, hl.line, hl.col_start, {
+      end_col = hl.col_end,
+      hl_group = hl.hl_group,
+    })
   end
 end
 
