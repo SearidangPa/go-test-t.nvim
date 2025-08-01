@@ -58,7 +58,8 @@ function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
   local self_ref = self
   vim.schedule(function()
     vim.api.nvim_buf_attach(float_term_state.bufnr, false, {
-      on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line, last_line, test_info) end,
+      on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line,
+          last_line, test_info) end,
     })
   end)
 end
@@ -183,7 +184,8 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:_clear_test_extmarks(test_info)
   if test_info.test_bufnr and test_info.test_line then
-    local extmarks = vim.api.nvim_buf_get_extmarks(test_info.test_bufnr, self.ns_id, { test_info.test_line - 1, 0 }, { test_info.test_line - 1, -1 }, {})
+    local extmarks = vim.api.nvim_buf_get_extmarks(test_info.test_bufnr, self.ns_id, { test_info.test_line - 1, 0 },
+      { test_info.test_line - 1, -1 }, {})
     for _, extmark in ipairs(extmarks) do
       vim.api.nvim_buf_del_extmark(test_info.test_bufnr, self.ns_id, extmark[1])
     end
@@ -299,6 +301,8 @@ function terminal_test:_process_one_line(line, test_info, current_time)
   elseif string.match(line, '--- PASS') then
     vim.notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
     self:_handle_test_passed(test_info, current_time)
+    -- delete the terminal after test pass
+    self.terminal_multiplexer:delete_terminal(test_info.name)
     return true
   end
 end
