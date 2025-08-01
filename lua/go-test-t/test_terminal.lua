@@ -228,7 +228,9 @@ function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_in
     local detach = self:_process_one_line(line, test_info, current_time)
     if detach then
       if test_info.status == 'pass' then
-        self.terminal_multiplexer:delete_terminal(test_info.name)
+        vim.schedule(function()
+          self.terminal_multiplexer:delete_terminal(test_info.name)
+        end)
       end
       return true
     end
