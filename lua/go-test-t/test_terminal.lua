@@ -58,8 +58,10 @@ function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
   local self_ref = self
   vim.schedule(function()
     vim.api.nvim_buf_attach(float_term_state.bufnr, false, {
-      on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line,
-          last_line, test_info) end,
+      on_lines = function(_, buf, _, first_line, last_line)
+        return self_ref:_process_buffer_lines(buf, first_line,
+          last_line, test_info)
+      end,
     })
   end)
 end
@@ -225,6 +227,9 @@ function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_in
   for _, line in ipairs(lines) do
     local detach = self:_process_one_line(line, test_info, current_time)
     if detach then
+      if test_info.status == 'pass' then
+        self.terminal_multiplexer:delete_terminal(test_info.name)
+      end
       return true
     end
   end
@@ -302,7 +307,6 @@ function terminal_test:_process_one_line(line, test_info, current_time)
     vim.notify(string.format('%s pass', test_info.name), vim.log.levels.INFO)
     self:_handle_test_passed(test_info, current_time)
     -- delete the terminal after test pass
-    self.terminal_multiplexer:delete_terminal(test_info.name)
     return true
   end
 end
