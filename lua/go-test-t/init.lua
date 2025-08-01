@@ -88,6 +88,11 @@ function go_test:setup_user_command()
     end
   end, {})
 
+  vim.api.nvim_create_user_command('TestReset', function()
+    self_ref:reset_all()
+    vim.notify('Go Test T: Reset all tests', vim.log.levels.INFO)
+  end, { desc = 'Reset all tests' })
+
   vim.api.nvim_create_user_command('TestLocation', function()
     local util_lsp = require 'go-test-t.util_lsp'
     local test_name = self.term_tester.terminal_multiplexer.last_terminal_name
@@ -154,7 +159,7 @@ function go_test:test_pkg(test_pkg)
         end
 
         if decoded.Action == 'run' then
-          self_ref:_add_golang_test(decoded, test_in_pkg_only, intermediate_path)
+          self_ref:_add_golang_test(decoded, test_command)
           self_ref.displayer:update_display_buffer()
           goto continue
         end
@@ -200,20 +205,12 @@ function go_test:_clean_up_prev_job()
 end
 
 ---@param entry table
----@param test_in_pkg_only boolean
----@param intermediate_path string
-function go_test:_add_golang_test(entry, test_in_pkg_only, intermediate_path)
+function go_test:_add_golang_test(entry, test_command)
   local self_ref = self
   if not entry.Test then
     return
   end
 
-  local test_command
-  if test_in_pkg_only then
-    test_command = string.format('%s %s -v', self_ref.go_test_prefix, intermediate_path)
-  else
-    test_command = string.format('%s ./... -v', self_ref.go_test_prefix)
-  end
 
   ---@type terminal.testInfo
   local test_info = {
