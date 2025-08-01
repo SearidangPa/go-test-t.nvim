@@ -137,6 +137,7 @@ function test_display:_sort_tests_by_status(tests)
       start = 4,
       running = 5,
       pass = 6,
+      fired = 7,
     }
 
     local pinned_tests = self.get_pinned_tests_func()
