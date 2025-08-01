@@ -40,7 +40,7 @@ function terminal_test:reset()
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
+function terminal_test:test_in_terminal(test_info, do_not_close_terminal, delete_terminal_after)
   self:_validate_test_info(test_info)
   self:_clear_test_extmarks(test_info)
   self.terminal_multiplexer:delete_terminal(test_info.name)
@@ -60,7 +60,7 @@ function terminal_test:test_in_terminal(test_info, do_not_close_terminal)
     vim.api.nvim_buf_attach(float_term_state.bufnr, false, {
       on_lines = function(_, buf, _, first_line, last_line)
         return self_ref:_process_buffer_lines(buf, first_line,
-          last_line, test_info)
+          last_line, test_info, delete_terminal_after)
       end,
     })
   end)
@@ -142,7 +142,7 @@ function terminal_test:test_buf_in_terminals()
     self.add_test_info_func(test_info)
     self.update_display_buffer_func(test_info)
     self:_auto_update_test_line(test_info)
-    self:test_in_terminal(test_info)
+    self:test_in_terminal(test_info, false, true)
   end
 end
 
@@ -220,14 +220,14 @@ end
 ---@param first_line number
 ---@param last_line number
 ---@param test_info terminal.testInfo
-function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_info)
+function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_info, delete_terminal_after)
   local lines = vim.api.nvim_buf_get_lines(buf, first_line, last_line, false)
   local current_time = os.date '%H:%M:%S'
 
   for _, line in ipairs(lines) do
     local detach = self:_process_one_line(line, test_info, current_time)
     if detach then
-      if test_info.status == 'pass' then
+      if test_info.status == 'pass' and delete_terminal_after then
         vim.schedule(function()
           self.terminal_multiplexer:delete_terminal(test_info.name)
         end)
