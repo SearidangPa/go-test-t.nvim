@@ -339,26 +339,6 @@ local function apply_highlights(bufnr, highlights)
   end
 end
 
--- Add this function before apply_highlights
-local function setup_ansi_highlights()
-  vim.api.nvim_set_hl(0, 'AnsiBlack', { fg = '#000000' })
-  vim.api.nvim_set_hl(0, 'AnsiRed', { fg = '#ff0000' })
-  vim.api.nvim_set_hl(0, 'AnsiGreen', { fg = '#0dd4af' })
-  vim.api.nvim_set_hl(0, 'AnsiYellow', { fg = '#ffff00' })
-  vim.api.nvim_set_hl(0, 'AnsiBlue', { fg = '#42b6f5' })
-  vim.api.nvim_set_hl(0, 'AnsiMagenta', { fg = '#ff00ff' })
-  vim.api.nvim_set_hl(0, 'AnsiCyan', { fg = '#00ffff' })
-  vim.api.nvim_set_hl(0, 'AnsiWhite', { fg = '#ffffff' })
-  vim.api.nvim_set_hl(0, 'AnsiGray', { fg = '#808080' })
-  vim.api.nvim_set_hl(0, 'AnsiBrightRed', { fg = '#ff5555' })
-  vim.api.nvim_set_hl(0, 'AnsiBrightGreen', { fg = '#55ff55' })
-  vim.api.nvim_set_hl(0, 'AnsiBrightYellow', { fg = '#ffff55' })
-  vim.api.nvim_set_hl(0, 'AnsiBrightBlue', { fg = '#5555ff' })
-  vim.api.nvim_set_hl(0, 'AnsiBrightMagenta', { fg = '#ff55ff' })
-  vim.api.nvim_set_hl(0, 'AnsiBrightCyan', { fg = '#55ffff' })
-  vim.api.nvim_set_hl(0, 'AnsiBrightWhite', { fg = '#ffffff' })
-end
-
 function test_display:_jump_to_test_location(filepath, test_line, test_name)
   assert(test_name, 'No test name found for test')
   assert(filepath, 'No filepath found for test: ' .. test_name)
@@ -375,21 +355,29 @@ function test_display:_jump_to_test_location(filepath, test_line, test_name)
 end
 
 local function clean_ansi_output(bufnr, output)
-  setup_ansi_highlights()
-  local clean_lines, highlights = parse_ansi_output(output)
+  local clean_lines = {}
+
+  local function strip_ansi_sequences(text)
+    -- Remove ANSI escape sequences
+    -- Pattern matches: ESC[ followed by any characters until a letter
+    return text:gsub('\27%[[%d;]*%a', '')
+  end
+
+  for _, line in ipairs(output) do
+    table.insert(clean_lines, strip_ansi_sequences(line))
+  end
+
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
-  vim.bo[bufnr].filetype = 'ansi_log'
-  apply_highlights(bufnr, highlights)
 end
 
 vim.api.nvim_create_user_command('AnsiClean', function(opts)
   local bufnr = opts.args and tonumber(opts.args) or vim.api.nvim_get_current_buf()
   assert(bufnr, 'No buffer number provided')
   assert(vim.api.nvim_buf_is_valid(bufnr), 'Invalid buffer number: ' .. bufnr)
-
   local output = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   clean_ansi_output(bufnr, output)
 end, { nargs = '?' })
+
 
 function test_display:_setup_keymaps()
   local self_ref = self -- Capture the current 'self' reference
