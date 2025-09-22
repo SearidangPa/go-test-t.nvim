@@ -358,9 +358,19 @@ local function clean_ansi_output(bufnr, output)
   local clean_lines = {}
 
   local function strip_ansi_sequences(text)
+    if not text or type(text) ~= 'string' then
+      return text or ''
+    end
+
     -- Remove ANSI escape sequences
     -- Pattern matches: ESC[ followed by any characters until a letter
-    return text:gsub('\27%[[%d;]*%a', '')
+    local clean_text = text:gsub('\027%[[%d;]*%a', '')
+    -- Also handle other common ANSI patterns
+    clean_text = clean_text:gsub('\027%[[%d;]*m', '') -- Color codes
+    clean_text = clean_text:gsub('\027%[%d*[ABCD]', '') -- Cursor movement
+    clean_text = clean_text:gsub('\027%[%d*[JK]', '') -- Clear screen/line
+
+    return clean_text
   end
 
   for _, line in ipairs(output) do
