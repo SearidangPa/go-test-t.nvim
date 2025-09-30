@@ -1,11 +1,12 @@
 ---@class GoTestT
-local go_test = {}
+local go_test = {
+  ---@class GoTestT
+  the_go_test_t = nil,
+}
 go_test.__index = go_test
 
----@class GoTestT
-local the_go_test_t = nil
 
-function go_test.setup(opts) the_go_test_t = go_test.new(opts) end
+function go_test.setup(opts) go_test.the_go_test_t = go_test.new(opts) end
 
 ---@param opts GoTestT.Options
 function go_test.new(opts)
@@ -60,57 +61,68 @@ function go_test:set_go_test_prefix(opts)
 end
 
 function go_test.test_this()
-  vim.api.nvim_create_user_command('Test', function()
-    local util_find_test = require 'go-test-t.util_find_test'
-    local test_name, _ = util_find_test.get_enclosing_test()
-    if not test_name then
-      local last_test = the_go_test_t.term_tester.terminal_multiplexer.last_terminal_name
-      if last_test then
-        local test_info = the_go_test_t.term_tester.get_test_info_func(last_test)
-        the_go_test_t.term_tester:test_in_terminal(test_info, true)
-      end
-    else
-      the_go_test_t.term_tester:test_nearest_in_terminal()
+  local the_go_test_t = go_test.the_go_test_t
+  local util_find_test = require 'go-test-t.util_find_test'
+  local test_name, _ = util_find_test.get_enclosing_test()
+  if not test_name then
+    local last_test = the_go_test_t.term_tester.terminal_multiplexer.last_terminal_name
+    if last_test then
+      local test_info = the_go_test_t.term_tester.get_test_info_func(last_test)
+      the_go_test_t.term_tester:test_in_terminal(test_info, true)
     end
-  end, {})
+  else
+    the_go_test_t.term_tester:test_nearest_in_terminal()
+  end
 end
 
 function go_test:setup_user_command()
   require 'terminal-multiplexer'
   local self_ref = self
-  local term_tester = self_ref.term_tester
-  vim.api.nvim_create_user_command('TestBoard', function() self_ref.displayer:toggle_display() end, {})
+  vim.api.nvim_create_user_command(
+    'TestBoard',
+    function() self_ref.displayer:toggle_display() end,
+    {}
+  )
 
   if self.integration_test_pkg and self.integration_test_pkg ~= '' then
-    vim.api.nvim_create_user_command('TestIntegration', function() self_ref:test_pkg(self.integration_test_pkg) end, {})
+    vim.api.nvim_create_user_command(
+      'TestIntegration',
+      function() self_ref:test_pkg(self.integration_test_pkg) end,
+      {}
+    )
   end
-
-  vim.api.nvim_create_user_command('TestFile', function() term_tester:test_buf_in_terminals() end, {})
 
   vim.api.nvim_create_user_command('TestReset', function()
     self_ref:reset_all()
     vim.notify('Go Test T: Reset all tests', vim.log.levels.INFO)
   end, { desc = 'Reset all tests' })
+end
 
-  vim.api.nvim_create_user_command('TestLocation', function()
-    local util_lsp = require 'go-test-t.util_lsp'
-    local test_name = self.term_tester.terminal_multiplexer.last_terminal_name
-    util_lsp.action_from_test_name(test_name, function(lsp_param)
-      local filepath = lsp_param.filepath
-      local test_line = lsp_param.test_line
-      vim.cmd('edit ' .. filepath)
+function go_test.test_file()
+  local the_go_test_t = go_test.the_go_test_t
+  the_go_test_t.term_tester:test_buf_in_terminals()
+end
 
-      if test_line then
-        local pos = { test_line, 0 }
-        vim.api.nvim_win_set_cursor(0, pos)
-        vim.cmd 'normal! zz'
-      end
-    end)
-  end, { desc = 'Go to test location', force = true })
+function go_test.go_to_test_location()
+  local the_go_test_t = go_test.the_go_test_t
+  local util_lsp = require 'go-test-t.util_lsp'
+  local test_name = the_go_test_t.term_tester.terminal_multiplexer.last_terminal_name
+  util_lsp.action_from_test_name(test_name, function(lsp_param)
+    local filepath = lsp_param.filepath
+    local test_line = lsp_param.test_line
+    vim.cmd('edit ' .. filepath)
 
-  vim.api.nvim_create_user_command('TestViewLast', function() self.term_tester:toggle_last_test_terminal() end, {
-    desc = 'Pin or unpin the last test terminal',
-  })
+    if test_line then
+      local pos = { test_line, 0 }
+      vim.api.nvim_win_set_cursor(0, pos)
+      vim.cmd 'normal! zz'
+    end
+  end)
+end
+
+function go_test.view_last_test_terminal()
+  local the_go_test_t = go_test.the_go_test_t
+  the_go_test_t.term_tester:toggle_last_test_terminal()
 end
 
 function go_test:reset_keep_pin()
