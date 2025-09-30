@@ -2,7 +2,10 @@
 local go_test = {}
 go_test.__index = go_test
 
-function go_test.setup(opts) go_test.new(opts) end
+---@class GoTestT
+local the_go_test_t = nil
+
+function go_test.setup(opts) the_go_test_t = go_test.new(opts) end
 
 ---@param opts GoTestT.Options
 function go_test.new(opts)
@@ -56,37 +59,33 @@ function go_test:set_go_test_prefix(opts)
   self_ref.term_tester.go_test_prefix = new_prefix
 end
 
+function go_test.test_this()
+  vim.api.nvim_create_user_command('Test', function()
+    local util_find_test = require 'go-test-t.util_find_test'
+    local test_name, _ = util_find_test.get_enclosing_test()
+    if not test_name then
+      local last_test = the_go_test_t.term_tester.terminal_multiplexer.last_terminal_name
+      if last_test then
+        local test_info = the_go_test_t.term_tester.get_test_info_func(last_test)
+        the_go_test_t.term_tester:test_in_terminal(test_info, true)
+      end
+    else
+      the_go_test_t.term_tester:test_nearest_in_terminal()
+    end
+  end, {})
+end
+
 function go_test:setup_user_command()
   require 'terminal-multiplexer'
   local self_ref = self
   local term_tester = self_ref.term_tester
   vim.api.nvim_create_user_command('TestBoard', function() self_ref.displayer:toggle_display() end, {})
-  vim.api.nvim_create_user_command('TestAll', function() self_ref:test_pkg './...' end, {})
-  vim.api.nvim_create_user_command('TestPkg', function()
-    local util_path = require 'go-test-t.util_path'
-    local test_pkg = util_path.get_intermediate_path()
-    self_ref:test_pkg(test_pkg)
-  end, {})
 
   if self.integration_test_pkg and self.integration_test_pkg ~= '' then
     vim.api.nvim_create_user_command('TestIntegration', function() self_ref:test_pkg(self.integration_test_pkg) end, {})
   end
 
   vim.api.nvim_create_user_command('TestFile', function() term_tester:test_buf_in_terminals() end, {})
-
-  vim.api.nvim_create_user_command('Test', function()
-    local util_find_test = require 'go-test-t.util_find_test'
-    local test_name, _ = util_find_test.get_enclosing_test()
-    if not test_name then
-      local last_test = self_ref.term_tester.terminal_multiplexer.last_terminal_name
-      if last_test then
-        local test_info = self_ref.term_tester.get_test_info_func(last_test)
-        self.term_tester:test_in_terminal(test_info, true)
-      end
-    else
-      self_ref.term_tester:test_nearest_in_terminal()
-    end
-  end, {})
 
   vim.api.nvim_create_user_command('TestReset', function()
     self_ref:reset_all()
