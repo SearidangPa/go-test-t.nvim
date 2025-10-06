@@ -132,10 +132,10 @@ function test_display:_sort_tests_by_status(tests)
   table.sort(tests, function(a, b)
     local priority = {
       fail = 1,
-      paused = 2,
+      running = 2,
       cont = 3,
-      start = 4,
-      running = 5,
+      pause = 4,
+      start = 5,
       pass = 6,
       fired = 7,
     }
@@ -150,8 +150,10 @@ function test_display:_sort_tests_by_status(tests)
       return false
     end
 
-    local a_priority = priority[a.status] or 999
-    local b_priority = priority[b.status] or 999
+    local a_priority = priority[a.status]
+    assert(a_priority, 'Unknown status: ' .. tostring(a.status))
+    local b_priority = priority[b.status]
+    assert(b_priority, 'Unknown status: ' .. tostring(b.status))
 
     if a_priority ~= b_priority then
       return a_priority < b_priority
@@ -236,109 +238,6 @@ function test_display:_jump_to_test_location_from_cursor()
   )
 end
 
-local function parse_ansi_output(lines)
-  local clean_lines = {}
-  local highlights = {}
-
-  local ansi_colors = {
-    ['30'] = 'AnsiBlack',         -- black
-    ['31'] = 'AnsiRed',           -- red
-    ['32'] = 'AnsiGreen',         -- green
-    ['33'] = 'AnsiYellow',        -- yellow
-    ['34'] = 'AnsiBlue',          -- blue
-    ['35'] = 'AnsiMagenta',       -- magenta
-    ['36'] = 'AnsiCyan',          -- cyan
-    ['37'] = 'AnsiWhite',         -- white
-    ['90'] = 'AnsiGray',          -- bright black (gray)
-    ['91'] = 'AnsiBrightRed',     -- bright red
-    ['92'] = 'AnsiBrightGreen',   -- bright green
-    ['93'] = 'AnsiBrightYellow',  -- bright yellow
-    ['94'] = 'AnsiBrightBlue',    -- bright blue
-    ['95'] = 'AnsiBrightMagenta', -- bright magenta
-    ['96'] = 'AnsiBrightCyan',    -- bright cyan
-    ['97'] = 'AnsiBrightWhite',   -- bright white
-  }
-  for line_idx, line in ipairs(lines) do
-    local clean_line = ''
-    local col_offset = 0
-    local current_hl = nil
-    local hl_start = nil
-
-    -- Match ANSI escape sequences: \033[...m or \027[...m or [ESC][...m
-    for text, codes in line:gmatch '([^\027]*)\027%[([0-9;]*)m' do
-      -- Add text before the escape sequence
-      if #text > 0 then
-        if current_hl and hl_start then
-          table.insert(highlights, {
-            line = line_idx - 1,
-            col_start = hl_start,
-            col_end = col_offset + #text,
-            hl_group = current_hl,
-          })
-        end
-        clean_line = clean_line .. text
-        col_offset = col_offset + #text
-      end
-
-      -- Process the ANSI codes
-      if codes == '' or codes == '0' then
-        -- Reset formatting
-        current_hl = nil
-        hl_start = nil
-      else
-        -- Parse color codes (handle compound codes like "0;32")
-        for code in codes:gmatch '([^;]+)' do
-          if ansi_colors[code] then
-            if current_hl and hl_start then
-              -- End previous highlight
-              table.insert(highlights, {
-                line = line_idx - 1,
-                col_start = hl_start,
-                col_end = col_offset,
-                hl_group = current_hl,
-              })
-            end
-            current_hl = ansi_colors[code]
-            hl_start = col_offset
-          end
-        end
-      end
-    end
-
-    -- Handle any remaining text after the last escape sequence
-    local remaining = line:match '\027%[[0-9;]*m([^\027]*)$' or line:match '^([^\027]+)' or line
-    if not line:find '\027' then
-      remaining = line
-    end
-
-    if remaining and #remaining > 0 then
-      if current_hl and hl_start then
-        table.insert(highlights, {
-          line = line_idx - 1,
-          col_start = hl_start,
-          col_end = col_offset + #remaining,
-          hl_group = current_hl,
-        })
-      end
-      clean_line = clean_line .. remaining
-    end
-
-    table.insert(clean_lines, clean_line)
-  end
-
-  return clean_lines, highlights
-end
-
-local function apply_highlights(bufnr, highlights)
-  local ns_id = vim.api.nvim_create_namespace 'ansi_colors'
-  for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_set_extmark(bufnr, ns_id, hl.line, hl.col_start, {
-      end_col = hl.col_end,
-      hl_group = hl.hl_group,
-    })
-  end
-end
-
 function test_display:_jump_to_test_location(filepath, test_line, test_name)
   assert(test_name, 'No test name found for test')
   assert(filepath, 'No filepath found for test: ' .. test_name)
@@ -366,9 +265,9 @@ local function clean_ansi_output(bufnr, output)
     -- Pattern matches: ESC[ followed by any characters until a letter
     local clean_text = text:gsub('\027%[[%d;]*%a', '')
     -- Also handle other common ANSI patterns
-    clean_text = clean_text:gsub('\027%[[%d;]*m', '') -- Color codes
+    clean_text = clean_text:gsub('\027%[[%d;]*m', '')   -- Color codes
     clean_text = clean_text:gsub('\027%[%d*[ABCD]', '') -- Cursor movement
-    clean_text = clean_text:gsub('\027%[%d*[JK]', '') -- Clear screen/line
+    clean_text = clean_text:gsub('\027%[%d*[JK]', '')   -- Clear screen/line
 
     return clean_text
   end
