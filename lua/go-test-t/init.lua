@@ -76,7 +76,6 @@ function go_test.test_this()
 end
 
 function go_test:setup_user_command()
-  require 'terminal-multiplexer'
   local self_ref = self
   vim.api.nvim_create_user_command(
     'TestBoard',

@@ -9,9 +9,19 @@ function terminal_test.new(opts)
   assert(opts.go_test_prefix, 'No go test prefix found')
   assert(opts.ns_id, 'No namespace ID found')
 
-  local self = setmetatable({}, terminal_test)
+  local self = setmetatable({}, {
+    __index = function(t, key)
+      if key == 'terminal_multiplexer' then
+        -- Lazy load and cache the terminal multiplexer
+        local multiplexer = require('terminal-multiplexer').new {}
+        rawset(t, 'terminal_multiplexer', multiplexer)
+        return multiplexer
+      end
+      -- Fall back to class methods and properties
+      return terminal_test[key]
+    end
+  })
   self.go_test_prefix = opts.go_test_prefix
-  self.terminal_multiplexer = require('terminal-multiplexer').new {}
 
   self.get_test_info_func = opts.get_test_info_func
   self.add_test_info_func = opts.add_test_info_func
