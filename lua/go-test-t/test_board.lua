@@ -261,13 +261,13 @@ local function clean_ansi_output(bufnr, output)
       return text or ''
     end
 
-    -- Remove ANSI escape sequences
-    -- Pattern matches: ESC[ followed by any characters until a letter
-    local clean_text = text:gsub('\027%[[%d;]*%a', '')
-    -- Also handle other common ANSI patterns
-    clean_text = clean_text:gsub('\027%[[%d;]*m', '')   -- Color codes
-    clean_text = clean_text:gsub('\027%[%d*[ABCD]', '') -- Cursor movement
-    clean_text = clean_text:gsub('\027%[%d*[JK]', '')   -- Clear screen/line
+    local clean_text = text
+    -- General CSI sequences: ESC[ followed by params, then command char
+    clean_text = clean_text:gsub('\027%[%??[%d;]*[%a@]', '')
+    -- OSC sequences (title setting, etc): ESC] ... BEL or ST
+    clean_text = clean_text:gsub('\027%][^\027]*[\007\027\\]?', '')
+    -- Carriage returns (progress indicators)
+    clean_text = clean_text:gsub('\r', '')
 
     return clean_text
   end
