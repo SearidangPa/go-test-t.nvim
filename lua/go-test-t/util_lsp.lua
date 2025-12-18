@@ -34,7 +34,7 @@ function util_lsp.action_from_test_name(test_name, callback_func)
     }
   end
 
-  client.request('workspace/symbol', params, handler)
+  client:request('workspace/symbol', params, handler)
 end
 
 return util_lsp
