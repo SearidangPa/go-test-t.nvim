@@ -79,10 +79,21 @@ end
 function terminal_test:test_nearest_in_terminal()
   local util_find_test = require 'go-test-t.util_find_test'
   local test_name, test_line = util_find_test.get_enclosing_test()
+  assert(test_line, 'No test line found')
+  assert(test_name, 'No test name found')
 
   local util_path = require 'go-test-t.util_path'
-  local intermediate_path = util_path.get_intermediate_path()
-  local test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
+  local test_command
+
+  if vim.bo.filetype == 'lua' then
+    local rel_path = vim.fn.expand '%:.'
+    local escaped_test_name = test_name:gsub('"', '\\"')
+    -- Quote the FILE argument as well in case of spaces
+    test_command = string.format('make test-file FILE="%s" FILTER="%s"', rel_path, escaped_test_name)
+  else
+    local intermediate_path = util_path.get_intermediate_path()
+    test_command = string.format('%s %s -v -run %s\\r\\n', self.go_test_prefix, intermediate_path, test_name)
+  end
 
   assert(test_name, 'No test name found')
   ---@type terminal.testInfo

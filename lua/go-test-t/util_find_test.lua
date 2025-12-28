@@ -2,6 +2,10 @@ local M = {}
 
 ---@return  string? , number?
 function M.get_enclosing_test()
+  if vim.bo.filetype == 'lua' then
+    return require('go-test-t.util_lua').get_enclosing_test()
+  end
+
   local ts_utils = require 'nvim-treesitter.ts_utils'
   local node = ts_utils.get_node_at_cursor()
   while node do
