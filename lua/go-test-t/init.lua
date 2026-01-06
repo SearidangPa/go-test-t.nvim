@@ -77,15 +77,13 @@ end
 
 function go_test:setup_user_command()
   local self_ref = self
-  vim.api.nvim_create_user_command(
-    'TestBoard',
+  vim.api.nvim_create_user_command('TestBoard',
     function() self_ref.displayer:toggle_display() end,
     {}
   )
 
   if self.integration_test_pkg and self.integration_test_pkg ~= '' then
-    vim.api.nvim_create_user_command(
-      'TestIntegration',
+    vim.api.nvim_create_user_command('TestIntegration',
       function() self_ref:test_pkg(self.integration_test_pkg) end,
       {}
     )
