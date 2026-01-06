@@ -94,7 +94,7 @@ function terminal_test:test_nearest_in_terminal()
     test_command = string.format('make test-file FILE="%s" FILTER="%s"', rel_path, escaped_test_name)
   else
     local intermediate_path = util_path.get_intermediate_path()
-    test_command = string.format('%s %s -v -run %s\\r\\n', self.go_test_prefix, intermediate_path, test_name)
+    test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
   end
 
   assert(test_name, 'No test name found')
