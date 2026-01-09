@@ -6,8 +6,7 @@ function M.get_enclosing_test()
     return require('go-test-t.util_lua').get_enclosing_test()
   end
 
-  local ts_utils = require 'nvim-treesitter.ts_utils'
-  local node = ts_utils.get_node_at_cursor()
+  local node = vim.treesitter.get_node()
   while node do
     if node:type() ~= 'function_declaration' then
       node = node:parent() -- Traverse up the node tree to find a function node

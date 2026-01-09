@@ -2,8 +2,7 @@ local M = {}
 
 ---@return string? , number?
 function M.get_enclosing_test()
-  local ts_utils = require 'nvim-treesitter.ts_utils'
-  local node = ts_utils.get_node_at_cursor()
+  local node = vim.treesitter.get_node()
 
   -- Traverse up to find the function call
   while node do
