@@ -19,7 +19,7 @@ function terminal_test.new(opts)
       end
       -- Fall back to class methods and properties
       return terminal_test[key]
-    end
+    end,
   })
   self.go_test_prefix = opts.go_test_prefix
 
@@ -70,10 +70,7 @@ function terminal_test:test_in_terminal(test_info, do_not_close_terminal, delete
   local self_ref = self
   vim.schedule(function()
     vim.api.nvim_buf_attach(float_term_state.bufnr, false, {
-      on_lines = function(_, buf, _, first_line, last_line)
-        return self_ref:_process_buffer_lines(buf, first_line,
-          last_line, test_info, delete_terminal_after)
-      end,
+      on_lines = function(_, buf, _, first_line, last_line) return self_ref:_process_buffer_lines(buf, first_line, last_line, test_info, delete_terminal_after) end,
     })
   end)
 end
@@ -209,8 +206,7 @@ end
 ---@param test_info terminal.testInfo
 function terminal_test:_clear_test_extmarks(test_info)
   if test_info.test_bufnr and test_info.test_line then
-    local extmarks = vim.api.nvim_buf_get_extmarks(test_info.test_bufnr, self.ns_id, { test_info.test_line - 1, 0 },
-      { test_info.test_line - 1, -1 }, {})
+    local extmarks = vim.api.nvim_buf_get_extmarks(test_info.test_bufnr, self.ns_id, { test_info.test_line - 1, 0 }, { test_info.test_line - 1, -1 }, {})
     for _, extmark in ipairs(extmarks) do
       vim.api.nvim_buf_del_extmark(test_info.test_bufnr, self.ns_id, extmark[1])
     end
@@ -218,7 +214,7 @@ function terminal_test:_clear_test_extmarks(test_info)
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:_auto_update_test_line(test_info)
+function terminal_test._auto_update_test_line(_, test_info)
   local augroup = vim.api.nvim_create_augroup('TestLineTracker_' .. test_info.name, { clear = true })
   local util_lsp = require 'go-test-t.util_lsp'
 
@@ -251,9 +247,7 @@ function terminal_test:_process_buffer_lines(buf, first_line, last_line, test_in
     local detach = self:_process_one_line(line, test_info, current_time)
     if detach then
       if test_info.status == 'pass' and delete_terminal_after then
-        vim.schedule(function()
-          self.terminal_multiplexer:delete_terminal(test_info.name)
-        end)
+        vim.schedule(function() self.terminal_multiplexer:delete_terminal(test_info.name) end)
       end
       return true
     end
@@ -337,7 +331,7 @@ function terminal_test:_process_one_line(line, test_info, current_time)
 end
 
 ---@param test_info terminal.testInfo
-function terminal_test:_validate_test_info(test_info)
+function terminal_test._validate_test_info(_, test_info)
   assert(test_info.name, 'No test found')
   assert(test_info.test_line, 'No test line found')
   assert(test_info.test_command, 'No test command found')

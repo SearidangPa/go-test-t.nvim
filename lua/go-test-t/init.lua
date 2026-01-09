@@ -5,7 +5,6 @@ local go_test = {
 }
 go_test.__index = go_test
 
-
 function go_test.setup(opts) go_test.the_go_test_t = go_test.new(opts) end
 
 ---@param opts GoTestT.Options
@@ -77,16 +76,10 @@ end
 
 function go_test:setup_user_command()
   local self_ref = self
-  vim.api.nvim_create_user_command('TestBoard',
-    function() self_ref.displayer:toggle_display() end,
-    {}
-  )
+  vim.api.nvim_create_user_command('TestBoard', function() self_ref.displayer:toggle_display() end, {})
 
   if self.integration_test_pkg and self.integration_test_pkg ~= '' then
-    vim.api.nvim_create_user_command('TestIntegration',
-      function() self_ref:test_pkg(self.integration_test_pkg) end,
-      {}
-    )
+    vim.api.nvim_create_user_command('TestIntegration', function() self_ref:test_pkg(self.integration_test_pkg) end, {})
   end
 
   vim.api.nvim_create_user_command('TestReset', function()
@@ -218,7 +211,6 @@ function go_test:_add_golang_test(entry, test_command)
   if not entry.Test then
     return
   end
-
 
   ---@type terminal.testInfo
   local test_info = {

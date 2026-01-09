@@ -287,7 +287,6 @@ vim.api.nvim_create_user_command('AnsiClean', function(opts)
   clean_ansi_output(bufnr, output)
 end, { nargs = '?' })
 
-
 function test_display:_setup_keymaps()
   local self_ref = self -- Capture the current 'self' reference
   local map_opts = { buffer = self.display_bufnr, noremap = true, silent = true }
