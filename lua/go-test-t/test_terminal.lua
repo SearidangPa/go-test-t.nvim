@@ -86,9 +86,8 @@ function terminal_test:test_nearest_in_terminal()
 
   if vim.bo.filetype == 'lua' then
     local rel_path = vim.fn.expand '%:.'
-    local escaped_test_name = test_name:gsub('"', '\\"')
-    -- Quote the FILE argument as well in case of spaces
-    test_command = string.format('make test-file FILE="%s" FILTER="%s"', rel_path, escaped_test_name)
+    local escaped_test_name = test_name:gsub("'", "\\'")
+    test_command = string.format([[nvim --headless --noplugin -u scripts/tests/minimal.vim -c "lua require('plenary.busted').run('%s', {filter='%s'})"]], rel_path, escaped_test_name)
   else
     local intermediate_path = util_path.get_intermediate_path()
     test_command = string.format('%s %s -v -run %s\r\n', self.go_test_prefix, intermediate_path, test_name)
