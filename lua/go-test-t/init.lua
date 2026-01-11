@@ -7,6 +7,7 @@ go_test.__index = go_test
 
 function go_test.setup(opts)
     go_test.the_go_test_t = go_test.new(opts)
+    require("go-test-t.test_drive_all")
 end
 
 ---@param opts GoTestT.Options
