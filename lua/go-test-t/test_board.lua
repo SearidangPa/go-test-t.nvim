@@ -14,21 +14,41 @@ function test_display.new(display_opts)
     self.original_test_win = -1
     self.original_test_buf = -1
     self.current_buffer_lines = {}
-    self.augroup_id =
-        vim.api.nvim_create_augroup("GoTestDisplay", { clear = true })
-    self.ns_id = vim.api.nvim_create_namespace("go_test_display")
+    self._initialized = false
+    self._test_line_map = {} -- { test_name -> line_index } for O(1) lookup
     self.display_title = display_opts.display_title
     self.rerun_in_term_func = display_opts.rerun_in_term_func
     self.get_tests_info_func = display_opts.get_tests_info_func
     self.get_pinned_tests_func = display_opts.get_pinned_tests_func
     self.preview_terminal_func = display_opts.preview_terminal_func
-
-    vim.api.nvim_set_hl(
-        0,
-        "GoTestPinned",
-        { fg = "#5097A4", bold = true, underline = true }
-    )
     return self
+end
+
+-- Track if AnsiClean command has been registered (module-level, one-time)
+local ansi_clean_registered = false
+
+--- Deferred initialization of augroup, namespace, and highlights
+function test_display:_ensure_initialized()
+    if self._initialized then
+        return
+    end
+    self._initialized = true
+    self.augroup_id = vim.api.nvim_create_augroup("GoTestDisplay", { clear = true })
+    self.ns_id = vim.api.nvim_create_namespace("go_test_display")
+    vim.api.nvim_set_hl(0, "GoTestPinned", { fg = "#5097A4", bold = true, underline = true })
+
+    -- Register AnsiClean command only once, lazily
+    if not ansi_clean_registered then
+        ansi_clean_registered = true
+        vim.api.nvim_create_user_command("AnsiClean", function(opts)
+            local bufnr = opts.args and tonumber(opts.args)
+                or vim.api.nvim_get_current_buf()
+            assert(bufnr, "No buffer number provided")
+            assert(vim.api.nvim_buf_is_valid(bufnr), "Invalid buffer number: " .. bufnr)
+            local output = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            clean_ansi_output(bufnr, output)
+        end, { nargs = "?" })
+    end
 end
 
 function test_display:reset()
@@ -66,13 +86,18 @@ function test_display:update_display_buffer(tests_info, pin_triggered)
     new_lines = self:_add_display_help_text(new_lines)
 
     pin_triggered = pin_triggered or false
+    -- Fast path: check line count first before expensive deep comparison
     if
-        vim.deep_equal(new_lines, self.current_buffer_lines)
-        and not pin_triggered
+        not pin_triggered
+        and #new_lines == #self.current_buffer_lines
+        and vim.deep_equal(new_lines, self.current_buffer_lines)
     then
         return
     end
     self.current_buffer_lines = new_lines
+
+    -- Capture line map for use in scheduled callback
+    local test_line_map = self._test_line_map
 
     vim.schedule(function()
         vim.api.nvim_buf_set_lines(self.display_bufnr, 0, -1, false, new_lines)
@@ -81,28 +106,23 @@ function test_display:update_display_buffer(tests_info, pin_triggered)
             hl_group = "Title",
         })
 
-        local line_idx = 1
-        for _, test_info in pairs(self.get_pinned_tests_func()) do
-            assert(test_info, "No test info found")
-            assert(test_info.name, "No test name found")
-            for i = 1, #new_lines do
-                local line = new_lines[i]
-                if line:match(test_info.name) then
-                    vim.api.nvim_buf_set_extmark(
-                        self.display_bufnr,
-                        self.ns_id,
-                        i - 1,
-                        0,
-                        {
-                            end_line = i - 1,
-                            end_col = #line,
-                            hl_group = "GoTestPinned",
-                        }
-                    )
-                    break
-                end
+        -- O(1) lookup for pinned test line indices using cached map
+        for test_name, _ in pairs(self.get_pinned_tests_func()) do
+            local line_idx = test_line_map[test_name]
+            if line_idx and line_idx <= #new_lines then
+                local line = new_lines[line_idx]
+                vim.api.nvim_buf_set_extmark(
+                    self.display_bufnr,
+                    self.ns_id,
+                    line_idx - 1,
+                    0,
+                    {
+                        end_line = line_idx - 1,
+                        end_col = #line,
+                        hl_group = "GoTestPinned",
+                    }
+                )
             end
-            line_idx = line_idx + 1
         end
 
         for i = #new_lines - #self._help_text_lines, #new_lines - 1 do
@@ -123,6 +143,7 @@ function test_display:update_display_buffer(tests_info, pin_triggered)
 end
 
 function test_display:create_window_and_buf()
+    self:_ensure_initialized()
     self.original_test_win = vim.api.nvim_get_current_win()
     self.original_test_buf = vim.api.nvim_get_current_buf()
 
@@ -164,20 +185,21 @@ end
 
 --- === Private Functions ===
 
----@param tests terminal.testInfo[]
-function test_display:_sort_tests_by_status(tests)
-    table.sort(tests, function(a, b)
-        local priority = {
-            fail = 1,
-            running = 2,
-            cont = 3,
-            pause = 4,
-            start = 5,
-            pass = 6,
-            fired = 7,
-        }
+-- Status priority lookup table (defined once, reused)
+local status_priority = {
+    fail = 1,
+    running = 2,
+    cont = 3,
+    pause = 4,
+    start = 5,
+    pass = 6,
+    fired = 7,
+}
 
-        local pinned_tests = self.get_pinned_tests_func()
+---@param tests terminal.testInfo[]
+---@param pinned_tests table<string, any> Cached pinned tests table
+function test_display:_sort_tests_by_status(tests, pinned_tests)
+    table.sort(tests, function(a, b)
         local is_a_pinned = pinned_tests[a.name] ~= nil
         local is_b_pinned = pinned_tests[b.name] ~= nil
 
@@ -187,9 +209,9 @@ function test_display:_sort_tests_by_status(tests)
             return false
         end
 
-        local a_priority = priority[a.status]
+        local a_priority = status_priority[a.status]
         assert(a_priority, "Unknown status: " .. tostring(a.status))
-        local b_priority = priority[b.status]
+        local b_priority = status_priority[b.status]
         assert(b_priority, "Unknown status: " .. tostring(b.status))
 
         if a_priority ~= b_priority then
@@ -215,11 +237,21 @@ function test_display:_parse_test_state_to_lines(tests_info)
             table.insert(tests_table, test)
         end
     end
-    self:_sort_tests_by_status(tests_table)
 
-    for _, test in ipairs(tests_table) do
+    -- Cache pinned tests once before sort (avoids O(n log n) function calls)
+    local pinned_tests = self.get_pinned_tests_func()
+    self:_sort_tests_by_status(tests_table, pinned_tests)
+
+    -- Build line-to-test lookup for O(1) extmark placement
+    self._test_line_map = {}
+
+    for idx, test in ipairs(tests_table) do
         local status_icon =
             require("go-test-t.util_icon").get_status_icon(test.status)
+
+        -- Store line index (+1 for title line)
+        self._test_line_map[test.name] = idx + 1
+
         if
             test.status == "fail"
             and test.filepath ~= ""
@@ -350,15 +382,6 @@ local function clean_ansi_output(bufnr, output)
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
 end
-
-vim.api.nvim_create_user_command("AnsiClean", function(opts)
-    local bufnr = opts.args and tonumber(opts.args)
-        or vim.api.nvim_get_current_buf()
-    assert(bufnr, "No buffer number provided")
-    assert(vim.api.nvim_buf_is_valid(bufnr), "Invalid buffer number: " .. bufnr)
-    local output = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    clean_ansi_output(bufnr, output)
-end, { nargs = "?" })
 
 function test_display:_setup_keymaps()
     local self_ref = self -- Capture the current 'self' reference

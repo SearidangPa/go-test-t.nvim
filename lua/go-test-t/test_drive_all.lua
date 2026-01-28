@@ -1,8 +1,11 @@
+local M = {}
+
 if vim.fn.has("win32") == 1 then
-    return {}
+    M.run = function() end
+    return M
 end
 
-vim.api.nvim_create_user_command("TestDrive", function(opts)
+function M.run(opts)
     local env_mode = opts.args ~= "" and opts.args or "dev"
 
     if env_mode ~= "dev" and env_mode ~= "staging" then
@@ -350,10 +353,6 @@ vim.api.nvim_create_user_command("TestDrive", function(opts)
             end, 10)
         end,
     })
-end, {
-    nargs = "?",
-    desc = "Run all integration tests concurrently and generate report",
-    complete = function()
-        return { "dev", "staging" }
-    end,
-})
+end
+
+return M

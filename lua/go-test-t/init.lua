@@ -5,79 +5,129 @@ local go_test = {
 }
 go_test.__index = go_test
 
+-- Cached module references to avoid redundant require() calls
+local util_quickfix_cache
+
+local function get_util_quickfix()
+    util_quickfix_cache = util_quickfix_cache or require("go-test-t.util_quickfix")
+    return util_quickfix_cache
+end
+
 function go_test.setup(opts)
     go_test.the_go_test_t = go_test.new(opts)
-    require("go-test-t.test_drive_all")
+    -- Defer TestDrive command registration - only load module when command is invoked
+    vim.api.nvim_create_user_command("TestDrive", function(cmd_opts)
+        require("go-test-t.test_drive_all").run(cmd_opts)
+    end, {
+        nargs = "?",
+        desc = "Run all integration tests concurrently and generate report",
+        complete = function()
+            return { "dev", "staging" }
+        end,
+    })
 end
 
 ---@param opts GoTestT.Options
 function go_test.new(opts)
     opts = opts or {}
-    local self = setmetatable({}, go_test)
-    self.go_test_prefix = opts.go_test_prefix or "go test"
-    self.integration_test_pkg = opts.integration_test_pkg
 
-    self.job_id = -1
-    self.tests_info = {}
-    self.go_test_ns_id = vim.api.nvim_create_namespace("GoTestT")
+    local instance = {
+        go_test_prefix = opts.go_test_prefix or "go test",
+        integration_test_pkg = opts.integration_test_pkg,
+        job_id = -1,
+        tests_info = {},
+        _opts = opts,
+        _initialized = {},
+    }
 
-    self.pin_tester = require("go-test-t.pin_test").new({
-        update_display_buffer_func = function(tests_info)
-            self.displayer:update_display_buffer(tests_info)
-        end,
-        toggle_display_func = function(do_not_close)
-            self.displayer:toggle_display(do_not_close)
-        end,
-        retest_in_terminal_by_name = function(test_name)
-            self.term_tester:retest_in_terminal_by_name(test_name)
-        end,
-        test_nearest_in_terminal_func = function()
-            return self.term_tester:test_nearest_in_terminal()
-        end,
-        add_test_info_func = function(test_info)
-            self.tests_info[test_info.name] = test_info
+    -- Lazy initialization via __index metamethod
+    local self = setmetatable(instance, {
+        __index = function(t, key)
+            -- Lazy namespace creation
+            if key == "go_test_ns_id" then
+                local ns_id = vim.api.nvim_create_namespace("GoTestT")
+                rawset(t, "go_test_ns_id", ns_id)
+                return ns_id
+            end
+
+            -- Lazy pin_tester initialization
+            if key == "pin_tester" then
+                local m = require("go-test-t.pin_test").new({
+                    update_display_buffer_func = function(tests_info)
+                        t.displayer:update_display_buffer(tests_info)
+                    end,
+                    toggle_display_func = function(do_not_close)
+                        t.displayer:toggle_display(do_not_close)
+                    end,
+                    retest_in_terminal_by_name = function(test_name)
+                        t.term_tester:retest_in_terminal_by_name(test_name)
+                    end,
+                    test_nearest_in_terminal_func = function()
+                        return t.term_tester:test_nearest_in_terminal()
+                    end,
+                    add_test_info_func = function(test_info)
+                        t.tests_info[test_info.name] = test_info
+                    end,
+                })
+                rawset(t, "pin_tester", m)
+                return m
+            end
+
+            -- Lazy displayer initialization
+            if key == "displayer" then
+                local m = require("go-test-t.test_board").new({
+                    display_title = "Go Test Results",
+                    rerun_in_term_func = function(test_name)
+                        t.term_tester:retest_in_terminal_by_name(test_name)
+                    end,
+                    get_tests_info_func = function()
+                        return t.tests_info
+                    end,
+                    get_pinned_tests_func = function()
+                        return t.pin_tester.pinned_list
+                    end,
+                    preview_terminal_func = function(test_name)
+                        return t.term_tester:preview_terminal(test_name)
+                    end,
+                })
+                rawset(t, "displayer", m)
+                return m
+            end
+
+            -- Lazy term_tester initialization
+            if key == "term_tester" then
+                local m = require("go-test-t.test_terminal").new({
+                    go_test_prefix = t.go_test_prefix,
+                    tests_info = t.tests_info,
+                    pin_test_func = function(test_info)
+                        t.pin_tester:pin_test(test_info)
+                    end,
+                    get_pinned_tests_func = function()
+                        return t.pin_tester.pinned_list
+                    end,
+                    get_test_info_func = function(test_name)
+                        return t.tests_info[test_name]
+                    end,
+                    add_test_info_func = function(test_info)
+                        t.tests_info[test_info.name] = test_info
+                    end,
+                    ns_id = vim.api.nvim_create_namespace("Terminal Test"),
+                    toggle_display_func = function(do_not_close)
+                        t.displayer:toggle_display(do_not_close)
+                    end,
+                    update_display_buffer_func = function(tests_info)
+                        t.displayer:update_display_buffer(tests_info)
+                    end,
+                })
+                rawset(t, "term_tester", m)
+                return m
+            end
+
+            -- Fall back to class methods
+            return go_test[key]
         end,
     })
 
-    self.displayer = require("go-test-t.test_board").new({
-        display_title = "Go Test Results",
-        rerun_in_term_func = function(test_name)
-            self.term_tester:retest_in_terminal_by_name(test_name)
-        end,
-        get_tests_info_func = function()
-            return self.tests_info
-        end,
-        get_pinned_tests_func = function()
-            return self.pin_tester.pinned_list
-        end,
-        preview_terminal_func = function(test_name)
-            return self.term_tester:preview_terminal(test_name)
-        end,
-    })
-
-    self.term_tester = require("go-test-t.test_terminal").new({
-        go_test_prefix = self.go_test_prefix,
-        tests_info = self.tests_info,
-        pin_test_func = function(test_info)
-            self.pin_tester:pin_test(test_info)
-        end,
-        get_pinned_tests_func = function()
-            return self.pin_tester.pinned_list
-        end,
-        get_test_info_func = function(test_name)
-            return self.tests_info[test_name]
-        end,
-        add_test_info_func = function(test_info)
-            self.tests_info[test_info.name] = test_info
-        end,
-        ns_id = vim.api.nvim_create_namespace("Terminal Test"),
-        toggle_display_func = function(do_not_close)
-            self.displayer:toggle_display(do_not_close)
-        end,
-        update_display_buffer_func = function(tests_info)
-            self.displayer:update_display_buffer(tests_info)
-        end,
-    })
     self:setup_user_command()
     return self
 end
@@ -300,7 +350,7 @@ function go_test:_filter_golang_output(entry)
     if trimmed_output:match("^--- FAIL:") then
         test_info.status = "fail"
         self_ref.pin_tester:pin_test(test_info)
-        require("go-test-t.util_quickfix").add_fail_test(test_info)
+        get_util_quickfix().add_fail_test(test_info)
     end
     self_ref.tests_info[entry.Test] = test_info
     self_ref.displayer:update_display_buffer()
@@ -320,7 +370,7 @@ function go_test:_mark_outcome(entry)
     test_info.status = entry.Action
     self_ref.tests_info[key] = test_info
     if entry.Action == "fail" then
-        require("go-test-t.util_quickfix").add_fail_test(test_info)
+        get_util_quickfix().add_fail_test(test_info)
         self_ref.pin_tester:pin_test(test_info)
         vim.schedule(function()
             self_ref.displayer:update_display_buffer()
