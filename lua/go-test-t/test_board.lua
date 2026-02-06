@@ -27,6 +27,32 @@ end
 -- Track if AnsiClean command has been registered (module-level, one-time)
 local ansi_clean_registered = false
 
+local function clean_ansi_output(bufnr, output)
+    local clean_lines = {}
+
+    local function strip_ansi_sequences(text)
+        if not text or type(text) ~= "string" then
+            return text or ""
+        end
+
+        local clean_text = text
+        -- General CSI sequences: ESC[ followed by params, then command char
+        clean_text = clean_text:gsub("\027%[%??[%d;]*[%a@]", "")
+        -- OSC sequences (title setting, etc): ESC] ... BEL or ST
+        clean_text = clean_text:gsub("\027%][^\027]*[\007\027\\]?", "")
+        -- Carriage returns (progress indicators)
+        clean_text = clean_text:gsub("\r", "")
+
+        return clean_text
+    end
+
+    for _, line in ipairs(output) do
+        table.insert(clean_lines, strip_ansi_sequences(line))
+    end
+
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
+end
+
 --- Deferred initialization of augroup, namespace, and highlights
 function test_display:_ensure_initialized()
     if self._initialized then
@@ -357,36 +383,10 @@ function test_display:_jump_to_test_location(filepath, test_line, test_name)
     end
 end
 
-local function clean_ansi_output(bufnr, output)
-    local clean_lines = {}
-
-    local function strip_ansi_sequences(text)
-        if not text or type(text) ~= "string" then
-            return text or ""
-        end
-
-        local clean_text = text
-        -- General CSI sequences: ESC[ followed by params, then command char
-        clean_text = clean_text:gsub("\027%[%??[%d;]*[%a@]", "")
-        -- OSC sequences (title setting, etc): ESC] ... BEL or ST
-        clean_text = clean_text:gsub("\027%][^\027]*[\007\027\\]?", "")
-        -- Carriage returns (progress indicators)
-        clean_text = clean_text:gsub("\r", "")
-
-        return clean_text
-    end
-
-    for _, line in ipairs(output) do
-        table.insert(clean_lines, strip_ansi_sequences(line))
-    end
-
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
-end
-
 function test_display:_setup_keymaps()
     local self_ref = self -- Capture the current 'self' reference
     local map_opts =
-        { buffer = self.display_bufnr, noremap = true, silent = true }
+    { buffer = self.display_bufnr, noremap = true, silent = true }
     local map = vim.keymap.set
 
     map("n", "q", function()
