@@ -26,32 +26,7 @@ end
 
 -- Track if AnsiClean command has been registered (module-level, one-time)
 local ansi_clean_registered = false
-
-local function clean_ansi_output(bufnr, output)
-    local clean_lines = {}
-
-    local function strip_ansi_sequences(text)
-        if not text or type(text) ~= "string" then
-            return text or ""
-        end
-
-        local clean_text = text
-        -- General CSI sequences: ESC[ followed by params, then command char
-        clean_text = clean_text:gsub("\027%[%??[%d;]*[%a@]", "")
-        -- OSC sequences (title setting, etc): ESC] ... BEL or ST
-        clean_text = clean_text:gsub("\027%][^\027]*[\007\027\\]?", "")
-        -- Carriage returns (progress indicators)
-        clean_text = clean_text:gsub("\r", "")
-
-        return clean_text
-    end
-
-    for _, line in ipairs(output) do
-        table.insert(clean_lines, strip_ansi_sequences(line))
-    end
-
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clean_lines)
-end
+local ansi_clean = require("lib.ansi_clean")
 
 --- Deferred initialization of augroup, namespace, and highlights
 function test_display:_ensure_initialized()
@@ -71,8 +46,7 @@ function test_display:_ensure_initialized()
                 or vim.api.nvim_get_current_buf()
             assert(bufnr, "No buffer number provided")
             assert(vim.api.nvim_buf_is_valid(bufnr), "Invalid buffer number: " .. bufnr)
-            local output = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-            clean_ansi_output(bufnr, output)
+            ansi_clean.clean_buffer(bufnr)
         end, { nargs = "?" })
     end
 end
@@ -421,7 +395,7 @@ function test_display:_setup_keymaps()
         -- Parse ANSI codes and get clean output with highlights
 
         local bufnr = vim.api.nvim_create_buf(false, true)
-        clean_ansi_output(bufnr, output)
+        ansi_clean.clean_buffer(bufnr, output)
 
         local total_width = math.floor(vim.o.columns)
         local width = math.floor(total_width * 3 / 4) - 2
