@@ -18,7 +18,6 @@ function M.get_enclosing_test()
             local func_name = vim.treesitter.get_node_text(func_name_node, 0)
             local startLine, _, _ = node:start()
             if not string.match(func_name, "Test") then
-                print(string.format("Not in a test function: %s", func_name))
                 return nil
             end
             return func_name, startLine + 1 -- +1 to convert 0-based to 1-based lua indexing system
