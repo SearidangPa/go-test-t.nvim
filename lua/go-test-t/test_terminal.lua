@@ -31,6 +31,7 @@ function terminal_test.new(opts)
     self.ns_id = opts.ns_id
     self.pin_test_func = opts.pin_test_func
     self.get_pinned_tests_func = opts.get_pinned_tests_func
+    self.file_test_completed = {}
     return self
 end
 
@@ -47,6 +48,7 @@ function terminal_test:reset()
     for test_name, _ in pairs(self.terminal_multiplexer.all_terminals) do
         self.terminal_multiplexer:delete_terminal(test_name)
     end
+    self.file_test_completed = {}
 end
 
 ---@param test_info terminal.testInfo
@@ -313,13 +315,34 @@ function terminal_test:_process_buffer_lines(
     for _, line in ipairs(lines) do
         local detach = self:_process_one_line(line, test_info, current_time)
         if detach then
-            if test_info.status == "pass" and delete_terminal_after then
+            if delete_terminal_after then
                 vim.schedule(function()
-                    self.terminal_multiplexer:delete_terminal(test_info.name)
+                    self:_track_file_test_terminal(test_info.name)
                 end)
             end
             return true
         end
+    end
+end
+
+---@param test_name string
+function terminal_test:_track_file_test_terminal(test_name)
+    if not test_name then
+        return
+    end
+
+    for i, name in ipairs(self.file_test_completed) do
+        if name == test_name then
+            table.remove(self.file_test_completed, i)
+            break
+        end
+    end
+
+    table.insert(self.file_test_completed, test_name)
+
+    while #self.file_test_completed > 6 do
+        local oldest_test = table.remove(self.file_test_completed, 1)
+        self.terminal_multiplexer:delete_terminal(oldest_test)
     end
 end
 
