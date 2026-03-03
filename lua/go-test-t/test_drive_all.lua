@@ -41,7 +41,7 @@ function M.run(opts)
         completed_tests = 0,
         passed_tests = 0,
         failed_tests = 0,
-        max_concurrent = 4,
+        max_concurrent = 8,
         bufnr = bufnr,
         report_file = report_file,
         test_names = {},
