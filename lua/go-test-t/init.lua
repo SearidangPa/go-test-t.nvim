@@ -378,9 +378,7 @@ function go_test:_mark_outcome(entry)
     end
 end
 
-go_test._ignored_actions = {
-    skip = true,
-}
+go_test._ignored_actions = {}
 
 go_test._action_state = {
     pause = true,
@@ -388,6 +386,7 @@ go_test._action_state = {
     start = true,
     fail = true,
     pass = true,
+    skip = true,
 }
 
 return go_test

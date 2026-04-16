@@ -193,6 +193,7 @@ local status_priority = {
     pause = 4,
     start = 5,
     pass = 6,
+    skip = 6,
     fired = 7,
 }
 

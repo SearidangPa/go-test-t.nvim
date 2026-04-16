@@ -3,7 +3,7 @@ local M = {}
 ---@param status string
 function M.get_status_icon(status)
     assert(status, "Empty status provided")
-    if status == "pass" then
+    if status == "pass" or status == "skip" then
         return "✅"
     elseif status == "fail" then
         return "❌"
