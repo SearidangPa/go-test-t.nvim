@@ -23,8 +23,10 @@
 
 ---@class termTester
 ---@field go_test_prefix string
----@field terminal_multiplexer TerminalMultiplexer
----@field last_terminal_name string?
+---@field last_test_name string?
+---@field running_jobs table<number, table>
+---@field test_jobs table<string, number>
+---@field output_buffers table<string, number>
 ---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
@@ -53,6 +55,7 @@
 ---@field filepath string
 ---@field set_ext_mark boolean
 ---@field output string[]
+---@field output_bufnr? number
 
 ---@class PinTester
 ---@field go_test_prefix string

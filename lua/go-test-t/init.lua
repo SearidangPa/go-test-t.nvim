@@ -9,7 +9,8 @@ go_test.__index = go_test
 local util_quickfix_cache
 
 local function get_util_quickfix()
-    util_quickfix_cache = util_quickfix_cache or require("go-test-t.util_quickfix")
+    util_quickfix_cache = util_quickfix_cache
+        or require("go-test-t.util_quickfix")
     return util_quickfix_cache
 end
 
@@ -96,7 +97,7 @@ function go_test.new(opts)
 
             -- Lazy term_tester initialization
             if key == "term_tester" then
-                local m = require("go-test-t.test_terminal").new({
+                local m = require("go-test-t.job_runner").new({
                     go_test_prefix = t.go_test_prefix,
                     tests_info = t.tests_info,
                     pin_test_func = function(test_info)
@@ -147,12 +148,9 @@ function go_test.test_this()
     local util_find_test = require("go-test-t.util_find_test")
     local test_name, _ = util_find_test.get_enclosing_test()
     if not test_name then
-        local last_test =
-            the_go_test_t.term_tester.terminal_multiplexer.last_terminal_name
+        local last_test = the_go_test_t.term_tester.last_test_name
         if last_test then
-            local test_info =
-                the_go_test_t.term_tester.get_test_info_func(last_test)
-            the_go_test_t.term_tester:test_in_terminal(test_info, true)
+            the_go_test_t.term_tester:retest_in_terminal_by_name(last_test)
         end
     else
         the_go_test_t.term_tester:test_nearest_in_terminal()
@@ -185,8 +183,7 @@ end
 function go_test.go_to_test_location()
     local the_go_test_t = go_test.the_go_test_t
     local util_lsp = require("go-test-t.util_lsp")
-    local test_name =
-        the_go_test_t.term_tester.terminal_multiplexer.last_terminal_name
+    local test_name = the_go_test_t.term_tester.last_test_name
     util_lsp.action_from_test_name(test_name, function(lsp_param)
         local filepath = lsp_param.filepath
         local test_line = lsp_param.test_line
@@ -223,66 +220,9 @@ end
 function go_test:test_pkg(test_pkg)
     local self_ref = self
     test_pkg = test_pkg or "./..."
-    local test_command =
-        string.format("%s %s -v --json", self_ref.go_test_prefix, test_pkg)
-
     self_ref:reset_keep_pin()
     self_ref.displayer:create_window_and_buf()
-
-    self_ref:_clean_up_prev_job()
-    self_ref.job_id = vim.fn.jobstart(test_command, {
-        stdout_buffered = false,
-        stderr_buffered = false,
-
-        on_stdout = function(_, data)
-            assert(data, "No data received from job")
-            for _, line in ipairs(data) do
-                if line == "" then
-                    goto continue
-                end
-
-                local ok, decoded = pcall(vim.json.decode, line)
-                if not ok or not decoded then
-                    goto continue
-                end
-
-                if self_ref._ignored_actions[decoded.Action] then
-                    goto continue
-                end
-
-                if decoded.Action == "run" then
-                    self_ref:_add_golang_test(decoded, test_command)
-                    self_ref.displayer:update_display_buffer()
-                    goto continue
-                end
-
-                if decoded.Action == "output" then
-                    if decoded.Test or decoded.Package then
-                        self_ref:_filter_golang_output(decoded)
-                    end
-                    goto continue
-                end
-
-                if self_ref._action_state[decoded.Action] then
-                    self_ref:_mark_outcome(decoded)
-                    self_ref.displayer:update_display_buffer()
-                    goto continue
-                end
-
-                ::continue::
-            end
-        end,
-
-        on_stderr = function(_, data)
-            assert(data, "No data received from job stderr")
-            for _, line in ipairs(data) do
-                if line ~= "" then
-                    vim.notify("Job stderr: " .. line, vim.log.levels.ERROR)
-                end
-            end
-        end,
-        on_exit = function() end,
-    })
+    self_ref.job_id = self_ref.term_tester:test_pkg(test_pkg) or -1
 end
 
 --- === Private functions ===

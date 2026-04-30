@@ -34,9 +34,14 @@ function test_display:_ensure_initialized()
         return
     end
     self._initialized = true
-    self.augroup_id = vim.api.nvim_create_augroup("GoTestDisplay", { clear = true })
+    self.augroup_id =
+        vim.api.nvim_create_augroup("GoTestDisplay", { clear = true })
     self.ns_id = vim.api.nvim_create_namespace("go_test_display")
-    vim.api.nvim_set_hl(0, "GoTestPinned", { fg = "#5097A4", bold = true, underline = true })
+    vim.api.nvim_set_hl(
+        0,
+        "GoTestPinned",
+        { fg = "#5097A4", bold = true, underline = true }
+    )
 
     -- Register AnsiClean command only once, lazily
     if not ansi_clean_registered then
@@ -45,7 +50,10 @@ function test_display:_ensure_initialized()
             local bufnr = opts.args and tonumber(opts.args)
                 or vim.api.nvim_get_current_buf()
             assert(bufnr, "No buffer number provided")
-            assert(vim.api.nvim_buf_is_valid(bufnr), "Invalid buffer number: " .. bufnr)
+            assert(
+                vim.api.nvim_buf_is_valid(bufnr),
+                "Invalid buffer number: " .. bufnr
+            )
             ansi_clean.clean_buffer(bufnr)
         end, { nargs = "?" })
     end
@@ -155,6 +163,7 @@ function test_display:create_window_and_buf()
         vim.bo[self.display_bufnr].bufhidden = "hide"
         vim.bo[self.display_bufnr].buftype = "nofile"
         vim.bo[self.display_bufnr].swapfile = false
+        vim.bo[self.display_bufnr].filetype = "test"
     end
 
     if
@@ -199,7 +208,7 @@ local status_priority = {
 
 ---@param tests terminal.testInfo[]
 ---@param pinned_tests table<string, any> Cached pinned tests table
-function test_display:_sort_tests_by_status(tests, pinned_tests)
+function test_display._sort_tests_by_status(_, tests, pinned_tests)
     table.sort(tests, function(a, b)
         local is_a_pinned = pinned_tests[a.name] ~= nil
         local is_b_pinned = pinned_tests[b.name] ~= nil
@@ -361,7 +370,7 @@ end
 function test_display:_setup_keymaps()
     local self_ref = self -- Capture the current 'self' reference
     local map_opts =
-    { buffer = self.display_bufnr, noremap = true, silent = true }
+        { buffer = self.display_bufnr, noremap = true, silent = true }
     local map = vim.keymap.set
 
     map("n", "q", function()
@@ -396,6 +405,10 @@ function test_display:_setup_keymaps()
         -- Parse ANSI codes and get clean output with highlights
 
         local bufnr = vim.api.nvim_create_buf(false, true)
+        vim.bo[bufnr].buftype = "nofile"
+        vim.bo[bufnr].bufhidden = "wipe"
+        vim.bo[bufnr].swapfile = false
+        vim.bo[bufnr].filetype = "test"
         ansi_clean.clean_buffer(bufnr, output)
 
         local total_width = math.floor(vim.o.columns)
