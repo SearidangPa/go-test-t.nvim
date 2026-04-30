@@ -14,6 +14,24 @@ local function regex_escape(value)
     return (value:gsub("([^%w_])", "\\%1"))
 end
 
+local function prefix_needs_shell(prefix)
+    prefix = vim.trim(prefix or "")
+    local lower = prefix:lower()
+
+    return lower:match("^set%s+")
+        or lower:match("^cmd%.exe%s+/[cs]")
+        or lower:match("^cmd%s+/[cs]")
+        or lower:match("^powershell%.exe%s+")
+        or lower:match("^powershell%s+")
+        or lower:match("^pwsh%.exe%s+")
+        or lower:match("^pwsh%s+")
+        or prefix:find("&&", 1, true)
+        or prefix:find("||", 1, true)
+        or prefix:find("|", 1, true)
+        or prefix:find(">", 1, true)
+        or prefix:find("<", 1, true)
+end
+
 local function prefix_to_args(prefix)
     local raw_args = vim.split(vim.trim(prefix), "%s+", { trimempty = true })
     local args = {}
@@ -31,6 +49,24 @@ local function prefix_to_args(prefix)
     end
 
     return args, has_env and env or nil
+end
+
+local function shell_quote(value)
+    value = tostring(value or "")
+    if vim.fn.has("win32") == 1 then
+        if not value:find('[%s&|<>()^]') then
+            return value
+        end
+        return '"' .. value:gsub('"', '""') .. '"'
+    end
+    return vim.fn.shellescape(value)
+end
+
+local function shell_command_to_args(command)
+    if vim.fn.has("win32") == 1 then
+        return { "cmd.exe", "/C", command }
+    end
+    return { "sh", "-c", command }
 end
 
 local function command_to_string(args)
@@ -122,10 +158,25 @@ function job_runner.new(opts)
     self.running_jobs = {}
     self.test_jobs = {}
     self.output_buffers = {}
+    self.display_update_pending = false
+    self.display_force_update_pending = false
     return self
 end
 
 function job_runner:_build_go_test_args(pkg, run_pattern)
+    if prefix_needs_shell(self.go_test_prefix) then
+        local command_parts = {
+            vim.trim(self.go_test_prefix),
+            shell_quote(pkg),
+            "-v",
+            "-json",
+        }
+        if run_pattern and run_pattern ~= "" then
+            vim.list_extend(command_parts, { "-run", shell_quote(run_pattern) })
+        end
+        return shell_command_to_args(table.concat(command_parts, " ")), nil
+    end
+
     local args, env = prefix_to_args(self.go_test_prefix)
     vim.list_extend(args, { pkg, "-v", "-json" })
     if run_pattern and run_pattern ~= "" then
@@ -165,6 +216,17 @@ function job_runner:_replace_output_buffer(test_info, lines)
     vim.bo[bufnr].modifiable = false
 end
 
+function job_runner:_existing_output_buffer(test_info)
+    local bufnr = test_info.output_bufnr or self.output_buffers[test_info.name]
+    if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+        test_info.output_bufnr = bufnr
+        return bufnr
+    end
+    test_info.output_bufnr = nil
+    self.output_buffers[test_info.name] = nil
+    return nil
+end
+
 function job_runner:_append_output(test_info, line)
     if not line or line == "" then
         return
@@ -173,7 +235,14 @@ function job_runner:_append_output(test_info, line)
     test_info.output = test_info.output or {}
     table.insert(test_info.output, line)
 
-    local bufnr = self:_ensure_output_buffer(test_info)
+    -- Keep package runs responsive: don't create/update hidden output buffers
+    -- for every test/output line. Materialize buffers lazily in preview_terminal(),
+    -- and append live only when a buffer already exists.
+    local bufnr = self:_existing_output_buffer(test_info)
+    if not bufnr then
+        return
+    end
+
     vim.bo[bufnr].modifiable = true
     vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { line })
     vim.bo[bufnr].modifiable = false
@@ -297,8 +366,14 @@ function job_runner:_new_test_info(name, command, opts)
     test_info.set_ext_mark = false
     test_info.fail_at_line = opts.fail_at_line or 0
     test_info.output = opts.keep_output and test_info.output or {}
-    self:_ensure_output_buffer(test_info)
-    self:_replace_output_buffer(test_info, test_info.output)
+
+    local bufnr = self:_existing_output_buffer(test_info)
+    if bufnr then
+        vim.bo[bufnr].modifiable = true
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, test_info.output)
+        vim.bo[bufnr].modifiable = false
+    end
+
     return test_info
 end
 
@@ -311,12 +386,39 @@ function job_runner:_register_initial_test(name, command, opts)
     return test_info
 end
 
+function job_runner:_schedule_display_update(force)
+    if force then
+        if self.display_force_update_pending then
+            return
+        end
+        self.display_force_update_pending = true
+        self.display_update_pending = false
+        vim.schedule(function()
+            self.display_force_update_pending = false
+            self.update_display_buffer_func()
+        end)
+        return
+    end
+
+    if self.display_update_pending or self.display_force_update_pending then
+        return
+    end
+
+    self.display_update_pending = true
+    vim.defer_fn(function()
+        self.display_update_pending = false
+        self.update_display_buffer_func()
+    end, 150)
+end
+
 function job_runner:_handle_run(entry, command)
     if not entry.Test then
         return
     end
 
     local test_info = self.get_test_info_func(entry.Test)
+    local previous_status = test_info and test_info.status
+    local force_update = not test_info or previous_status ~= "running"
     if not test_info then
         test_info =
             self:_new_test_info(entry.Test, command, { status = "running" })
@@ -326,7 +428,7 @@ function job_runner:_handle_run(entry, command)
     test_info.test_command = command
     self.add_test_info_func(test_info)
     self.last_test_name = entry.Test
-    self.update_display_buffer_func()
+    self:_schedule_display_update(force_update)
 end
 
 function job_runner:_handle_output(entry)
@@ -344,10 +446,11 @@ function job_runner:_handle_output(entry)
         return
     end
 
+    local previous_status = test_info.status
     self:_append_output(test_info, line)
     self:_handle_error_trace(line, test_info)
     self.add_test_info_func(test_info)
-    self.update_display_buffer_func()
+    self:_schedule_display_update(test_info.status ~= previous_status)
 end
 
 function job_runner:_handle_outcome(entry)
@@ -375,7 +478,7 @@ function job_runner:_handle_outcome(entry)
     end
 
     self.add_test_info_func(test_info)
-    self.update_display_buffer_func()
+    self:_schedule_display_update(true)
 end
 
 function job_runner:_handle_json_line(line, command)
@@ -403,6 +506,104 @@ function job_runner:_handle_json_line(line, command)
     end
 end
 
+local function is_priority_json_line(line)
+    return line:match('"Action"%s*:%s*"run"')
+        or line:match('"Action"%s*:%s*"pass"')
+        or line:match('"Action"%s*:%s*"fail"')
+        or line:match('"Action"%s*:%s*"skip"')
+        or line:match('"Action"%s*:%s*"pause"')
+        or line:match('"Action"%s*:%s*"cont"')
+end
+
+local function compact_queue(queue, head)
+    if head <= 1000 then
+        return queue, head
+    end
+
+    local compacted = {}
+    for i = head, #queue do
+        table.insert(compacted, queue[i])
+    end
+    return compacted, 1
+end
+
+function job_runner:_enqueue_job_line(job_state, line)
+    if is_priority_json_line(line) then
+        table.insert(job_state.priority_queue, line)
+    else
+        table.insert(job_state.queue, line)
+    end
+end
+
+function job_runner:_schedule_process_job_data(job_state)
+    if job_state.processing_scheduled then
+        return
+    end
+
+    job_state.processing_scheduled = true
+    vim.schedule(function()
+        job_state.processing_scheduled = false
+
+        local processed = 0
+        local max_priority_per_tick = 25
+        while
+            job_state.priority_head <= #job_state.priority_queue
+            and processed < max_priority_per_tick
+        do
+            self:_handle_json_line(
+                job_state.priority_queue[job_state.priority_head],
+                job_state.command
+            )
+            job_state.priority_head = job_state.priority_head + 1
+            processed = processed + 1
+
+            -- Yield on the first new/status row so the board can paint quickly;
+            -- afterwards process status rows in batches to avoid one render per
+            -- test when `go test ./...` emits a large burst of run events.
+            if
+                self.display_force_update_pending
+                and not job_state.yielded_for_first_status
+            then
+                job_state.yielded_for_first_status = true
+                break
+            end
+        end
+
+        processed = 0
+        local max_output_per_tick = self.display_force_update_pending and 0
+            or 50
+        while
+            job_state.queue_head <= #job_state.queue
+            and processed < max_output_per_tick
+        do
+            self:_handle_json_line(
+                job_state.queue[job_state.queue_head],
+                job_state.command
+            )
+            job_state.queue_head = job_state.queue_head + 1
+            processed = processed + 1
+        end
+
+        job_state.priority_queue, job_state.priority_head = compact_queue(
+            job_state.priority_queue,
+            job_state.priority_head
+        )
+        job_state.queue, job_state.queue_head = compact_queue(
+            job_state.queue,
+            job_state.queue_head
+        )
+
+        if
+            job_state.priority_head <= #job_state.priority_queue
+            or job_state.queue_head <= #job_state.queue
+        then
+            self:_schedule_process_job_data(job_state)
+        elseif job_state.exited then
+            self:_schedule_display_update(true)
+        end
+    end)
+end
+
 function job_runner:_consume_job_data(job_state, data)
     if not data or #data == 0 then
         return
@@ -412,8 +613,9 @@ function job_runner:_consume_job_data(job_state, data)
     job_state.pending = data[#data]
 
     for i = 1, #data - 1 do
-        self:_handle_json_line(data[i], job_state.command)
+        self:_enqueue_job_line(job_state, data[i])
     end
+    self:_schedule_process_job_data(job_state)
 end
 
 function job_runner:_stop_test_job(test_name)
@@ -429,6 +631,15 @@ function job_runner:_start_job(args, test_names, env)
         command = command,
         pending = "",
         test_names = test_names or {},
+        priority_queue = {},
+        priority_head = 1,
+        queue = {},
+        queue_head = 1,
+        processing_scheduled = false,
+        exited = false,
+        stderr_lines = {},
+        stderr_count = 0,
+        yielded_for_first_status = false,
     }
 
     local job_id
@@ -441,14 +652,33 @@ function job_runner:_start_job(args, test_names, env)
         on_stderr = function(_, data)
             for _, line in ipairs(data or {}) do
                 if line ~= "" then
-                    vim.notify("go test stderr: " .. line, vim.log.levels.WARN)
+                    job_state.stderr_count = job_state.stderr_count + 1
+                    if #job_state.stderr_lines < 5 then
+                        table.insert(job_state.stderr_lines, line)
+                    end
                 end
             end
         end,
         env = env,
         on_exit = function(_, exit_code)
             if job_state.pending and job_state.pending ~= "" then
-                self:_handle_json_line(job_state.pending, job_state.command)
+                self:_enqueue_job_line(job_state, job_state.pending)
+                job_state.pending = ""
+                self:_schedule_process_job_data(job_state)
+            end
+            job_state.exited = true
+            if job_state.stderr_count > 0 then
+                local lines = table.concat(job_state.stderr_lines, "\n")
+                local suffix = job_state.stderr_count > #job_state.stderr_lines
+                        and string.format(
+                            "\n... plus %d more stderr lines",
+                            job_state.stderr_count - #job_state.stderr_lines
+                        )
+                    or ""
+                vim.notify(
+                    "go test stderr:\n" .. lines .. suffix,
+                    vim.log.levels.WARN
+                )
             end
             self.running_jobs[job_id] = nil
             for _, name in ipairs(job_state.test_names) do
@@ -457,7 +687,7 @@ function job_runner:_start_job(args, test_names, env)
                 end
             end
             if exit_code ~= 0 then
-                self.update_display_buffer_func()
+                self:_schedule_display_update(true)
             end
         end,
     })
@@ -501,7 +731,7 @@ function job_runner:_run_tests(pkg, test_names, metadata_by_name)
     end
 
     self.last_test_name = test_names[#test_names] or self.last_test_name
-    self.update_display_buffer_func()
+    self:_schedule_display_update(true)
     return self:_start_job(args, test_names, env)
 end
 
@@ -598,6 +828,7 @@ function job_runner:preview_terminal(test_name)
     end
 
     local bufnr = self:_ensure_output_buffer(test_info)
+    self:_replace_output_buffer(test_info, test_info.output or {})
     vim.bo[bufnr].filetype = "test"
 
     local total_width = math.floor(vim.o.columns)
