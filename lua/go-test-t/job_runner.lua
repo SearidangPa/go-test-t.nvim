@@ -25,6 +25,8 @@ local function prefix_needs_shell(prefix)
         or lower:match("^powershell%s+")
         or lower:match("^pwsh%.exe%s+")
         or lower:match("^pwsh%s+")
+        or prefix:find('"', 1, true)
+        or prefix:find("'", 1, true)
         or prefix:find("&&", 1, true)
         or prefix:find("||", 1, true)
         or prefix:find("|", 1, true)
@@ -54,7 +56,7 @@ end
 local function shell_quote(value)
     value = tostring(value or "")
     if vim.fn.has("win32") == 1 then
-        if not value:find('[%s&|<>()^]') then
+        if not value:find("[%s&|<>()^]") then
             return value
         end
         return '"' .. value:gsub('"', '""') .. '"'
@@ -551,7 +553,7 @@ local function compact_queue(queue, head)
     return compacted, 1
 end
 
-function job_runner:_enqueue_job_line(job_state, line)
+function job_runner._enqueue_job_line(_, job_state, line)
     if is_priority_json_line(line) then
         table.insert(job_state.priority_queue, line)
     else
@@ -608,14 +610,10 @@ function job_runner:_schedule_process_job_data(job_state)
             processed = processed + 1
         end
 
-        job_state.priority_queue, job_state.priority_head = compact_queue(
-            job_state.priority_queue,
-            job_state.priority_head
-        )
-        job_state.queue, job_state.queue_head = compact_queue(
-            job_state.queue,
-            job_state.queue_head
-        )
+        job_state.priority_queue, job_state.priority_head =
+            compact_queue(job_state.priority_queue, job_state.priority_head)
+        job_state.queue, job_state.queue_head =
+            compact_queue(job_state.queue, job_state.queue_head)
 
         if
             job_state.priority_head <= #job_state.priority_queue
@@ -731,8 +729,9 @@ function job_runner:_start_job(args, test_names, env)
     return job_id
 end
 
-function job_runner:_run_tests(pkg, test_names, metadata_by_name)
+function job_runner:_run_tests(pkg, test_names, metadata_by_name, run_opts)
     metadata_by_name = metadata_by_name or {}
+    run_opts = run_opts or {}
     local run_pattern
     if #test_names == 1 then
         run_pattern = "^" .. regex_escape(test_names[1]) .. "$"
@@ -756,6 +755,11 @@ function job_runner:_run_tests(pkg, test_names, metadata_by_name)
 
     self.last_test_name = test_names[#test_names] or self.last_test_name
     self:_schedule_display_update(true)
+
+    if run_opts.open_preview and #test_names == 1 then
+        self:preview_terminal(test_names[1])
+    end
+
     return self:_start_job(args, test_names, env)
 end
 
@@ -789,7 +793,7 @@ function job_runner:test_nearest_in_terminal()
         test_bufnr = vim.api.nvim_get_current_buf(),
         filepath = vim.fn.expand("%:p"),
     }
-    self:_run_tests(pkg, { test_name }, metadata)
+    self:_run_tests(pkg, { test_name }, metadata, { open_preview = true })
     return self.get_test_info_func(test_name)
 end
 
@@ -809,7 +813,12 @@ function job_runner:retest_in_terminal_by_name(test_name)
                 filepath = lsp_param.filepath,
                 test_bufnr = lsp_param.test_bufnr,
             }
-            self:_run_tests(pkg, { test_name }, metadata)
+            self:_run_tests(
+                pkg,
+                { test_name },
+                metadata,
+                { open_preview = true }
+            )
         end
     )
 end
@@ -855,17 +864,16 @@ function job_runner:preview_terminal(test_name)
     self:_replace_output_buffer(test_info, test_info.output or {})
     vim.bo[bufnr].filetype = "test"
 
-    local total_width = math.floor(vim.o.columns)
-    local width = math.floor(total_width * 3 / 4) - 2
-    local height = math.floor(vim.o.lines)
+    local width = vim.o.columns
+    local height = math.max(1, vim.o.lines - vim.o.cmdheight - 1)
     local win = vim.api.nvim_open_win(bufnr, true, {
         relative = "editor",
         width = width,
-        height = height - 3,
+        height = height,
         row = 0,
         col = 0,
         style = "minimal",
-        border = "rounded",
+        border = "none",
     })
 
     local line_count = vim.api.nvim_buf_line_count(bufnr)
