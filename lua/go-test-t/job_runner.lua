@@ -111,6 +111,28 @@ local function format_logrus_line(entry)
     return line
 end
 
+local function apply_log_highlight(bufnr)
+    if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+        return
+    end
+    if vim.b[bufnr].go_test_t_log_highlight_applied then
+        return
+    end
+
+    vim.schedule(function()
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+            return
+        end
+
+        vim.api.nvim_buf_call(bufnr, function()
+            local ok = pcall(vim.cmd, "silent LogHighlight")
+            if ok then
+                vim.b[bufnr].go_test_t_log_highlight_applied = true
+            end
+        end)
+    end)
+end
+
 local function format_output_line(output)
     local line = vim.trim((output or ""):gsub("\r", ""))
     if line == "" then
@@ -191,6 +213,7 @@ function job_runner:_ensure_output_buffer(test_info)
         and vim.api.nvim_buf_is_valid(test_info.output_bufnr)
     then
         vim.bo[test_info.output_bufnr].filetype = "test"
+        apply_log_highlight(test_info.output_bufnr)
         return test_info.output_bufnr
     end
 
@@ -205,6 +228,7 @@ function job_runner:_ensure_output_buffer(test_info)
         self.output_buffers[test_info.name] = bufnr
     end
 
+    apply_log_highlight(bufnr)
     test_info.output_bufnr = bufnr
     return bufnr
 end
