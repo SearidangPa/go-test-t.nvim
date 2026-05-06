@@ -150,7 +150,9 @@ function go_test.test_this()
     if not test_name then
         local last_test = the_go_test_t.term_tester.last_test_name
         if last_test then
-            the_go_test_t.term_tester:retest_in_terminal_by_name(last_test)
+            the_go_test_t.term_tester:retest_in_terminal_by_name(last_test, {
+                open_output = true,
+            })
         end
     else
         the_go_test_t.term_tester:test_nearest_in_terminal()

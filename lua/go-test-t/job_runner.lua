@@ -182,6 +182,7 @@ function job_runner.new(opts)
     self.running_jobs = {}
     self.test_jobs = {}
     self.output_buffers = {}
+    self.output_windows = {}
     self.display_update_pending = false
     self.display_force_update_pending = false
     return self
@@ -242,6 +243,60 @@ function job_runner:_replace_output_buffer(test_info, lines)
     vim.bo[bufnr].modifiable = false
 end
 
+function job_runner:_scroll_output_windows(bufnr)
+    for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
+        if vim.api.nvim_win_is_valid(win) then
+            local line_count = vim.api.nvim_buf_line_count(bufnr)
+            pcall(vim.api.nvim_win_set_cursor, win, { line_count, 0 })
+        end
+    end
+end
+
+function job_runner:_open_output_window(test_info)
+    local bufnr = self:_ensure_output_buffer(test_info)
+    self:_replace_output_buffer(test_info, test_info.output or {})
+    vim.bo[bufnr].filetype = "test"
+
+    local existing_win = self.output_windows[test_info.name]
+    if existing_win and vim.api.nvim_win_is_valid(existing_win) then
+        pcall(vim.api.nvim_set_current_win, existing_win)
+        self:_scroll_output_windows(bufnr)
+        return existing_win
+    end
+
+    local win = vim.api.nvim_open_win(bufnr, true, {
+        relative = "editor",
+        width = math.floor(vim.o.columns),
+        height = math.max(1, math.floor(vim.o.lines - vim.o.cmdheight)),
+        row = 0,
+        col = 0,
+        style = "minimal",
+    })
+
+    self.output_windows[test_info.name] = win
+    vim.wo[win].number = false
+    vim.wo[win].relativenumber = false
+    vim.wo[win].wrap = true
+    self:_scroll_output_windows(bufnr)
+
+    vim.keymap.set("n", "q", function()
+        if vim.api.nvim_win_is_valid(win) then
+            vim.api.nvim_win_close(win, true)
+        end
+        if self.output_windows[test_info.name] == win then
+            self.output_windows[test_info.name] = nil
+        end
+    end, { buffer = bufnr, noremap = true, silent = true })
+
+    return win
+end
+
+function job_runner:_open_streaming_output(test_info)
+    test_info.output = { "$ " .. test_info.test_command }
+    self.add_test_info_func(test_info)
+    return self:_open_output_window(test_info)
+end
+
 function job_runner:_existing_output_buffer(test_info)
     local bufnr = test_info.output_bufnr or self.output_buffers[test_info.name]
     if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
@@ -262,8 +317,8 @@ function job_runner:_append_output(test_info, line)
     table.insert(test_info.output, line)
 
     -- Keep package runs responsive: don't create/update hidden output buffers
-    -- for every test/output line. Materialize buffers lazily in preview_terminal(),
-    -- and append live only when a buffer already exists.
+    -- for every test/output line. Streaming output creates the buffer up front;
+    -- otherwise output buffers are materialized lazily by preview_terminal().
     local bufnr = self:_existing_output_buffer(test_info)
     if not bufnr then
         return
@@ -273,12 +328,7 @@ function job_runner:_append_output(test_info, line)
     vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { line })
     vim.bo[bufnr].modifiable = false
 
-    for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
-        if vim.api.nvim_win_is_valid(win) then
-            local line_count = vim.api.nvim_buf_line_count(bufnr)
-            pcall(vim.api.nvim_win_set_cursor, win, { line_count, 0 })
-        end
-    end
+    self:_scroll_output_windows(bufnr)
 end
 
 function job_runner:_clear_test_extmarks(test_info)
@@ -750,7 +800,10 @@ function job_runner:_run_tests(pkg, test_names, metadata_by_name, run_opts)
         self:_stop_test_job(name)
         local opts = metadata_by_name[name] or {}
         opts.status = "fired"
-        self:_register_initial_test(name, command, opts)
+        local test_info = self:_register_initial_test(name, command, opts)
+        if run_opts.open_output and #test_names == 1 then
+            self:_open_streaming_output(test_info)
+        end
     end
 
     self.last_test_name = test_names[#test_names] or self.last_test_name
@@ -793,12 +846,13 @@ function job_runner:test_nearest_in_terminal()
         test_bufnr = vim.api.nvim_get_current_buf(),
         filepath = vim.fn.expand("%:p"),
     }
-    self:_run_tests(pkg, { test_name }, metadata, { open_preview = true })
+    self:_run_tests(pkg, { test_name }, metadata, { open_output = true })
     return self.get_test_info_func(test_name)
 end
 
-function job_runner:retest_in_terminal_by_name(test_name)
+function job_runner:retest_in_terminal_by_name(test_name, opts)
     assert(test_name, "No test name found")
+    opts = opts or {}
 
     require("go-test-t.util_lsp").action_from_test_name(
         test_name,
@@ -813,12 +867,9 @@ function job_runner:retest_in_terminal_by_name(test_name)
                 filepath = lsp_param.filepath,
                 test_bufnr = lsp_param.test_bufnr,
             }
-            self:_run_tests(
-                pkg,
-                { test_name },
-                metadata,
-                { open_preview = true }
-            )
+            self:_run_tests(pkg, { test_name }, metadata, {
+                open_output = opts.open_output,
+            })
         end
     )
 end
@@ -860,31 +911,7 @@ function job_runner:preview_terminal(test_name)
         return nil
     end
 
-    local bufnr = self:_ensure_output_buffer(test_info)
-    self:_replace_output_buffer(test_info, test_info.output or {})
-    vim.bo[bufnr].filetype = "test"
-
-    local width = vim.o.columns
-    local height = math.max(1, vim.o.lines - vim.o.cmdheight - 1)
-    local win = vim.api.nvim_open_win(bufnr, true, {
-        relative = "editor",
-        width = width,
-        height = height,
-        row = 0,
-        col = 0,
-        style = "minimal",
-        border = "none",
-    })
-
-    local line_count = vim.api.nvim_buf_line_count(bufnr)
-    pcall(vim.api.nvim_win_set_cursor, win, { line_count, 0 })
-    vim.keymap.set("n", "q", function()
-        if vim.api.nvim_win_is_valid(win) then
-            vim.api.nvim_win_close(win, true)
-        end
-    end, { buffer = bufnr, noremap = true, silent = true })
-
-    return win
+    return self:_open_output_window(test_info)
 end
 
 function job_runner:toggle_last_test_terminal()
@@ -906,6 +933,13 @@ function job_runner:reset()
     self.running_jobs = {}
     self.test_jobs = {}
     self.last_test_name = nil
+
+    for name, win in pairs(self.output_windows) do
+        if vim.api.nvim_win_is_valid(win) then
+            pcall(vim.api.nvim_win_close, win, true)
+        end
+        self.output_windows[name] = nil
+    end
 
     for name, bufnr in pairs(self.output_buffers) do
         if vim.api.nvim_buf_is_valid(bufnr) then
