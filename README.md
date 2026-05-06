@@ -53,6 +53,11 @@ Board keys:
 - `<CR>` jump to test location
 - `q` close board/preview
 
+Streaming output keys:
+
+- `p` pause/resume auto-scroll so new log lines do not move the cursor
+- `q` close the output window
+
 ### 3) Integration workflows
 
 - `:TestIntegration`

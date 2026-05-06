@@ -131,6 +131,28 @@ local function apply_log_highlight(bufnr)
     end)
 end
 
+local output_follow_var = "go_test_t_follow_output"
+
+local function get_output_follow(bufnr)
+    local ok, enabled =
+        pcall(vim.api.nvim_buf_get_var, bufnr, output_follow_var)
+    if not ok then
+        return true
+    end
+    return enabled ~= false
+end
+
+local function set_output_follow(bufnr, enabled)
+    pcall(vim.api.nvim_buf_set_var, bufnr, output_follow_var, enabled)
+end
+
+local function ensure_output_follow(bufnr)
+    local ok = pcall(vim.api.nvim_buf_get_var, bufnr, output_follow_var)
+    if not ok then
+        set_output_follow(bufnr, true)
+    end
+end
+
 local function format_output_line(output)
     local line = vim.trim((output or ""):gsub("\r", ""))
     if line == "" then
@@ -212,6 +234,7 @@ function job_runner:_ensure_output_buffer(test_info)
         and vim.api.nvim_buf_is_valid(test_info.output_bufnr)
     then
         vim.bo[test_info.output_bufnr].filetype = "test"
+        ensure_output_follow(test_info.output_bufnr)
         apply_log_highlight(test_info.output_bufnr)
         return test_info.output_bufnr
     end
@@ -227,6 +250,7 @@ function job_runner:_ensure_output_buffer(test_info)
         self.output_buffers[test_info.name] = bufnr
     end
 
+    ensure_output_follow(bufnr)
     apply_log_highlight(bufnr)
     test_info.output_bufnr = bufnr
     return bufnr
@@ -239,7 +263,12 @@ function job_runner:_replace_output_buffer(test_info, lines)
     vim.bo[bufnr].modifiable = false
 end
 
-function job_runner:_scroll_output_windows(bufnr)
+function job_runner._scroll_output_windows(_, bufnr, opts)
+    opts = opts or {}
+    if not opts.force and not get_output_follow(bufnr) then
+        return
+    end
+
     for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
         if vim.api.nvim_win_is_valid(win) then
             local line_count = vim.api.nvim_buf_line_count(bufnr)
@@ -248,10 +277,45 @@ function job_runner:_scroll_output_windows(bufnr)
     end
 end
 
+function job_runner:_toggle_output_follow(bufnr)
+    local enabled = not get_output_follow(bufnr)
+    set_output_follow(bufnr, enabled)
+
+    if enabled then
+        self:_scroll_output_windows(bufnr, { force = true })
+    end
+
+    vim.notify(
+        "Go Test T: log auto-scroll " .. (enabled and "enabled" or "paused"),
+        vim.log.levels.INFO
+    )
+end
+
+function job_runner:_setup_output_keymaps(test_info, bufnr)
+    local function map_opts(desc)
+        return { buffer = bufnr, noremap = true, silent = true, desc = desc }
+    end
+
+    vim.keymap.set("n", "q", function()
+        local win = vim.api.nvim_get_current_win()
+        if vim.api.nvim_win_is_valid(win) then
+            vim.api.nvim_win_close(win, true)
+        end
+        if self.output_windows[test_info.name] == win then
+            self.output_windows[test_info.name] = nil
+        end
+    end, map_opts("Close test output"))
+
+    vim.keymap.set("n", "p", function()
+        self:_toggle_output_follow(bufnr)
+    end, map_opts("Toggle test output auto-scroll"))
+end
+
 function job_runner:_open_output_window(test_info)
     local bufnr = self:_ensure_output_buffer(test_info)
     self:_replace_output_buffer(test_info, test_info.output or {})
     vim.bo[bufnr].filetype = "test"
+    self:_setup_output_keymaps(test_info, bufnr)
 
     local existing_win = self.output_windows[test_info.name]
     if existing_win and vim.api.nvim_win_is_valid(existing_win) then
@@ -276,15 +340,6 @@ function job_runner:_open_output_window(test_info)
     vim.wo[win].wrap = true
     self:_scroll_output_windows(bufnr)
     run_log_highlight_here()
-
-    vim.keymap.set("n", "q", function()
-        if vim.api.nvim_win_is_valid(win) then
-            vim.api.nvim_win_close(win, true)
-        end
-        if self.output_windows[test_info.name] == win then
-            self.output_windows[test_info.name] = nil
-        end
-    end, { buffer = bufnr, noremap = true, silent = true })
 
     return win
 end
