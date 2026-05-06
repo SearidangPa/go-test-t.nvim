@@ -113,11 +113,12 @@ local function format_logrus_line(entry)
     return line
 end
 
+local function run_log_highlight_here()
+    pcall(vim.cmd, "silent LogHighlight")
+end
+
 local function apply_log_highlight(bufnr)
     if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-    end
-    if vim.b[bufnr].go_test_t_log_highlight_applied then
         return
     end
 
@@ -126,12 +127,7 @@ local function apply_log_highlight(bufnr)
             return
         end
 
-        vim.api.nvim_buf_call(bufnr, function()
-            local ok = pcall(vim.cmd, "silent LogHighlight")
-            if ok then
-                vim.b[bufnr].go_test_t_log_highlight_applied = true
-            end
-        end)
+        vim.api.nvim_buf_call(bufnr, run_log_highlight_here)
     end)
 end
 
@@ -261,6 +257,7 @@ function job_runner:_open_output_window(test_info)
     if existing_win and vim.api.nvim_win_is_valid(existing_win) then
         pcall(vim.api.nvim_set_current_win, existing_win)
         self:_scroll_output_windows(bufnr)
+        run_log_highlight_here()
         return existing_win
     end
 
@@ -278,6 +275,7 @@ function job_runner:_open_output_window(test_info)
     vim.wo[win].relativenumber = false
     vim.wo[win].wrap = true
     self:_scroll_output_windows(bufnr)
+    run_log_highlight_here()
 
     vim.keymap.set("n", "q", function()
         if vim.api.nvim_win_is_valid(win) then
