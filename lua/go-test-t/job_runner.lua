@@ -311,7 +311,8 @@ function job_runner:_setup_output_keymaps(test_info, bufnr)
     end, map_opts("Toggle test output auto-scroll"))
 end
 
-function job_runner:_open_output_window(test_info)
+function job_runner:_open_output_window(test_info, opts)
+    opts = opts or {}
     local bufnr = self:_ensure_output_buffer(test_info)
     self:_replace_output_buffer(test_info, test_info.output or {})
     vim.bo[bufnr].filetype = "test"
@@ -320,7 +321,9 @@ function job_runner:_open_output_window(test_info)
     local existing_win = self.output_windows[test_info.name]
     if existing_win and vim.api.nvim_win_is_valid(existing_win) then
         pcall(vim.api.nvim_set_current_win, existing_win)
-        self:_scroll_output_windows(bufnr)
+        if not opts.no_scroll then
+            self:_scroll_output_windows(bufnr)
+        end
         run_log_highlight_here()
         return existing_win
     end
@@ -338,7 +341,9 @@ function job_runner:_open_output_window(test_info)
     vim.wo[win].number = false
     vim.wo[win].relativenumber = false
     vim.wo[win].wrap = true
-    self:_scroll_output_windows(bufnr)
+    if not opts.no_scroll then
+        self:_scroll_output_windows(bufnr)
+    end
     run_log_highlight_here()
 
     return win
@@ -957,14 +962,14 @@ function job_runner:test_buf_in_terminals()
     self:_run_tests(pkg, test_names, metadata)
 end
 
-function job_runner:preview_terminal(test_name)
+function job_runner:preview_terminal(test_name, opts)
     local test_info = self.get_test_info_func(test_name)
     if not test_info then
         vim.notify("No test output found", vim.log.levels.WARN)
         return nil
     end
 
-    return self:_open_output_window(test_info)
+    return self:_open_output_window(test_info, opts)
 end
 
 function job_runner:toggle_last_test_terminal()
@@ -972,7 +977,7 @@ function job_runner:toggle_last_test_terminal()
         vim.notify("No last test output found", vim.log.levels.WARN)
         return
     end
-    self:preview_terminal(self.last_test_name)
+    self:preview_terminal(self.last_test_name, { no_scroll = true })
 end
 
 function job_runner:toggle_term_func(test_name)
