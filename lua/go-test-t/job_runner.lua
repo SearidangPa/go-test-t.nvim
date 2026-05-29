@@ -361,18 +361,9 @@ function job_runner:_restore_output_cursor(test_info, win, bufnr)
     if not saved then
         return
     end
-    local function restore()
-        if not vim.api.nvim_win_is_valid(win) then
-            return
-        end
-        local line_count = vim.api.nvim_buf_line_count(bufnr)
-        local line = math.min(saved[1], line_count)
-        pcall(vim.api.nvim_win_set_cursor, win, { line, saved[2] })
-    end
-    -- Restore now, then reassert on the next tick in case `LogHighlight`
-    -- (or other scheduled callbacks) reset the view to the top.
-    restore()
-    vim.schedule(restore)
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    local line = math.min(saved[1], line_count)
+    pcall(vim.api.nvim_win_set_cursor, win, { line, saved[2] })
 end
 
 function job_runner:_open_streaming_output(test_info)
