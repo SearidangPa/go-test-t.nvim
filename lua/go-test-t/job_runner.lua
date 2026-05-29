@@ -346,12 +346,12 @@ function job_runner:_open_output_window(test_info, opts)
     vim.wo[win].number = false
     vim.wo[win].relativenumber = false
     vim.wo[win].wrap = true
+    run_log_highlight_here()
     if opts.no_scroll then
         self:_restore_output_cursor(test_info, win, bufnr)
     else
         self:_scroll_output_windows(bufnr)
     end
-    run_log_highlight_here()
 
     return win
 end
@@ -361,9 +361,18 @@ function job_runner:_restore_output_cursor(test_info, win, bufnr)
     if not saved then
         return
     end
-    local line_count = vim.api.nvim_buf_line_count(bufnr)
-    local line = math.min(saved[1], line_count)
-    pcall(vim.api.nvim_win_set_cursor, win, { line, saved[2] })
+    local function restore()
+        if not vim.api.nvim_win_is_valid(win) then
+            return
+        end
+        local line_count = vim.api.nvim_buf_line_count(bufnr)
+        local line = math.min(saved[1], line_count)
+        pcall(vim.api.nvim_win_set_cursor, win, { line, saved[2] })
+    end
+    -- Restore now, then reassert on the next tick in case `LogHighlight`
+    -- (or other scheduled callbacks) reset the view to the top.
+    restore()
+    vim.schedule(restore)
 end
 
 function job_runner:_open_streaming_output(test_info)
