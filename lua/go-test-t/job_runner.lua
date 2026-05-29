@@ -201,6 +201,7 @@ function job_runner.new(opts)
     self.test_jobs = {}
     self.output_buffers = {}
     self.output_windows = {}
+    self.output_cursor = {}
     self.display_update_pending = false
     self.display_force_update_pending = false
     return self
@@ -299,6 +300,10 @@ function job_runner:_setup_output_keymaps(test_info, bufnr)
     vim.keymap.set("n", "q", function()
         local win = vim.api.nvim_get_current_win()
         if vim.api.nvim_win_is_valid(win) then
+            local ok, cursor = pcall(vim.api.nvim_win_get_cursor, win)
+            if ok then
+                self.output_cursor[test_info.name] = cursor
+            end
             vim.api.nvim_win_close(win, true)
         end
         if self.output_windows[test_info.name] == win then
@@ -341,12 +346,24 @@ function job_runner:_open_output_window(test_info, opts)
     vim.wo[win].number = false
     vim.wo[win].relativenumber = false
     vim.wo[win].wrap = true
-    if not opts.no_scroll then
+    if opts.no_scroll then
+        self:_restore_output_cursor(test_info, win, bufnr)
+    else
         self:_scroll_output_windows(bufnr)
     end
     run_log_highlight_here()
 
     return win
+end
+
+function job_runner:_restore_output_cursor(test_info, win, bufnr)
+    local saved = self.output_cursor[test_info.name]
+    if not saved then
+        return
+    end
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    local line = math.min(saved[1], line_count)
+    pcall(vim.api.nvim_win_set_cursor, win, { line, saved[2] })
 end
 
 function job_runner:_open_streaming_output(test_info)
