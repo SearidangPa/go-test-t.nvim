@@ -9,6 +9,13 @@ local util_lsp = {}
 
 ---@param callback_func fun(lsp_param: lsp_param)
 function util_lsp.action_from_test_name(test_name, callback_func)
+    if not test_name or test_name == "" then
+        vim.notify(
+            "action_from_test_name: test_name is nil or empty",
+            vim.log.levels.ERROR
+        )
+        return
+    end
     local go_clients = vim.lsp.get_clients({ name = "gopls" })
     if #go_clients == 0 then
         vim.notify("No Go language server found", vim.log.levels.ERROR)
@@ -20,7 +27,7 @@ function util_lsp.action_from_test_name(test_name, callback_func)
     local handler = function(err, res, _)
         if err or not res or #res == 0 then
             vim.notify(
-                "No definition found for test: " .. test_name,
+                "No definition found for test: " .. tostring(test_name),
                 vim.log.levels.WARN
             )
             return
