@@ -229,9 +229,15 @@ function job_runner:_build_go_test_args(pkg, run_pattern)
     return args, env
 end
 
+function job_runner:_output_key(test_info)
+    return test_info.output_key or test_info.name
+end
+
 function job_runner:_ensure_output_buffer(test_info)
+    local key = self:_output_key(test_info)
     if
         test_info.output_bufnr
+        and self.output_buffers[key] == test_info.output_bufnr
         and vim.api.nvim_buf_is_valid(test_info.output_bufnr)
     then
         vim.bo[test_info.output_bufnr].filetype = "test"
@@ -240,15 +246,15 @@ function job_runner:_ensure_output_buffer(test_info)
         return test_info.output_bufnr
     end
 
-    local bufnr = self.output_buffers[test_info.name]
+    local bufnr = self.output_buffers[key]
     if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
         bufnr = vim.api.nvim_create_buf(false, true)
         vim.bo[bufnr].buftype = "nofile"
         vim.bo[bufnr].bufhidden = "hide"
         vim.bo[bufnr].swapfile = false
         vim.bo[bufnr].filetype = "test"
-        pcall(vim.api.nvim_buf_set_name, bufnr, "go-test://" .. test_info.name)
-        self.output_buffers[test_info.name] = bufnr
+        pcall(vim.api.nvim_buf_set_name, bufnr, "go-test://" .. key)
+        self.output_buffers[key] = bufnr
     end
 
     ensure_output_follow(bufnr)
@@ -300,14 +306,15 @@ function job_runner:_setup_output_keymaps(test_info, bufnr)
     vim.keymap.set("n", "q", function()
         local win = vim.api.nvim_get_current_win()
         if vim.api.nvim_win_is_valid(win) then
-            local ok, cursor = pcall(vim.api.nvim_win_get_cursor, win)
+                local ok, cursor = pcall(vim.api.nvim_win_get_cursor, win)
             if ok then
-                self.output_cursor[test_info.name] = cursor
+                self.output_cursor[self:_output_key(test_info)] = cursor
             end
             vim.api.nvim_win_close(win, true)
         end
-        if self.output_windows[test_info.name] == win then
-            self.output_windows[test_info.name] = nil
+        local key = self:_output_key(test_info)
+        if self.output_windows[key] == win then
+            self.output_windows[key] = nil
         end
     end, map_opts("Close test output"))
 
@@ -323,7 +330,8 @@ function job_runner:_open_output_window(test_info, opts)
     vim.bo[bufnr].filetype = "test"
     self:_setup_output_keymaps(test_info, bufnr)
 
-    local existing_win = self.output_windows[test_info.name]
+    local key = self:_output_key(test_info)
+    local existing_win = self.output_windows[key]
     if existing_win and vim.api.nvim_win_is_valid(existing_win) then
         pcall(vim.api.nvim_set_current_win, existing_win)
         if not opts.no_scroll then
@@ -342,7 +350,7 @@ function job_runner:_open_output_window(test_info, opts)
         style = "minimal",
     })
 
-    self.output_windows[test_info.name] = win
+    self.output_windows[key] = win
     vim.wo[win].number = false
     vim.wo[win].relativenumber = false
     vim.wo[win].wrap = true
@@ -357,7 +365,7 @@ function job_runner:_open_output_window(test_info, opts)
 end
 
 function job_runner:_restore_output_cursor(test_info, win, bufnr)
-    local saved = self.output_cursor[test_info.name]
+    local saved = self.output_cursor[self:_output_key(test_info)]
     if not saved then
         return
     end
@@ -373,13 +381,14 @@ function job_runner:_open_streaming_output(test_info)
 end
 
 function job_runner:_existing_output_buffer(test_info)
-    local bufnr = test_info.output_bufnr or self.output_buffers[test_info.name]
+    local key = self:_output_key(test_info)
+    local bufnr = self.output_buffers[key]
     if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
         test_info.output_bufnr = bufnr
         return bufnr
     end
     test_info.output_bufnr = nil
-    self.output_buffers[test_info.name] = nil
+    self.output_buffers[key] = nil
     return nil
 end
 
@@ -516,6 +525,7 @@ function job_runner:_new_test_info(name, command, opts)
     test_info.test_command = command
     test_info.set_ext_mark = false
     test_info.fail_at_line = opts.fail_at_line or 0
+    test_info.output_key = opts.output_key or test_info.output_key or name
     test_info.output = opts.keep_output and test_info.output or {}
 
     local bufnr = self:_existing_output_buffer(test_info)
@@ -571,12 +581,22 @@ function job_runner:_handle_run(entry, command)
     local previous_status = test_info and test_info.status
     local force_update = not test_info or previous_status ~= "running"
     if not test_info then
-        test_info =
-            self:_new_test_info(entry.Test, command, { status = "running" })
+        test_info = self:_new_test_info(entry.Test, command, {
+            status = "running",
+            output_key = "pkg:" .. (entry.Package or "") .. ":" .. entry.Test,
+        })
     end
 
     test_info.status = "running"
     test_info.test_command = command
+    if not command:find("%-run") then
+        local output_key = "pkg:" .. (entry.Package or "") .. ":" .. entry.Test
+        if test_info.output_key ~= output_key then
+            test_info.output = {}
+            test_info.output_bufnr = nil
+        end
+        test_info.output_key = output_key
+    end
     self.add_test_info_func(test_info)
     self.last_test_name = entry.Test
     self:_schedule_display_update(force_update)
@@ -875,6 +895,8 @@ function job_runner:_run_tests(pkg, test_names, metadata_by_name, run_opts)
         self:_stop_test_job(name)
         local opts = metadata_by_name[name] or {}
         opts.status = "fired"
+        opts.output_key = run_opts.output_key_prefix and (run_opts.output_key_prefix .. name)
+            or opts.output_key
         local test_info = self:_register_initial_test(name, command, opts)
         if run_opts.open_output and #test_names == 1 then
             self:_open_streaming_output(test_info)
@@ -921,7 +943,10 @@ function job_runner:test_nearest_in_terminal()
         test_bufnr = vim.api.nvim_get_current_buf(),
         filepath = vim.fn.expand("%:p"),
     }
-    self:_run_tests(pkg, { test_name }, metadata, { open_output = true })
+    self:_run_tests(pkg, { test_name }, metadata, {
+        open_output = true,
+        output_key_prefix = "test-this:",
+    })
     return self.get_test_info_func(test_name)
 end
 
@@ -944,6 +969,7 @@ function job_runner:retest_in_terminal_by_name(test_name, opts)
             }
             self:_run_tests(pkg, { test_name }, metadata, {
                 open_output = opts.open_output,
+                output_key_prefix = opts.open_output and "test-this:" or nil,
             })
         end
     )
