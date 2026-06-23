@@ -61,7 +61,7 @@ Streaming output keys:
 ### 3) Integration workflows
 
 - `:TestIntegration`
-  - Runs the configured package using `go test ... -v --json`.
+  - Runs the configured package using `go test ... -json` without `-v` to avoid verbose log streaming.
   - Streams JSON actions and updates the board live (`run`, `output`, `pass`, `fail`).
 - `:TestDrive [dev|staging]` (default: `dev`)
   - Discovers integration tests (`Test_` prefix) in `./integration_tests/`.

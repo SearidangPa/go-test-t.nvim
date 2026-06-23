@@ -207,14 +207,18 @@ function job_runner.new(opts)
     return self
 end
 
-function job_runner:_build_go_test_args(pkg, run_pattern)
+function job_runner:_build_go_test_args(pkg, run_pattern, include_verbose)
+    include_verbose = include_verbose ~= false
+
     if prefix_needs_shell(self.go_test_prefix) then
         local command_parts = {
             vim.trim(self.go_test_prefix),
             shell_quote(pkg),
-            "-v",
-            "-json",
         }
+        if include_verbose then
+            table.insert(command_parts, "-v")
+        end
+        table.insert(command_parts, "-json")
         if run_pattern and run_pattern ~= "" then
             vim.list_extend(command_parts, { "-run", shell_quote(run_pattern) })
         end
@@ -222,7 +226,11 @@ function job_runner:_build_go_test_args(pkg, run_pattern)
     end
 
     local args, env = prefix_to_args(self.go_test_prefix)
-    vim.list_extend(args, { pkg, "-v", "-json" })
+    table.insert(args, pkg)
+    if include_verbose then
+        table.insert(args, "-v")
+    end
+    table.insert(args, "-json")
     if run_pattern and run_pattern ~= "" then
         vim.list_extend(args, { "-run", run_pattern })
     end
@@ -915,7 +923,7 @@ end
 
 function job_runner:test_pkg(test_pkg)
     test_pkg = test_pkg or "./..."
-    local args, env = self:_build_go_test_args(test_pkg)
+    local args, env = self:_build_go_test_args(test_pkg, nil, false)
     return self:_start_job(args, {}, env)
 end
 
