@@ -610,26 +610,25 @@ function job_runner:_handle_run(entry, command)
     self:_schedule_display_update(force_update)
 end
 
-function job_runner:_handle_output(entry)
-    if not entry.Test then
-        return
-    end
-
-    local test_info = self.get_test_info_func(entry.Test)
-    if not test_info then
-        return
-    end
-
+function job_runner:_handle_output(entry, fallback_test_names)
     local line = format_output_line(entry.Output)
     if not line then
         return
     end
 
-    local previous_status = test_info.status
-    self:_append_output(test_info, line)
-    self:_handle_error_trace(line, test_info)
-    self.add_test_info_func(test_info)
-    self:_schedule_display_update(test_info.status ~= previous_status)
+    local test_names = entry.Test and { entry.Test }
+        or fallback_test_names
+        or {}
+    for _, test_name in ipairs(test_names) do
+        local test_info = self.get_test_info_func(test_name)
+        if test_info then
+            local previous_status = test_info.status
+            self:_append_output(test_info, line)
+            self:_handle_error_trace(line, test_info)
+            self.add_test_info_func(test_info)
+            self:_schedule_display_update(test_info.status ~= previous_status)
+        end
+    end
 end
 
 function job_runner:_handle_outcome(entry)
@@ -660,20 +659,21 @@ function job_runner:_handle_outcome(entry)
     self:_schedule_display_update(true)
 end
 
-function job_runner:_handle_json_line(line, command)
+function job_runner:_handle_json_line(line, command, fallback_test_names)
     if not line or line == "" then
         return
     end
 
     local ok, decoded = pcall(vim.json.decode, line)
     if not ok or type(decoded) ~= "table" then
+        self:_handle_output({ Output = line }, fallback_test_names)
         return
     end
 
     if decoded.Action == "run" then
         self:_handle_run(decoded, command)
     elseif decoded.Action == "output" then
-        self:_handle_output(decoded)
+        self:_handle_output(decoded, fallback_test_names)
     elseif
         decoded.Action == "pass"
         or decoded.Action == "fail"
@@ -731,7 +731,8 @@ function job_runner:_schedule_process_job_data(job_state)
         do
             self:_handle_json_line(
                 job_state.priority_queue[job_state.priority_head],
-                job_state.command
+                job_state.command,
+                job_state.test_names
             )
             job_state.priority_head = job_state.priority_head + 1
             processed = processed + 1
@@ -757,7 +758,8 @@ function job_runner:_schedule_process_job_data(job_state)
         do
             self:_handle_json_line(
                 job_state.queue[job_state.queue_head],
-                job_state.command
+                job_state.command,
+                job_state.test_names
             )
             job_state.queue_head = job_state.queue_head + 1
             processed = processed + 1
@@ -862,7 +864,32 @@ function job_runner:_start_job(args, test_names, env)
                 end
             end
             if exit_code ~= 0 then
-                self:_schedule_display_update(true)
+                -- Package setup failures may not emit a test-scoped JSON event,
+                -- and some go errors are stderr-only. Show the failure in the
+                -- selected test output instead of leaving only the command.
+                vim.schedule(function()
+                    for _, name in ipairs(job_state.test_names) do
+                        local test_info = self.get_test_info_func(name)
+                        if test_info then
+                            test_info.status = "fail"
+                            self:_append_output(
+                                test_info,
+                                string.format(
+                                    "go test exited with code %d",
+                                    exit_code
+                                )
+                            )
+                            for _, stderr_line in ipairs(job_state.stderr_lines) do
+                                self:_append_output(
+                                    test_info,
+                                    "stderr: " .. stderr_line
+                                )
+                            end
+                            self.add_test_info_func(test_info)
+                        end
+                    end
+                    self:_schedule_display_update(true)
+                end)
             end
         end,
     })
