@@ -133,7 +133,7 @@ function go_test.new(opts)
     return self
 end
 
----@param opts GoTestT.Options
+---@param opts { go_test_prefix: string }
 function go_test:set_go_test_prefix(opts)
     assert(type(opts) == "table", "Options must be a table")
     assert(opts.go_test_prefix, "go_test_prefix must be provided in options")

@@ -27,13 +27,17 @@
 ---@field running_jobs table<number, table>
 ---@field test_jobs table<string, number>
 ---@field output_buffers table<string, number>
+---@field output_windows table<string, number>
+---@field output_cursor table<string, integer[]>
+---@field display_update_pending boolean
+---@field display_force_update_pending boolean
 ---@field ns_id number
 ---@field pin_test_func fun(tests_info: terminal.testInfo)
 ---@field get_pinned_tests_func fun(): table<string, terminal.testInfo>
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---@field toggle_display_func fun(do_not_close: boolean)
----@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field update_display_buffer_func fun(tests_info?: table<string, terminal.testInfo>)
 
 ---@class termTest.Options
 ---@field go_test_prefix string
@@ -43,7 +47,7 @@
 ---@field get_test_info_func fun(test_name: string): terminal.testInfo
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---@field toggle_display_func fun(do_not_close: boolean)
----@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field update_display_buffer_func fun(tests_info?: table<string, terminal.testInfo>)
 
 ---@class terminal.testInfo
 ---@field name string
@@ -56,6 +60,7 @@
 ---@field set_ext_mark boolean
 ---@field output string[]
 ---@field output_bufnr? number
+---@field output_key? string
 
 ---@class PinTester
 ---@field go_test_prefix string
@@ -67,7 +72,7 @@
 ---@field add_test_info_func fun(test_info: terminal.testInfo)
 ---
 ---@class PinTesterOptions
----@field update_display_buffer_func fun(tests_info: table<string, terminal.testInfo>)
+---@field update_display_buffer_func fun(tests_info?: table<string, terminal.testInfo>)
 ---@field toggle_display_func fun(boolean)
 ---@field retest_in_terminal_by_name fun(test_name: string)
 ---@field test_nearest_in_terminal_func fun(): terminal.testInfo

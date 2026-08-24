@@ -173,12 +173,9 @@ function test_display:create_window_and_buf()
         vim.cmd("vsplit")
         self.display_win_id = vim.api.nvim_get_current_win()
         vim.api.nvim_win_set_buf(self.display_win_id, self.display_bufnr)
-        vim.api.nvim_win_set_width(
+        vim.api.nvim_win_resize(
             self.display_win_id,
-            math.floor(vim.o.columns / 4)
-        )
-        vim.api.nvim_win_set_height(
-            self.display_win_id,
+            math.floor(vim.o.columns / 4),
             math.floor(vim.o.lines - 2)
         )
         vim.wo[self.display_win_id].number = false
