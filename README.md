@@ -86,7 +86,6 @@ Streaming output keys:
 
 - `gopls` for symbol-based test navigation and test-name-to-location lookups.
 - `beaver` for test/function detection in current buffer.
-- `terminal-multiplexer` for managing floating test terminals.
 
 ## Notes
 
